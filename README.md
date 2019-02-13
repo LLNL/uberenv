@@ -1,5 +1,5 @@
 # uberenv
-Automates using Spack to build and deploy software.
+Automates using Spack (https://www.spack.io/) to build and deploy software.
 
 Uberenv is a short python script that helps automate using Spack to build
 third-party dependencies for development and to deploy Spack packages. 
