@@ -276,8 +276,13 @@ class SpackEnv(UberEnv):
     def find_spack_pkg_path(self,pkg_name):
         r,rout = sexe("spack/bin/spack find -p " + pkg_name,ret_output = True)
         for l in rout.split("\n"):
-            if l.startswith(" "):
-                return {"name": pkg_name, "path": l.split()[-1]}
+            lstrip = l.strip()
+            if not lstrip == "" and \
+               not lstrip.startswith("==>") and  \
+               not lstrip.startswith("--"):
+                   return {"name": pkg_name, "path": l.split()[-1]}
+        print("[ERROR: failed to find package named '{}']".format(pkg_name))
+        sys.exit(-1)
 
     def read_spack_full_spec(self,pkg_name,spec):
         rv, res = sexe("spack/bin/spack spec " + pkg_name + " " + spec, ret_output=True)
@@ -308,7 +313,7 @@ class SpackEnv(UberEnv):
                 print("[info: using spack commit {}]".format(sha1))
                 os.chdir(pjoin(self.dest_dir,"spack"))
                 sexe("git checkout {}".format(sha1),echo=True)
-                
+
         if self.opts["spack_pull"]:
             # do a pull to make sure we have the latest
             os.chdir(pjoin(self.dest_dir,"spack"))
@@ -382,8 +387,8 @@ class SpackEnv(UberEnv):
         cln_cmd = "spack/bin/spack clean "
         res = sexe(cln_cmd, echo=True)
 
-        # clean out any spack cached downloads
-        cln_cmd = "spack/bin/spack clean -d"
+        # clean out any spack cached stuff
+        cln_cmd = "spack/bin/spack clean --all"
         res = sexe(cln_cmd, echo=True)
 
         # check if we need to force uninstall of selected packages
