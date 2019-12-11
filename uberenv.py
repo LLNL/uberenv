@@ -207,11 +207,8 @@ class UberEnv():
         print("[uberenv project settings: {}]".format(str(self.project_opts)))
         print("[uberenv options: {}]".format(str(self.opts)))
 
-        # setup main package name
-        if opts["install"]:
-            self.pkg_name = self.project_opts["package_name"]
-        else:
-            self.pkg_name = self.project_opts["uberenv_package_name"]
+        self.pkg_name = self.project_opts["package_name"]
+        self.pkg_version = self.project_opts["package_version"]
 
     def setup_paths_and_dirs(self):
         self.uberenv_path = os.path.split(os.path.abspath(__file__))[0]
@@ -248,6 +245,9 @@ class SpackEnv(UberEnv):
                 opts["spec"] = "%clang"
             else:
                 opts["spec"] = "%gcc"
+
+        opts["spec"] = "@{}{}".format(self.pkg_version,opts["spec"])
+
         print("[spack spec: {}]".format(opts["spec"]))
 
     def setup_paths_and_dirs(self):
