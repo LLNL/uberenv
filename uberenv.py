@@ -493,7 +493,7 @@ class SpackEnv(UberEnv):
                                                                     self.pkg_name)
         return sexe(mirror_cmd, echo=True)
 
-    def find_spack_mirror(self, spack_dir, mirror_name):
+    def find_spack_mirror(self, mirror_name):
         """
         Returns the path of a site scoped spack mirror with the
         given name, or None if no mirror exists.
@@ -511,10 +511,9 @@ class SpackEnv(UberEnv):
         """
         Configures spack to use mirror at a given path.
         """
-        spack_dir = self.dest_spack
         mirror_name = self.pkg_name
         mirror_path = self.get_mirror_path()
-        existing_mirror_path = self.find_spack_mirror(spack_dir, mirror_name)
+        existing_mirror_path = self.find_spack_mirror(mirror_name)
 
         if existing_mirror_path and mirror_path != existing_mirror_path:
             # Existing mirror has different URL, error out
