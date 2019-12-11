@@ -221,12 +221,13 @@ class UberEnv():
         self.pkg_name = self.project_opts["package_name"]
         self.pkg_version = self.project_opts["package_version"]
         self.pkg_stop_phase = self.project_opts["package_stop_phase"]
-        script_dir = os.path.dirname(os.path.realpath(__file__))
-        self.source_dir = os.path.join(script_dir,self.project_opts["source_dir"])
 
     def setup_paths_and_dirs(self):
-        self.uberenv_path = os.path.split(os.path.abspath(__file__))[0]
-
+        self.uberenv_path = os.path.dirname(os.path.realpath(__file__))
+        self.source_dir = os.path.join(self.uberenv_path,self.project_opts["source_dir"])
+        if not os.path.isdir(self.source_dir):
+            print("[ERROR: source_dir '{}'  exists]".format(self.source_dir))
+            sys.exit(-1)
 
     def detect_platform(self):
         # find supported sets of compilers.yaml, packages,yaml
