@@ -97,22 +97,32 @@ def parse_args():
                       dest="prefix",
                       default="uberenv_libs",
                       help="destination directory")
+
     # what compiler to use
     parser.add_option("--spec",
                       dest="spec",
                       default=None,
                       help="spack compiler spec")
+
     # optional location of spack mirror
     parser.add_option("--mirror",
                       dest="mirror",
                       default=None,
                       help="spack mirror directory")
+
     # flag to create mirror
     parser.add_option("--create-mirror",
                       action="store_true",
                       dest="create_mirror",
                       default=False,
                       help="Create spack mirror")
+
+    # optional location of spack upstream
+    parser.add_option("--upstream",
+                      dest="upstream",
+                      default=None,
+                      help="add an external spack instance as upstream")
+
     # this option allows a user to explicitly to select a
     # group of spack settings files (compilers.yaml , packages.yaml)
     parser.add_option("--spack-config-dir",
@@ -523,6 +533,48 @@ class SpackEnv(UberEnv):
                     mirror_name, mirror_path), echo=True)
             print("[using mirror {}]".format(mirror_path))
 
+    def find_spack_upstream(self, upstream_name):
+        """
+        Returns the path of a site scoped spack upstream with the
+        given name, or None if no upstream exists.
+        """
+        upstream_path = None
+
+        rv, res = sexe('spack/bin/spack config get upstreams', ret_output=True)
+        if (not res) and ("upstreams:" in res):
+            res = res.replace(' ', '')
+            res = res.replace('install_tree:', '')
+            res = res.replace(':', '')
+            res = res.splitlines()
+            res = res[1:]
+            upstreams = dict(zip(res[::2], res[1::2]))
+
+            for name in upstreams.keys():
+                if name == upstream_name:
+                    upstream_path = upstreams[name]
+
+        return upstream_path
+
+    def use_spack_upstream(self):
+        """
+        Configures spack to use upstream at a given path.
+        """
+        upstream_path = self.opts["upstream"]
+        if not upstream_path:
+            print("[--create-upstream requires a upstream directory]")
+            sys.exit(-1)
+        upstream_path = os.path.abspath(upstream_path)
+        upstream_name = self.pkg_name
+        existing_upstream_path = self.find_spack_upstream(upstream_name)
+        if (not existing_upstream_path) or (upstream_path != os.path.abspath(existing_upstream_path)):
+            # Existing upstream has different URL, error out
+            print("[removing existing spack upstream configuration file]")
+            sexe("rm spack/etc/spack/defaults/upstreams.yaml")
+            with open('spack/etc/spack/defaults/upstreams.yaml','w+') as upstreams_cfg_file:
+                upstreams_cfg_file.write("upstreams:\n")
+                upstreams_cfg_file.write("  {}:\n".format(upstream_name))
+                upstreams_cfg_file.write("    install_tree: {}\n".format(upstream_path))
+
 
 def find_osx_sdks():
     """
@@ -611,6 +663,10 @@ def main():
     else:
         if not opts["mirror"] is None:
             env.use_mirror()
+
+        if not opts["upstream"] is None:
+            env.use_spack_upstream()
+
         res = env.install()
 
         return res
