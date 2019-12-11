@@ -220,6 +220,9 @@ class UberEnv():
 
         self.pkg_name = self.project_opts["package_name"]
         self.pkg_version = self.project_opts["package_version"]
+        self.pkg_stop_phase = self.project_opts["package_stop_phase"]
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        self.source_dir = os.path.join(script_dir,self.project_opts["source_dir"])
 
     def setup_paths_and_dirs(self):
         self.uberenv_path = os.path.split(os.path.abspath(__file__))[0]
@@ -419,7 +422,9 @@ class SpackEnv(UberEnv):
         install_cmd = "spack/bin/spack "
         if self.opts["ignore_ssl_errors"]:
             install_cmd += "-k "
-        install_cmd += "install "
+        install_cmd += "dev-build -d {} ".format(self.source_dir)
+        if not self.opts["install"]:
+            install_cmd += "-u {} ".format(self.pkg_stop_phase)
         if self.opts["run_tests"]:
             install_cmd += "--test=root "
         install_cmd += self.pkg_name + self.opts["spec"]
