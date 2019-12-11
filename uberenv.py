@@ -90,7 +90,8 @@ def parse_args():
                       action="store_true",
                       dest="install",
                       default=False,
-                      help="Install `package_name` instead of `uberenv_package_name`.")
+                      help="Install `package_name`, not just its dependencies.")
+
     # where to install
     parser.add_option("--prefix",
                       dest="prefix",
@@ -297,7 +298,7 @@ class SpackEnv(UberEnv):
 
             os.chdir(self.dest_dir)
 
-            clone_opts = ("-c http.sslVerify=false " 
+            clone_opts = ("-c http.sslVerify=false "
                           if self.opts["ignore_ssl_errors"] else "")
 
             spack_branch = self.project_opts.get("spack_branch", "develop")
@@ -436,7 +437,7 @@ class SpackEnv(UberEnv):
         if self.opts["install"] and "+python" in full_spec:
             activate_cmd = "spack/bin/spack activate " + self.pkg_name
             sexe(activate_cmd, echo=True)
-        # if user opt'd for an install, we want to symlink the final ascent
+        # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
         if self.opts["install"]:
             pkg_path = self.find_spack_pkg_path(self.pkg_name)
