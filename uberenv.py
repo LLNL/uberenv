@@ -344,10 +344,10 @@ class SpackEnv(UberEnv):
 
 
     def disable_spack_config_scopes(self,spack_dir):
-        # disables all config scopes except "default", which we will
+        # disables all config scopes except "defaults", which we will
         # force our settings into
         spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
-        print("[disabling config scope (except default) in: {}]".format(spack_lib_config))
+        print("[disabling config scope (except defaults) in: {}]".format(spack_lib_config))
         cfg_script = open(spack_lib_config).read()
         for cfg_scope_stmt in ["('system', os.path.join(spack.paths.system_etc_path, 'spack')),",
                             "('site', os.path.join(spack.paths.etc_path, 'spack')),",
@@ -363,11 +363,11 @@ class SpackEnv(UberEnv):
         cfg_dir = self.config_dir()
         spack_dir = self.dest_spack
 
-        # force spack to use only default config scope
+        # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
-        # copy in default config.yaml
+        # copy in "defaults" config.yaml
         config_yaml = os.path.abspath(pjoin(self.uberenv_path,"spack_configs","config.yaml"))
         sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir ), echo=True)
 
@@ -500,7 +500,7 @@ class SpackEnv(UberEnv):
 
     def find_spack_mirror(self, mirror_name):
         """
-        Returns the path of a site scoped spack mirror with the
+        Returns the path of a defaults scoped spack mirror with the
         given name, or None if no mirror exists.
         """
         rv, res = sexe("spack/bin/spack mirror list", ret_output=True)
@@ -528,18 +528,18 @@ class SpackEnv(UberEnv):
             # Note: In this case, spack says it removes the mirror, but we still
             # get errors when we try to add a new one, sounds like a bug
             #
-            sexe("spack/bin/spack mirror remove --scope=site {} ".format(mirror_name),
+            sexe("spack/bin/spack mirror remove --scope=defaults {} ".format(mirror_name),
                 echo=True)
             existing_mirror_path = None
         if not existing_mirror_path:
             # Add if not already there
-            sexe("spack/bin/spack mirror add --scope=site {} {}".format(
+            sexe("spack/bin/spack mirror add --scope=defaults {} {}".format(
                     mirror_name, mirror_path), echo=True)
             print("[using mirror {}]".format(mirror_path))
 
     def find_spack_upstream(self, upstream_name):
         """
-        Returns the path of a site scoped spack upstream with the
+        Returns the path of a defaults scoped spack upstream with the
         given name, or None if no upstream exists.
         """
         upstream_path = None
