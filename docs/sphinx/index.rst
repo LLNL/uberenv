@@ -78,19 +78,19 @@ Build configuration
 
 ``uberenv.py`` has a few options that allow you to control how dependencies are built:
 
- ==================== ============================================== ================================================
-  Option               Description                                     Default
- ==================== ============================================== ================================================
-  --prefix             Destination directory                          ``uberenv_libs``
-  --spec               Spack spec                                     linux: **%gcc**
-                                                                      osx: **%clang**
-  --spack-config-dir   Folder with Spack settings files               linux: (empty)
-                                                                      osx: ``scripts/uberenv/spack_configs/darwin/``
-  -k                   Ignore SSL Errors                              **False**
-  --install            Fully install target, not just dependencies    **False**
-  --run_tests          Invoke tests during build and against install  **False**
-  --project-json       File for project specific settings             ``project.json``
- ==================== ============================================== ================================================
+ ======================= ============================================== ================================================
+  Option                  Description                                    Default
+ ======================= ============================================== ================================================
+  ``--prefix``            Destination directory                          ``uberenv_libs``
+  ``--spec``              Spack spec                                     linux: **%gcc**
+                                                                         osx: **%clang**
+  ``--spack-config-dir``  Folder with Spack settings files               linux: (empty)
+                                                                         osx: ``scripts/uberenv/spack_configs/darwin/``
+  ``-k``                  Ignore SSL Errors                              **False**
+  ``--install``           Fully install target, not just dependencies    **False**
+  ``--run_tests``         Invoke tests during build and against install  **False**
+  ``--project-json``      File for project specific settings             ``project.json``
+ ======================= ============================================== ================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
 from github and https hosted source tarballs. When enabled, ``uberenv.py`` clones Spack using:
@@ -149,22 +149,23 @@ destination directory. It then uses Spack to build and install the target packag
 ``spack/opt/spack/``. Finally, the target package generates a host-config file ``{hostname}.cmake``, which is
 copied to destination directory. This file specifies the compiler settings and paths to all of the dependencies.
 
+
 Project configuration
 ---------------------
 
 Part of the configuration can also be addressed using a json file. By default, it is named ``project.json`` and some settings can be overridden on command line:
 
- ==================== ======================= ================================================ =======================================
-  Setting              Option                  Description                                      Default
- ==================== ======================= ================================================ =======================================
-  package_name         --package-name          Spack package name                               **None**
-  package_version      **None**                Spack package version                            **None**
-  package_final_phase  --package-final-phase   Controls after which phase Spack should stop     **None**
-  package_source_dir   --package-source-dir    Controls the source directory Spack should use   **None**
-  spack_url            **None**                Url where to download Spack                      ``https://github.com/spack/spack.git``
-  spack_commit         **None**                Spack commit to checkout                         **None**
-  spack_activate       **None**                Spack packages to activate                       **None**
- ==================== ======================= ================================================ =======================================
+ ==================== ========================== ================================================ =======================================
+  Setting              Option                     Description                                      Default
+ ==================== ========================== ================================================ =======================================
+  package_name         ``--package-name``         Spack package name                               **None**
+  package_version      **None**                   Spack package version                            **None**
+  package_final_phase  ``--package-final-phase``  Controls after which phase Spack should stop     **None**
+  package_source_dir   ``--package-source-dir``   Controls the source directory Spack should use   **None**
+  spack_url            **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
+  spack_commit         **None**                   Spack commit to checkout                         **None**
+  spack_activate       **None**                   Spack packages to activate                       **None**
+ ==================== ========================== ================================================ =======================================
 
 
 Optimization
@@ -173,11 +174,11 @@ Optimization
 ``uberenv.py`` also features options to optimize the installation
 
  ==================== ============================================== ================================================
-  Option               Description                                     Default
+  Option               Description                                    Default
  ==================== ============================================== ================================================
-  --mirror             Location of a Spack mirror                     **None**
-  --create-mirror      Creates a Spack mirror at specified location   **None**
-  --upstream           Location of a Spack upstream                   **None**
+  ``--mirror``         Location of a Spack mirror                     **None**
+  ``--create-mirror``  Creates a Spack mirror at specified location   **None**
+  ``--upstream``       Location of a Spack upstream                   **None**
  ==================== ============================================== ================================================
 
 
