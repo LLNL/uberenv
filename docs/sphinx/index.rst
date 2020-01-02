@@ -1,45 +1,45 @@
 .. ############################################################################
 .. # Copyright (c) 2014-2018, Lawrence Livermore National Security, LLC.
-.. # 
+.. #
 .. # Produced at the Lawrence Livermore National Laboratory
-.. # 
+.. #
 .. # LLNL-CODE-666778
-.. # 
+.. #
 .. # All rights reserved.
-.. # 
-.. # This file is part of Conduit. 
-.. # 
+.. #
+.. # This file is part of Conduit.
+.. #
 .. # For details, see: http://software.llnl.gov/conduit/.
-.. # 
+.. #
 .. # Please also read conduit/LICENSE
-.. # 
-.. # Redistribution and use in source and binary forms, with or without 
+.. #
+.. # Redistribution and use in source and binary forms, with or without
 .. # modification, are permitted provided that the following conditions are met:
-.. # 
-.. # * Redistributions of source code must retain the above copyright notice, 
+.. #
+.. # * Redistributions of source code must retain the above copyright notice,
 .. #   this list of conditions and the disclaimer below.
-.. # 
+.. #
 .. # * Redistributions in binary form must reproduce the above copyright notice,
 .. #   this list of conditions and the disclaimer (as noted below) in the
 .. #   documentation and/or other materials provided with the distribution.
-.. # 
+.. #
 .. # * Neither the name of the LLNS/LLNL nor the names of its contributors may
 .. #   be used to endorse or promote products derived from this software without
 .. #   specific prior written permission.
-.. # 
+.. #
 .. # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 .. # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 .. # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 .. # ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY,
 .. # LLC, THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY
-.. # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+.. # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 .. # DAMAGES  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
 .. # OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-.. # HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+.. # HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 .. # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-.. # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+.. # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 .. # POSSIBILITY OF SUCH DAMAGE.
-.. # 
+.. #
 .. ############################################################################
 
 .. _building_with_uberenv:
@@ -50,7 +50,7 @@ Uberenv
 **Uberenv** automates using `Spack <ttp://www.spack.io>`_ to build and deploy software.
 
 Many projects leverage `Spack <ttp://www.spack.io>`_ to help build the software dependencies needed to develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate using Spack to build
-third-party dependencies for development and to deploy Spack packages. 
+third-party dependencies for development and to deploy Spack packages.
 
 Uberenv was released as part of Conduit (https://github.com/LLNL/conduit/). It is included in-source in several projects. The
 https://github.com/llnl/uberenv/ repo is used to hold the latest reference version of Uberenv.
@@ -70,7 +70,7 @@ https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 ``uberenv.py`` is developed by LLNL in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_, Axom, and `Conduit <https://github.com/llnl/conduit>`_  projects.
 
 
-Command Line Options 
+Command Line Options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Build configuration
@@ -88,7 +88,7 @@ Build configuration
                                                                       osx: ``scripts/uberenv/spack_configs/darwin/``
   -k                   Ignore SSL Errors                              **False**
   --install            Fully install target, not just dependencies    **False**
-  --run_tests          Invoke tests during build and against install  **False** 
+  --run_tests          Invoke tests during build and against install  **False**
   --project-json       File for project specific settings             ``project.json``
  ==================== ============================================== ================================================
 
@@ -107,7 +107,7 @@ Default invocation on Linux:
 .. code:: bash
 
     python scripts/uberenv/uberenv.py --prefix uberenv_libs \
-                                      --spec %gcc 
+                                      --spec %gcc
 
 Default invocation on OSX:
 
@@ -144,9 +144,9 @@ documentation for details.
     The bootstrapping process ignores ``~/.spack/compilers.yaml`` to avoid conflicts
     and surprises from a user's specific Spack settings on HPC platforms.
 
-When run, ``uberenv.py`` checkouts a specific version of Spack from github as ``spack`` in the 
-destination directory. It then uses Spack to build and install the target packages' dependencies into 
-``spack/opt/spack/``. Finally, the target package generates a host-config file ``{hostname}.cmake``, which is 
+When run, ``uberenv.py`` checkouts a specific version of Spack from github as ``spack`` in the
+destination directory. It then uses Spack to build and install the target packages' dependencies into
+``spack/opt/spack/``. Finally, the target package generates a host-config file ``{hostname}.cmake``, which is
 copied to destination directory. This file specifies the compiler settings and paths to all of the dependencies.
 
 Project configuration
@@ -181,7 +181,7 @@ Optimization
  ==================== ============================================== ================================================
 
 
-Project Settings 
+Project Settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A few notes on using ``uberenv.py`` in a new project:
