@@ -59,7 +59,7 @@ https://github.com/llnl/uberenv/ repo is used to hold the latest reference versi
 uberenv.py
 ~~~~~~~~~~~~~~~~~~~~~
 
-``uberenv.py`` is a single file python script that automates fetching spack, building and installing third party dependencies, and can optionally install packages as well.  To automate the full install process, ``uberenv.py`` uses a target Spack package along with extra settings such as Spack compiler and external third party package details for common HPC platforms.
+``uberenv.py`` is a single file python script that automates fetching Spack, building and installing third party dependencies, and can optionally install packages as well.  To automate the full install process, ``uberenv.py`` uses a target Spack package along with extra settings such as Spack compiler and external third party package details for common HPC platforms.
 
 ``uberenv.py`` is included directly in a project's source code repo in the folder: ``scripts/uberenv/``
 This folder is also used to store extra Spack and Uberenv configuration files unique to the target project. ``uberenv.py`` uses a ``project.json`` file to specify project details, including the target Spack package name and which Spack repo is used.  Conduit's source repo serves as an example for Uberenv and Spack configuration files, etc:
@@ -72,6 +72,9 @@ https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 
 Command Line Options 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Build configuration
+-------------------
 
 ``uberenv.py`` has a few options that allow you to control how dependencies are built:
 
@@ -86,16 +89,17 @@ Command Line Options
   -k                   Ignore SSL Errors                              **False**
   --install            Fully install target, not just dependencies    **False**
   --run_tests          Invoke tests during build and against install  **False** 
+  --project-json       File for project specific settings             ``project.json``
  ==================== ============================================== ================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
-from github and https hosted source tarballs. When enabled, ``uberenv.py`` clones spack using:
+from github and https hosted source tarballs. When enabled, ``uberenv.py`` clones Spack using:
 
 .. code:: bash
 
     git -c http.sslVerify=false clone https://github.com/llnl/spack.git
 
-And passes ``-k`` to any spack commands that may fetch via https.
+And passes ``-k`` to any Spack commands that may fetch via https.
 
 
 Default invocation on Linux:
@@ -145,6 +149,37 @@ destination directory. It then uses Spack to build and install the target packag
 ``spack/opt/spack/``. Finally, the target package generates a host-config file ``{hostname}.cmake``, which is 
 copied to destination directory. This file specifies the compiler settings and paths to all of the dependencies.
 
+Project configuration
+---------------------
+
+Part of the configuration can also be addressed using a json file. By default, it is named ``project.json`` and some settings can be overridden on command line:
+
+ ==================== ======================= ================================================ =======================================
+  Setting              Option                  Description                                      Default
+ ==================== ======================= ================================================ =======================================
+  package_name         --package-name          Spack package name                               **None**
+  package_version      **None**                Spack package version                            **None**
+  package_final_phase  --package-final-phase   Controls after which phase Spack should stop     **None**
+  package_source_dir   --package-source-dir    Controls the source directory Spack should use   **None**
+  spack_url            **None**                Url where to download Spack                      ``https://github.com/spack/spack.git``
+  spack_commit         **None**                Spack commit to checkout                         **None**
+  spack_activate       **None**                Spack packages to activate                       **None**
+ ==================== ======================= ================================================ =======================================
+
+
+Optimization
+------------
+
+``uberenv.py`` also features options to optimize the installation
+
+ ==================== ============================================== ================================================
+  Option               Description                                     Default
+ ==================== ============================================== ================================================
+  --mirror             Location of a Spack mirror                     **None**
+  --create-mirror      Creates a Spack mirror at specified location   **None**
+  --upstream           Location of a Spack upstream                   **None**
+ ==================== ============================================== ================================================
+
 
 Project Settings 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -153,6 +188,6 @@ A few notes on using ``uberenv.py`` in a new project:
 
 * For an example of how to craft a ``project.json`` file a target project, see: `Conduit's project.json file <https://github.com/LLNL/conduit/tree/master/scripts/uberenv/project.json>`_
 
-* ``uberenv.py`` hot copies ``packages`` to the cloned spack install, this allows you to easily version control any Spack package overrides necessary
+* ``uberenv.py`` hot copies ``packages`` to the cloned Spack install, this allows you to easily version control any Spack package overrides necessary
 
 
