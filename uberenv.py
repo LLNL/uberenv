@@ -264,9 +264,9 @@ class SpackEnv(UberEnv):
         self.pkg_version = self.project_opts["package_version"]
 
         if opts["package_final_phase"]:
-            self.pkg_stop_phase = opts["package_final_phase"]
+            self.pkg_final_phase = opts["package_final_phase"]
         else:
-            self.pkg_stop_phase = self.project_opts["package_final_phase"]
+            self.pkg_final_phase = self.project_opts["package_final_phase"]
 
         # Some additional setup for macos
         if is_darwin():
@@ -460,12 +460,12 @@ class SpackEnv(UberEnv):
         install_cmd += "dev-build -d {} ".format(self.pkg_src_dir)
         if not self.opts["install"]:
             try:
-                if self.pkg_stop_phase:
-                    install_cmd += "-u {} ".format(self.pkg_stop_phase)
+                if self.pkg_final_phase:
+                    install_cmd += "-u {} ".format(self.pkg_final_phase)
                 else:
-                    raise ValueError("package_stop_phase cannot be empty.")
+                    raise ValueError("package_final_phase cannot be empty.")
             except (KeyError, ValueError) as e:
-                print("ERROR: hostconfig_phase must be defined in project.json")
+                print("ERROR: package_final_phase must be defined in project.json")
                 raise
         if self.opts["run_tests"]:
             install_cmd += "--test=root "
