@@ -90,34 +90,63 @@ def parse_args():
                       action="store_true",
                       dest="install",
                       default=False,
-                      help="Install `package_name` instead of `uberenv_package_name`.")
+                      help="Install `package_name`, not just its dependencies.")
+
     # where to install
     parser.add_option("--prefix",
                       dest="prefix",
                       default="uberenv_libs",
                       help="destination directory")
+
     # what compiler to use
     parser.add_option("--spec",
                       dest="spec",
                       default=None,
                       help="spack compiler spec")
+
     # optional location of spack mirror
     parser.add_option("--mirror",
                       dest="mirror",
                       default=None,
                       help="spack mirror directory")
+
     # flag to create mirror
     parser.add_option("--create-mirror",
                       action="store_true",
                       dest="create_mirror",
                       default=False,
                       help="Create spack mirror")
+
+    # optional location of spack upstream
+    parser.add_option("--upstream",
+                      dest="upstream",
+                      default=None,
+                      help="add an external spack instance as upstream")
+
     # this option allows a user to explicitly to select a
     # group of spack settings files (compilers.yaml , packages.yaml)
     parser.add_option("--spack-config-dir",
                       dest="spack_config_dir",
                       default=None,
                       help="dir with spack settings files (compilers.yaml, packages.yaml, etc)")
+
+    # overrides package_name
+    parser.add_option("--package-name",
+                      dest="package_name",
+                      default=None,
+                      help="override the default package name")
+
+    # controls after which package phase spack should stop
+    parser.add_option("--package-final-phase",
+                      dest="package_final_phase",
+                      default=None,
+                      help="override the default phase after which spack should stop")
+
+    # controls source_dir spack should use to build the package
+    parser.add_option("--package-source-dir",
+                      dest="package_source_dir",
+                      default=None,
+                      help="override the default source dir spack should use")
 
     # a file that holds settings for a specific project
     # using uberenv.py
@@ -207,15 +236,27 @@ class UberEnv():
         print("[uberenv project settings: {}]".format(str(self.project_opts)))
         print("[uberenv options: {}]".format(str(self.opts)))
 
-        # setup main package name
-        if opts["install"]:
-            self.pkg_name = self.project_opts["package_name"]
-        else:
-            self.pkg_name = self.project_opts["uberenv_package_name"]
-
     def setup_paths_and_dirs(self):
-        self.uberenv_path = os.path.split(os.path.abspath(__file__))[0]
+        self.uberenv_path = os.path.dirname(os.path.realpath(__file__))
 
+    def set_from_args_or_json(self,setting):
+        try:
+            setting_value = self.project_opts[setting]
+        except (KeyError):
+            print("ERROR: {} must at least be defined in project.json".format(setting))
+            raise
+        else:
+            if self.opts[setting]:
+                setting_value = self.opts[setting]
+        return setting_value
+
+    def set_from_json(self,setting):
+        try:
+            setting_value = self.project_opts[setting]
+        except (KeyError):
+            print("ERROR: {} must at least be defined in project.json".format(setting))
+            raise
+        return setting_value
 
     def detect_platform(self):
         # find supported sets of compilers.yaml, packages,yaml
@@ -234,6 +275,11 @@ class SpackEnv(UberEnv):
     def __init__(self, opts, extra_opts):
         UberEnv.__init__(self,opts,extra_opts)
 
+        self.pkg_name = self.set_from_args_or_json("package_name")
+        self.pkg_version = self.set_from_json("package_version")
+        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
+        self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
+
         # Some additional setup for macos
         if is_darwin():
             if opts["macos_sdk_env_setup"]:
@@ -248,7 +294,13 @@ class SpackEnv(UberEnv):
                 opts["spec"] = "%clang"
             else:
                 opts["spec"] = "%gcc"
-        print("[spack spec: {}]".format(opts["spec"]))
+            self.opts["spec"] = "@{}{}".format(self.pkg_version,opts["spec"])
+        elif not opts["spec"].startswith("@"):
+            self.opts["spec"] = "@{}{}".format(self.pkg_version,opts["spec"])
+        else:
+            self.opts["spec"] = "{}".format(opts["spec"])
+
+        print("[spack spec: {}]".format(self.opts["spec"]))
 
     def setup_paths_and_dirs(self):
         # get the current working path, and the glob used to identify the
@@ -272,14 +324,18 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{}' already exists]".format(self.dest_spack))
 
+        self.pkg_src_dir = os.path.join(self.uberenv_path,self.pkg_src_dir)
+        if not os.path.isdir(self.pkg_src_dir):
+            print("[ERROR: package_source_dir '{}' does not exist]".format(self.pkg_src_dir))
+            sys.exit(-1)
+
 
     def find_spack_pkg_path(self,pkg_name):
         r,rout = sexe("spack/bin/spack find -p " + pkg_name,ret_output = True)
         for l in rout.split("\n"):
-            lstrip = l.strip()
-            if not lstrip == "" and \
-               not lstrip.startswith("==>") and  \
-               not lstrip.startswith("--"):
+            # TODO: at least print a warning when several choices exist. This will
+            # pick the first in the list.
+            if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: failed to find package named '{}']".format(pkg_name))
         sys.exit(-1)
@@ -298,7 +354,7 @@ class SpackEnv(UberEnv):
 
             os.chdir(self.dest_dir)
 
-            clone_opts = ("-c http.sslVerify=false " 
+            clone_opts = ("-c http.sslVerify=false "
                           if self.opts["ignore_ssl_errors"] else "")
 
             spack_branch = self.project_opts.get("spack_branch", "develop")
@@ -331,10 +387,10 @@ class SpackEnv(UberEnv):
 
 
     def disable_spack_config_scopes(self,spack_dir):
-        # disables all config scopes except "default", which we will
+        # disables all config scopes except "defaults", which we will
         # force our settings into
         spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
-        print("[disabling config scope (except default) in: {}]".format(spack_lib_config))
+        print("[disabling config scope (except defaults) in: {}]".format(spack_lib_config))
         cfg_script = open(spack_lib_config).read()
         for cfg_scope_stmt in ["('system', os.path.join(spack.paths.system_etc_path, 'spack')),",
                             "('site', os.path.join(spack.paths.etc_path, 'spack')),",
@@ -344,17 +400,16 @@ class SpackEnv(UberEnv):
         open(spack_lib_config,"w").write(cfg_script)
 
 
-
     def patch(self):
 
         cfg_dir = self.config_dir()
         spack_dir = self.dest_spack
 
-        # force spack to use only default config scope
+        # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
-        # copy in default config.yaml
+        # copy in "defaults" config.yaml
         config_yaml = os.path.abspath(pjoin(self.uberenv_path,"spack_configs","config.yaml"))
         sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir ), echo=True)
 
@@ -409,7 +464,9 @@ class SpackEnv(UberEnv):
         install_cmd = "spack/bin/spack "
         if self.opts["ignore_ssl_errors"]:
             install_cmd += "-k "
-        install_cmd += "install "
+        install_cmd += "dev-build -d {} ".format(self.pkg_src_dir)
+        if not self.opts["install"]:
+            install_cmd += "-u {} ".format(self.pkg_final_phase)
         if self.opts["run_tests"]:
             install_cmd += "--test=root "
         install_cmd += self.pkg_name + self.opts["spec"]
@@ -437,7 +494,7 @@ class SpackEnv(UberEnv):
         if self.opts["install"] and "+python" in full_spec:
             activate_cmd = "spack/bin/spack activate " + self.pkg_name
             sexe(activate_cmd, echo=True)
-        # if user opt'd for an install, we want to symlink the final ascent
+        # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
         if self.opts["install"]:
             pkg_path = self.find_spack_pkg_path(self.pkg_name)
@@ -483,9 +540,9 @@ class SpackEnv(UberEnv):
                                                                     self.pkg_name)
         return sexe(mirror_cmd, echo=True)
 
-    def find_spack_mirror(self, spack_dir, mirror_name):
+    def find_spack_mirror(self, mirror_name):
         """
-        Returns the path of a site scoped spack mirror with the
+        Returns the path of a defaults scoped spack mirror with the
         given name, or None if no mirror exists.
         """
         rv, res = sexe("spack/bin/spack mirror list", ret_output=True)
@@ -501,10 +558,9 @@ class SpackEnv(UberEnv):
         """
         Configures spack to use mirror at a given path.
         """
-        spack_dir = self.dest_spack
         mirror_name = self.pkg_name
         mirror_path = self.get_mirror_path()
-        existing_mirror_path = self.find_spack_mirror(spack_dir, mirror_name)
+        existing_mirror_path = self.find_spack_mirror(mirror_name)
 
         if existing_mirror_path and mirror_path != existing_mirror_path:
             # Existing mirror has different URL, error out
@@ -514,14 +570,56 @@ class SpackEnv(UberEnv):
             # Note: In this case, spack says it removes the mirror, but we still
             # get errors when we try to add a new one, sounds like a bug
             #
-            sexe("spack/bin/spack mirror remove --scope=site {} ".format(mirror_name),
+            sexe("spack/bin/spack mirror remove --scope=defaults {} ".format(mirror_name),
                 echo=True)
             existing_mirror_path = None
         if not existing_mirror_path:
             # Add if not already there
-            sexe("spack/bin/spack mirror add --scope=site {} {}".format(
+            sexe("spack/bin/spack mirror add --scope=defaults {} {}".format(
                     mirror_name, mirror_path), echo=True)
             print("[using mirror {}]".format(mirror_path))
+
+    def find_spack_upstream(self, upstream_name):
+        """
+        Returns the path of a defaults scoped spack upstream with the
+        given name, or None if no upstream exists.
+        """
+        upstream_path = None
+
+        rv, res = sexe('spack/bin/spack config get upstreams', ret_output=True)
+        if (not res) and ("upstreams:" in res):
+            res = res.replace(' ', '')
+            res = res.replace('install_tree:', '')
+            res = res.replace(':', '')
+            res = res.splitlines()
+            res = res[1:]
+            upstreams = dict(zip(res[::2], res[1::2]))
+
+            for name in upstreams.keys():
+                if name == upstream_name:
+                    upstream_path = upstreams[name]
+
+        return upstream_path
+
+    def use_spack_upstream(self):
+        """
+        Configures spack to use upstream at a given path.
+        """
+        upstream_path = self.opts["upstream"]
+        if not upstream_path:
+            print("[--create-upstream requires a upstream directory]")
+            sys.exit(-1)
+        upstream_path = os.path.abspath(upstream_path)
+        upstream_name = self.pkg_name
+        existing_upstream_path = self.find_spack_upstream(upstream_name)
+        if (not existing_upstream_path) or (upstream_path != os.path.abspath(existing_upstream_path)):
+            # Existing upstream has different URL, error out
+            print("[removing existing spack upstream configuration file]")
+            sexe("rm spack/etc/spack/defaults/upstreams.yaml")
+            with open('spack/etc/spack/defaults/upstreams.yaml','w+') as upstreams_cfg_file:
+                upstreams_cfg_file.write("upstreams:\n")
+                upstreams_cfg_file.write("  {}:\n".format(upstream_name))
+                upstreams_cfg_file.write("    install_tree: {}\n".format(upstream_path))
 
 
 def find_osx_sdks():
@@ -611,6 +709,10 @@ def main():
     else:
         if not opts["mirror"] is None:
             env.use_mirror()
+
+        if not opts["upstream"] is None:
+            env.use_spack_upstream()
+
         res = env.install()
 
         return res
