@@ -129,7 +129,7 @@ def parse_args():
     parser.add_option("--spack-config-dir",
                       dest="spack_config_dir",
                       default=None,
-                      help="dir with spack settings files (compilers.yaml, packages.yaml, etc)")
+                      help="dir with spack settings files (spack.yaml, config.yaml, compilers.yaml, packages.yaml)")
 
     # overrides package_name
     parser.add_option("--package-name",
@@ -400,6 +400,7 @@ class SpackEnv(UberEnv):
             sexe("git stash", echo=True)
             sexe("git pull", echo=True)
 
+
     def config_dir(self):
         """ path to compilers.yaml, which we will use for spack's compiler setup"""
         spack_config_dir = self.opts["spack_config_dir"]
@@ -410,56 +411,32 @@ class SpackEnv(UberEnv):
         return spack_config_dir
 
 
-    def disable_spack_config_scopes(self,spack_dir):
-        # disables all config scopes except "defaults", which we will
-        # force our settings into
-        spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
-        print("[disabling config scope (except defaults) in: {}]".format(spack_lib_config))
-        cfg_script = open(spack_lib_config).read()
-        for cfg_scope_stmt in ["('system', os.path.join(spack.paths.system_etc_path, 'spack')),",
-                            "('site', os.path.join(spack.paths.etc_path, 'spack')),",
-                            "('user', spack.paths.user_config_path)"]:
-            cfg_script = cfg_script.replace(cfg_scope_stmt,
-                                            "#DISABLED BY UBERENV: " + cfg_scope_stmt)
-        open(spack_lib_config,"w").write(cfg_script)
+    def load(self):
+        # load spack environment, potentially overriding spack defaults
+        # uberenv used to handle defaults overriding, now spack environment can
+        # be used to do so, but it relies on each project to make sure their
+        # environment is well designed.
 
+        spack_cfg_dir = self.config_dir()
+        spack_cfg_file = os.path.join(spack_cfg_dir,"spack.yaml")
 
-    def patch(self):
+        if not os.path.isfile(spack_cfg_file):
+            print("[ERROR: {} not found ]".format(spack_cfg_file))
+            sys.exit(-1)
 
-        cfg_dir = self.config_dir()
-        spack_dir = self.dest_spack
+        spack_env_name = os.path.basename(spack_cfg_dir)
+        spack_exe = os.path.join(self.dest_spack,"bin","spack")
 
-        # force spack to use only "defaults" config scope
-        self.disable_spack_config_scopes(spack_dir)
-        spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
+        rv, res = sexe("{} env list | grep \"^[ ]*{}$\"".format(spack_exe,spack_env_name), ret_output=True, echo=True)
 
-        # copy in "defaults" config.yaml
-        config_yaml = os.path.abspath(pjoin(self.uberenv_path,"spack_configs","config.yaml"))
-        sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir ), echo=True)
+        if rv == 1:
+            sexe("{} -d env create {} {}".format(spack_exe,spack_env_name,spack_cfg_file), echo=True)
 
-        # copy in other settings per platform
-        if not cfg_dir is None:
-            print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
-
-            config_yaml    = pjoin(cfg_dir,"config.yaml")
-            compilers_yaml = pjoin(cfg_dir,"compilers.yaml")
-            packages_yaml  = pjoin(cfg_dir,"packages.yaml")
-
-            if os.path.isfile(config_yaml):
-                sexe("cp {} {}/".format(config_yaml , spack_etc_defaults_dir ), echo=True)
-
-            if os.path.isfile(compilers_yaml):
-                sexe("cp {} {}/".format(compilers_yaml, spack_etc_defaults_dir ), echo=True)
-
-            if os.path.isfile(packages_yaml):
-                sexe("cp {} {}/".format(packages_yaml, spack_etc_defaults_dir ), echo=True)
-        else:
-            # let spack try to auto find compilers
-            sexe("spack/bin/spack compiler find", echo=True)
+        sexe("{} -d env activate --sh {}".format(spack_exe,spack_env_name), echo=True)
 
         # hot-copy our packages into spack
         if self.pkgs:
-            dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
+            dest_spack_pkgs = pjoin(self.dest_spack,"var","spack","repos","builtin","packages")
             print("[copying patched packages from {0}]".format(self.pkgs))
             sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
 
@@ -763,8 +740,8 @@ def main():
 
     os.chdir(env.dest_dir)
 
-    # Patch the package manager, as necessary
-    env.patch()
+    # Load the package manager environment
+    env.load()
 
     # Clean the build
     env.clean_build()
