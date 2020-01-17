@@ -418,21 +418,10 @@ class SpackEnv(UberEnv):
         # environment is well designed.
 
         spack_cfg_dir = self.config_dir()
-        spack_cfg_file = os.path.join(spack_cfg_dir,"spack.yaml")
 
-        if not os.path.isfile(spack_cfg_file):
-            print("[ERROR: {} not found ]".format(spack_cfg_file))
-            sys.exit(-1)
-
-        spack_env_name = os.path.basename(spack_cfg_dir)
         spack_exe = os.path.join(self.dest_spack,"bin","spack")
 
-        rv, res = sexe("{} env list | grep \"^[ ]*{}$\"".format(spack_exe,spack_env_name), ret_output=True, echo=True)
-
-        if rv == 1:
-            sexe("{} -d env create {} {}".format(spack_exe,spack_env_name,spack_cfg_file), echo=True)
-
-        sexe("{} -d env activate --sh {}".format(spack_exe,spack_env_name), echo=True)
+        sexe("{} -d env activate --sh {}".format(spack_exe,spack_cfg_dir), echo=True)
 
         # hot-copy our packages into spack
         if self.pkgs:
