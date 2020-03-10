@@ -341,7 +341,7 @@ class SpackEnv(UberEnv):
         print("[ERROR: failed to find package named '{}']".format(pkg_name))
         sys.exit(-1)
 
-    def find_spack_pkg_path(self,pkg_name,spec):
+    def find_spack_pkg_path(self, pkg_name, spec = ""):
         r,rout = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
         for l in rout.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
@@ -522,12 +522,12 @@ class SpackEnv(UberEnv):
         # note: this assumes package extends python when +python
         # this may fail general cases
         if self.opts["install"] and "+python" in full_spec:
-            activate_cmd = "spack/bin/spack activate " + self.pkg_name
+            activate_cmd = "spack/bin/spack activate " + self.pkg_name + self.opts["spec"]
             sexe(activate_cmd, echo=True)
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
         if self.opts["install"] or "use_install" in self.opts:
-            pkg_path = self.find_spack_pkg_path(self.pkg_name)
+            pkg_path = self.find_spack_pkg_path(self.pkg_name,self.opts["spec"])
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {}]".format(self.pkg_name))
                 return -1
