@@ -47,7 +47,8 @@
 """
  file: uberenv.py
 
- description: automates using spack to install a project.
+ description: automates using a package manager to install a project.
+ Uses spack on Unix-based systems and Vcpkg on Windows-based systems.
 
 """
 
@@ -244,6 +245,7 @@ class UberEnv():
 
         # setup main package name
         self.pkg_name = self.project_opts["package_name"]
+
     def setup_paths_and_dirs(self):
         self.uberenv_path = os.path.split(os.path.abspath(__file__))[0]
 
@@ -824,16 +826,16 @@ def main():
     env.show_info()
 
 
-    ##########################################################
-    # we now have an instance of spack configured how we
-    # need it to build our tpls at this point there are two
-    # possible next steps:
+    ###########################################################
+    # we now have an instance of our package manager configured
+    # how we need it to build our tpls at this point there are
+    # two possible next steps:
     #
     # *) create a mirror of the packages
     #   OR
     # *) build
     #
-    ##########################################################
+    ###########################################################
     if opts["create_mirror"]:
         return env.create_mirror()
     else:

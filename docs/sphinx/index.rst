@@ -1,5 +1,5 @@
 .. ############################################################################
-.. # Copyright (c) 2014-2018, Lawrence Livermore National Security, LLC.
+.. # Copyright (c) 2014-2020, Lawrence Livermore National Security, LLC.
 .. #
 .. # Produced at the Lawrence Livermore National Laboratory
 .. #
@@ -47,10 +47,12 @@
 Uberenv
 ~~~~~~~~~~~~~~~
 
-**Uberenv** automates using `Spack <ttp://www.spack.io>`_ to build and deploy software.
+**Uberenv** automates using a package manager to build and deploy software.
+It uses `Spack <http://www.spack.io>`_ on Unix-based systems (e.g. Linux and macOS)
+and `Vcpkg <https://github.com/microsoft/vcpkg>`_ on Windows systems.
 
-Many projects leverage `Spack <ttp://www.spack.io>`_ to help build the software dependencies needed to develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate using Spack to build
-third-party dependencies for development and to deploy Spack packages.
+Many projects leverage package managers, like Spack and Vcpkg to help build the software dependencies needed to develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate usage of a package manager to build
+third-party dependencies for development and deployment.
 
 Uberenv was released as part of Conduit (https://github.com/LLNL/conduit/). It is included in-source in several projects. The
 https://github.com/llnl/uberenv/ repo is used to hold the latest reference version of Uberenv.
@@ -59,15 +61,17 @@ https://github.com/llnl/uberenv/ repo is used to hold the latest reference versi
 uberenv.py
 ~~~~~~~~~~~~~~~~~~~~~
 
-``uberenv.py`` is a single file python script that automates fetching Spack, building and installing third party dependencies, and can optionally install packages as well.  To automate the full install process, ``uberenv.py`` uses a target Spack package along with extra settings such as Spack compiler and external third party package details for common HPC platforms.
+``uberenv.py`` is a single file python script that automates fetching Spack or Vcpkg, building and installing third party dependencies, and can optionally install packages as well.  To automate the full install process, ``uberenv.py`` uses a target Spack or Vcpkg package along with extra settings such as compilers and external third party package details for common HPC platforms.
 
-``uberenv.py`` is included directly in a project's source code repo in the folder: ``scripts/uberenv/``
-This folder is also used to store extra Spack and Uberenv configuration files unique to the target project. ``uberenv.py`` uses a ``project.json`` file to specify project details, including the target Spack package name and which Spack repo is used.  Conduit's source repo serves as an example for Uberenv and Spack configuration files, etc:
+``uberenv.py`` is typically included directly in a project's source code repo in the folder: ``scripts/uberenv/``
+This folder is also used to store extra configuration files unique to the target project. ``uberenv.py`` uses a ``project.json`` file to specify project details, including the target package name and the base branch or commit in the package manager.  
+
+Conduit's source repo serves as an example for Uberenv and Spack configuration files, etc:
 
 https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 
 
-``uberenv.py`` is developed by LLNL in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_, Axom, and `Conduit <https://github.com/llnl/conduit>`_  projects.
+``uberenv.py`` is developed by LLNL in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_, `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects.
 
 
 Command Line Options
@@ -90,6 +94,7 @@ Build configuration
   ``--install``           Fully install target, not just dependencies    **False**
   ``--run_tests``         Invoke tests during build and against install  **False**
   ``--project-json``      File for project specific settings             ``project.json``
+  ``--triplet``           (vcpkg) Target architecture and linkage        ``x86-Windows``
  ======================= ============================================== ================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
@@ -117,6 +122,14 @@ Default invocation on OSX:
                                       --spec %clang \
                                       --spack-config-dir scripts/uberenv/spack_configs/darwin/
 
+Default invocation on Windows:
+
+.. code:: bash
+
+    python scripts/uberenv/uberenv.py --prefix uberenv_libs \
+                                      --triplet x86-windows
+
+See `Vcpkg user docs <https://vcpkg.readthedocs.io/en/latest/users/triplets/>`_ for more information about triplets.
 
 Use the ``--install`` option to install the target package (not just its development dependencies):
 
@@ -162,10 +175,16 @@ Part of the configuration can also be addressed using a json file. By default, i
   package_version      **None**                   Spack package version                            **None**
   package_final_phase  ``--package-final-phase``  Controls after which phase Spack should stop     **None**
   package_source_dir   ``--package-source-dir``   Controls the source directory Spack should use   **None**
-  spack_url            **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
+  spack_url            **None**                   Download url for Spack                          ``https://github.com/spack/spack.git``
+  spack_branch         **None**                   Spack branch to checkout                         ``develop``
   spack_commit         **None**                   Spack commit to checkout                         **None**
   spack_activate       **None**                   Spack packages to activate                       **None**
+  vcpkg_url            **None**                   Download url for Vcpkg                          ``https://github.com/microsoft/vcpkg``
+  vcpkg_branch         **None**                   Vcpkg branch to checkout                         ``master``
+  vcpkg_commit         **None**                   Vcpkg commit to checkout                         **None**
  ==================== ========================== ================================================ =======================================
+
+If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit`` and ``vcpkg_branch``.
 
 
 Optimization
@@ -180,6 +199,9 @@ Optimization
   ``--create-mirror``  Creates a Spack mirror at specified location   **None**
   ``--upstream``       Location of a Spack upstream                   **None**
  ==================== ============================================== ================================================
+
+.. note::
+    These options are only currently available for spack.
 
 
 Project Settings
