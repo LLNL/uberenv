@@ -72,7 +72,7 @@ from os.path import abspath as pabs
 def sexe(cmd,ret_output=False,echo=False):
     """ Helper for executing shell commands. """
     if echo:
-        print("[exe: {}]".format(cmd))
+        print("[exe: {0}]".format(cmd))
     if ret_output:
         p = subprocess.Popen(cmd,
                              shell=True,
@@ -214,7 +214,7 @@ def parse_args():
     if not opts["spack_config_dir"] is None:
         opts["spack_config_dir"] = pabs(opts["spack_config_dir"])
         if not os.path.isdir(opts["spack_config_dir"]):
-            print("[ERROR: invalid spack config dir: {} ]".format(opts["spack_config_dir"]))
+            print("[ERROR: invalid spack config dir: {0} ]".format(opts["spack_config_dir"]))
             sys.exit(-1)
     # if rel path is given for the mirror, we need to evaluate here -- before any
     # chdirs to avoid confusion related to what it is relative to.
@@ -294,7 +294,7 @@ class UberEnv():
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            print("ERROR: {} must at least be defined in project.json".format(setting))
+            print("ERROR: {0} must at least be defined in project.json".format(setting))
             raise
         else:
             if self.opts[setting]:
@@ -305,7 +305,7 @@ class UberEnv():
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            print("ERROR: {} must at least be defined in project.json".format(setting))
+            print("ERROR: {0} must at least be defined in project.json".format(setting))
             raise
         return setting_value
 
@@ -350,13 +350,13 @@ class SpackEnv(UberEnv):
                 opts["spec"] = "%clang"
             else:
                 opts["spec"] = "%gcc"
-            self.opts["spec"] = "@{}{}".format(self.pkg_version,opts["spec"])
+            self.opts["spec"] = "@{0}{1}".format(self.pkg_version,opts["spec"])
         elif not opts["spec"].startswith("@"):
-            self.opts["spec"] = "@{}{}".format(self.pkg_version,opts["spec"])
+            self.opts["spec"] = "@{0}{1}".format(self.pkg_version,opts["spec"])
         else:
-            self.opts["spec"] = "{}".format(opts["spec"])
+            self.opts["spec"] = "{0}".format(opts["spec"])
 
-        print("[spack spec: {}]".format(self.opts["spec"]))
+        print("[spack spec: {0}]".format(self.opts["spec"]))
 
 
     def append_path_to_packages_paths(self, path, errorOnNonexistant=True):
@@ -421,23 +421,23 @@ class SpackEnv(UberEnv):
         if not os.path.isdir(self.dest_dir):
             os.mkdir(self.dest_dir)
         else:
-            print("[info: destination '{}' already exists]".format(self.dest_dir))
+            print("[info: destination '{0}' already exists]".format(self.dest_dir))
 
         if os.path.isdir(self.dest_spack):
-            print("[info: destination '{}' already exists]".format(self.dest_spack))
+            print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
         self.pkg_src_dir = os.path.join(self.uberenv_path,self.pkg_src_dir)
         if not os.path.isdir(self.pkg_src_dir):
-            print("[ERROR: package_source_dir '{}' does not exist]".format(self.pkg_src_dir))
+            print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
             sys.exit(-1)
 
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
-        res, out = sexe("spack/bin/spack find -p /{}".format(pkg_hash), ret_output = True)
+        res, out = sexe("spack/bin/spack find -p /{0}".format(pkg_hash), ret_output = True)
         for l in out.split("\n"):
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package named '{}']".format(pkg_name))
+        print("[ERROR: failed to find package named '{0}']".format(pkg_name))
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
@@ -447,7 +447,7 @@ class SpackEnv(UberEnv):
             # pick the first in the list.
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package named '{}']".format(pkg_name))
+        print("[ERROR: failed to find package named '{0}']".format(pkg_name))
         sys.exit(-1)
 
     # Extract the first line of the full spec
@@ -480,7 +480,7 @@ class SpackEnv(UberEnv):
             sha1 = self.project_opts["spack_commit"]
             res, current_sha1 = sexe("git log -1 --pretty=%H", ret_output=True)
             if sha1 != current_sha1:
-                print("[info: using spack commit {}]".format(sha1))
+                print("[info: using spack commit {0}]".format(sha1))
                 sexe("git stash", echo=True)
                 sexe("git fetch --depth=1 origin {0}".format(sha1),echo=True)
                 res = sexe("git checkout {0}".format(sha1),echo=True)
@@ -503,7 +503,7 @@ class SpackEnv(UberEnv):
         # disables all config scopes except "defaults", which we will
         # force our settings into
         spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
-        print("[disabling config scope (except defaults) in: {}]".format(spack_lib_config))
+        print("[disabling config scope (except defaults) in: {0}]".format(spack_lib_config))
         cfg_script = open(spack_lib_config).read()
         for cfg_scope_stmt in ["('system', os.path.join(spack.paths.system_etc_path, 'spack')),",
                             "('site', os.path.join(spack.paths.etc_path, 'spack')),",
@@ -524,9 +524,9 @@ class SpackEnv(UberEnv):
 
         # copy in "defaults" config.yaml
         config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
-        sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
+        sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
         mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
-        sexe("cp {} {}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
+        sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
 
         # copy in other settings per platform
         if not cfg_dir is None:
@@ -538,16 +538,16 @@ class SpackEnv(UberEnv):
             packages_yaml  = pjoin(cfg_dir,"packages.yaml")
 
             if os.path.isfile(config_yaml):
-                sexe("cp {} {}/".format(config_yaml , spack_etc_defaults_dir ), echo=True)
+                sexe("cp {0} {1}/".format(config_yaml , spack_etc_defaults_dir ), echo=True)
 
             if os.path.isfile(mirrors_yaml):
-                sexe("cp {} {}/".format(mirrors_yaml , spack_etc_defaults_dir ), echo=True)
+                sexe("cp {0} {1}/".format(mirrors_yaml , spack_etc_defaults_dir ), echo=True)
 
             if os.path.isfile(compilers_yaml):
-                sexe("cp {} {}/".format(compilers_yaml, spack_etc_defaults_dir ), echo=True)
+                sexe("cp {0} {1}/".format(compilers_yaml, spack_etc_defaults_dir ), echo=True)
 
             if os.path.isfile(packages_yaml):
-                sexe("cp {} {}/".format(packages_yaml, spack_etc_defaults_dir ), echo=True)
+                sexe("cp {0} {1}/".format(packages_yaml, spack_etc_defaults_dir ), echo=True)
         else:
             # let spack try to auto find compilers
             sexe("spack/bin/spack compiler find", echo=True)
@@ -600,7 +600,7 @@ class SpackEnv(UberEnv):
                     # testing that the path exists is mandatory until Spack team fixes
                     # https://github.com/spack/spack/issues/16329
                     if os.path.isdir(install_path):
-                        print("[Warning: {} {} has already been installed in {}]".format(self.pkg_name, self.opts["spec"],install_path))
+                        print("[Warning: {0} {1} has already been installed in {2}]".format(self.pkg_name, self.opts["spec"],install_path))
                         print("[Warning: Uberenv will proceed using this directory]".format(self.pkg_name))
                         self.use_install = True
 
@@ -615,9 +615,9 @@ class SpackEnv(UberEnv):
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             if not self.opts["install"]:
-                install_cmd += "dev-build --quiet -d {} ".format(self.pkg_src_dir)
+                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
-                    install_cmd += "-u {} ".format(self.pkg_final_phase)
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
             else:
                 install_cmd += "install "
                 if self.opts["run_tests"]:
@@ -654,7 +654,7 @@ class SpackEnv(UberEnv):
         if self.opts["install"] or self.use_install:
             pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
             if self.pkg_name != pkg_path["name"]:
-                print("[ERROR: Could not find install of {}]".format(self.pkg_name))
+                print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
                 return -1
             else:
                 # Symlink host-config file
@@ -665,24 +665,24 @@ class SpackEnv(UberEnv):
                     if os.path.islink(hc_fname):
                         os.unlink(hc_fname)
                     elif os.path.isfile(hc_fname):
-                        sexe("rm -f {}".format(hc_fname))
-                    print("[symlinking host config file to {}]".format(pjoin(self.dest_dir,hc_fname)))
+                        sexe("rm -f {0}".format(hc_fname))
+                    print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
                     os.symlink(hc_path,hc_fname)
 
                 # Symlink install directory
                 if self.opts["install"]:
-                    pkg_lnk_dir = "{}-install".format(self.pkg_name)
+                    pkg_lnk_dir = "{0}-install".format(self.pkg_name)
                     if os.path.islink(pkg_lnk_dir):
                         os.unlink(pkg_lnk_dir)
                     print("")
-                    print("[symlinking install to {}]".format(pjoin(self.dest_dir,pkg_lnk_dir)))
+                    print("[symlinking install to {0}]".format(pjoin(self.dest_dir,pkg_lnk_dir)))
                     os.symlink(pkg_path["path"],pabs(pkg_lnk_dir))
                     print("")
                     print("[install complete!]")
         # otherwise we are in the "only dependencies" case and the host-config
         # file has to be copied from the do-be-deleted spack-build dir.
         else:
-            pattern = "*{}.cmake".format(self.pkg_name)
+            pattern = "*{0}.cmake".format(self.pkg_name)
             build_dir = pjoin(self.pkg_src_dir,"spack-build")
             hc_glob = glob.glob(pjoin(build_dir,pattern))
             if len(hc_glob) > 0:
@@ -690,10 +690,10 @@ class SpackEnv(UberEnv):
                 hc_fname = os.path.split(hc_path)[1]
                 if os.path.islink(hc_fname):
                     os.unlink(hc_fname)
-                print("[copying host config file to {}]".format(pjoin(self.dest_dir,hc_fname)))
-                sexe("cp {} {}".format(hc_path,hc_fname))
-                print("[removing project build directory {}]".format(pjoin(build_dir)))
-                sexe("rm -rf {}".format(build_dir))
+                print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                sexe("cp {0} {1}".format(hc_path,hc_fname))
+                print("[removing project build directory {0}]".format(pjoin(build_dir)))
+                sexe("rm -rf {0}".format(build_dir))
 
     def get_mirror_path(self):
         mirror_path = self.opts["mirror"]
@@ -712,7 +712,7 @@ class SpackEnv(UberEnv):
         mirror_cmd = "spack/bin/spack "
         if self.opts["ignore_ssl_errors"]:
             mirror_cmd += "-k "
-        mirror_cmd += "mirror create -d {} --dependencies {}{}".format(mirror_path,
+        mirror_cmd += "mirror create -d {0} --dependencies {1}{2}".format(mirror_path,
                                                                     self.pkg_name,
                                                                     self.opts["spec"])
         return sexe(mirror_cmd, echo=True)
@@ -741,20 +741,20 @@ class SpackEnv(UberEnv):
 
         if existing_mirror_path and mirror_path != existing_mirror_path:
             # Existing mirror has different URL, error out
-            print("[removing existing spack mirror `{}` @ {}]".format(mirror_name,
+            print("[removing existing spack mirror `{0}` @ {1}]".format(mirror_name,
                                                                     existing_mirror_path))
             #
             # Note: In this case, spack says it removes the mirror, but we still
             # get errors when we try to add a new one, sounds like a bug
             #
-            sexe("spack/bin/spack mirror remove --scope=defaults {} ".format(mirror_name),
+            sexe("spack/bin/spack mirror remove --scope=defaults {0} ".format(mirror_name),
                 echo=True)
             existing_mirror_path = None
         if not existing_mirror_path:
             # Add if not already there
-            sexe("spack/bin/spack mirror add --scope=defaults {} {}".format(
+            sexe("spack/bin/spack mirror add --scope=defaults {0} {1}".format(
                     mirror_name, mirror_path), echo=True)
-            print("[using mirror {}]".format(mirror_path))
+            print("[using mirror {0}]".format(mirror_path))
 
     def find_spack_upstream(self, upstream_name):
         """
@@ -795,8 +795,8 @@ class SpackEnv(UberEnv):
             sexe("rm spack/etc/spack/defaults/upstreams.yaml")
             with open('spack/etc/spack/defaults/upstreams.yaml','w+') as upstreams_cfg_file:
                 upstreams_cfg_file.write("upstreams:\n")
-                upstreams_cfg_file.write("  {}:\n".format(upstream_name))
-                upstreams_cfg_file.write("    install_tree: {}\n".format(upstream_path))
+                upstreams_cfg_file.write("  {0}:\n".format(upstream_name))
+                upstreams_cfg_file.write("    install_tree: {0}\n".format(upstream_path))
 
 
 def find_osx_sdks():
@@ -836,8 +836,8 @@ def setup_osx_sdk_env_vars():
 
     env["MACOSX_DEPLOYMENT_TARGET"] = dep_tgt
     env["SDKROOT"] = sdk_root
-    print("[setting MACOSX_DEPLOYMENT_TARGET to {}]".format(env["MACOSX_DEPLOYMENT_TARGET"]))
-    print("[setting SDKROOT to {}]".format(env[ "SDKROOT"]))
+    print("[setting MACOSX_DEPLOYMENT_TARGET to {0}]".format(env["MACOSX_DEPLOYMENT_TARGET"]))
+    print("[setting SDKROOT to {0}]".format(env[ "SDKROOT"]))
 
 
 
@@ -903,3 +903,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
