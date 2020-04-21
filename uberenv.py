@@ -1,7 +1,7 @@
 #!/bin/sh
 "exec" "python" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2020, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -432,9 +432,11 @@ class SpackEnv(UberEnv):
         else:
             # let spack try to auto find compilers
             sexe("spack/bin/spack compiler find", echo=True)
-        dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
-        # hot-copy our packages into spack
-        sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
+
+        if self.pkgs:
+            # hot-copy our packages into spack
+            dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
+            sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
 
 
     def clean_build(self):
@@ -465,7 +467,7 @@ class SpackEnv(UberEnv):
         if self.opts["ignore_ssl_errors"]:
             install_cmd += "-k "
         if not self.opts["install"]:
-            install_cmd += "dev-build -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
+            install_cmd += "dev-build --quiet -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
         else:
             install_cmd += "install "
             if self.opts["run_tests"]:
@@ -497,28 +499,47 @@ class SpackEnv(UberEnv):
             sexe(activate_cmd, echo=True)
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
-        if self.opts["install"]:
+        if self.opts["install"] or "use_install" in self.opts:
             pkg_path = self.find_spack_pkg_path(self.pkg_name)
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {}]".format(self.pkg_name))
                 return -1
             else:
-                pkg_lnk_dir = "{}-install".format(self.pkg_name)
-                if os.path.islink(pkg_lnk_dir):
-                    os.unlink(pkg_lnk_dir)
-                print("")
-                print("[symlinking install to {}]").format(pjoin(self.dest_dir,pkg_lnk_dir))
-                os.symlink(pkg_path["path"],os.path.abspath(pkg_lnk_dir))
-                hcfg_glob = glob.glob(pjoin(pkg_lnk_dir,"*.cmake"))
-                if len(hcfg_glob) > 0:
-                    hcfg_path  = hcfg_glob[0]
-                    hcfg_fname = os.path.split(hcfg_path)[1]
-                    if os.path.islink(hcfg_fname):
-                        os.unlink(hcfg_fname)
-                    print("[symlinking host config file to {}]".format(pjoin(self.dest_dir,hcfg_fname)))
-                    os.symlink(hcfg_path,hcfg_fname)
-                print("")
-                print("[install complete!]")
+                # Symlink host-config file
+                hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
+                if len(hc_glob) > 0:
+                    hc_path  = hc_glob[0]
+                    hc_fname = os.path.split(hc_path)[1]
+                    if os.path.islink(hc_fname):
+                        os.unlink(hc_fname)
+                    elif os.path.isfile(hc_fname):
+                        sexe("rm -f {}".format(hc_fname))
+                    print("[symlinking host config file to {}]".format(pjoin(self.dest_dir,hc_fname)))
+                    os.symlink(hc_path,hc_fname)
+
+                # Symlink install directory
+                if self.opts["install"]:
+                    pkg_lnk_dir = "{}-install".format(self.pkg_name)
+                    if os.path.islink(pkg_lnk_dir):
+                        os.unlink(pkg_lnk_dir)
+                    print("")
+                    print("[symlinking install to {}]".format(pjoin(self.dest_dir,pkg_lnk_dir)))
+                    os.symlink(pkg_path["path"],os.path.abspath(pkg_lnk_dir))
+                    print("")
+                    print("[install complete!]")
+        else:
+            pattern = "*{}.cmake".format(self.pkg_name)
+            build_dir = pjoin(self.pkg_src_dir,"spack-build")
+            hc_glob = glob.glob(pjoin(build_dir,pattern))
+            if len(hc_glob) > 0:
+                hc_path  = hc_glob[0]
+                hc_fname = os.path.split(hc_path)[1]
+                if os.path.islink(hc_fname):
+                    os.unlink(hc_fname)
+                print("[copying host config file to {}]".format(pjoin(self.dest_dir,hc_fname)))
+                sexe("cp {} {}".format(hc_path,hc_fname))
+                print("[removing project build directory {}]".format(pjoin(build_dir)))
+                sexe("rm -rf {}".format(build_dir))
 
     def get_mirror_path(self):
         mirror_path = self.opts["mirror"]
