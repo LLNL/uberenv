@@ -60,6 +60,7 @@ import platform
 import json
 import datetime
 import glob
+import re
 
 from optparse import OptionParser
 
@@ -280,6 +281,8 @@ class SpackEnv(UberEnv):
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
 
+        self.spec_hash = ""
+
         # Some additional setup for macos
         if is_darwin():
             if opts["macos_sdk_env_setup"]:
@@ -330,8 +333,16 @@ class SpackEnv(UberEnv):
             sys.exit(-1)
 
 
-    def find_spack_pkg_path(self,pkg_name):
-        r,rout = sexe("spack/bin/spack find -p " + pkg_name,ret_output = True)
+    def find_spack_pkg_path_form_hash(self, pkg_name, pkg_hash):
+        r,rout = sexe("spack/bin/spack find -p /{}".format(pkg_hash), ret_output = True)
+        for l in rout.split("\n"):
+            if l.startswith(pkg_name):
+                   return {"name": pkg_name, "path": l.split()[-1]}
+        print("[ERROR: failed to find package named '{}']".format(pkg_name))
+        sys.exit(-1)
+
+    def find_spack_pkg_path(self,pkg_name,spec):
+        r,rout = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
         for l in rout.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -340,6 +351,7 @@ class SpackEnv(UberEnv):
         print("[ERROR: failed to find package named '{}']".format(pkg_name))
         sys.exit(-1)
 
+    # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
         rv, res = sexe("spack/bin/spack spec " + pkg_name + " " + spec, ret_output=True)
         for l in res.split("\n"):
@@ -457,25 +469,40 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
-        spec_cmd = "spack/bin/spack spec " + self.pkg_name + self.opts["spec"]
-        return sexe(spec_cmd, echo=True)
+        spec_cmd = "spack/bin/spack spec -Il " + self.pkg_name + self.opts["spec"]
+
+        res, out = sexe(spec_cmd, ret_output=True, echo=True)
+        print(out)
+
+        for line in out.split("\n"):
+            if re.match(rf'^(\[\+\]| - )  [a-z0-9]{{32}}  {self.pkg_name}', line):
+                self.spec_hash = line.split("  ")[1]
+                if line.startswith("[+]"):
+                    pkg_path = self.find_spack_pkg_path_form_hash(self.pkg_name,self.pkg_hash)
+                    install_path = pkg_path["path"]
+                    if os.path.isdir(install_path):
+                        print("[Warning: {} {} has already been install in {}]".format(self.pkg_name, self.opts["spec"],install_path))
+                        print("[Warning: Uberenv will proceed using this directory]".format(self.pkg_name))
+                        self.opts["use_install"] = True
+
+        return res
 
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
-        install_cmd = "spack/bin/spack "
-        if self.opts["ignore_ssl_errors"]:
-            install_cmd += "-k "
-        if not self.opts["install"]:
-            install_cmd += "dev-build --quiet -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
-        else:
-            install_cmd += "install "
-            if self.opts["run_tests"]:
-                install_cmd += "--test=root "
-        install_cmd += self.pkg_name + self.opts["spec"]
-        res = sexe(install_cmd, echo=True)
-        if res != 0:
-            return res
+
+        if not "use_install" in self.opts:
+            install_cmd = "spack/bin/spack "
+            if self.opts["ignore_ssl_errors"]:
+                install_cmd += "-k "
+            if not self.opts["install"]:
+                install_cmd += "dev-build --quiet -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
+            else:
+                install_cmd += "install "
+                if self.opts["run_tests"]:
+                    install_cmd += "--test=root "
+            install_cmd += self.pkg_name + self.opts["spec"]
+            res, out = sexe(install_cmd, ret_output=True, echo=True)
 
         if "spack_activate" in self.project_opts:
             print("[activating dependent packages]")
