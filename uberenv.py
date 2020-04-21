@@ -469,16 +469,16 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
-        spec_cmd = "spack/bin/spack spec -Il " + self.pkg_name + self.opts["spec"]
+        spec_cmd = "spack/bin/spack spec -IL " + self.pkg_name + self.opts["spec"]
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
 
         for line in out.split("\n"):
-            if re.match(rf'^(\[\+\]| - )  [a-z0-9]{{32}}  {self.pkg_name}', line):
+            if re.match(r"^(\[\+\]| - )  [a-z0-9]{32}  " + re.escape(self.pkg_name), line):
                 self.spec_hash = line.split("  ")[1]
                 if line.startswith("[+]"):
-                    pkg_path = self.find_spack_pkg_path_form_hash(self.pkg_name,self.pkg_hash)
+                    pkg_path = self.find_spack_pkg_path_form_hash(self.pkg_name,self.spec_hash)
                     install_path = pkg_path["path"]
                     if os.path.isdir(install_path):
                         print("[Warning: {} {} has already been install in {}]".format(self.pkg_name, self.opts["spec"],install_path))
@@ -504,10 +504,10 @@ class SpackEnv(UberEnv):
             install_cmd += self.pkg_name + self.opts["spec"]
             res, out = sexe(install_cmd, ret_output=True, echo=True)
 
+        full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
             print("[activating dependent packages]")
             # get the full spack spec for our project
-            full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
             pkg_names = self.project_opts["spack_activate"].keys()
             for pkg_name in pkg_names:
                 pkg_spec_requirements = self.project_opts["spack_activate"][pkg_name]
