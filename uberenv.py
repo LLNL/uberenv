@@ -258,17 +258,15 @@ class UberEnv():
         else:
             print("[info: destination '{0}' already exists]".format(self.dest_dir))
 
-    def set_from_args_or_json(self, setting, fail_on_undefined=True):
-        # Command line options take precedence over project file
-        setting_value = None
-        if setting in self.project_opts:
+    def set_from_args_or_json(self,setting):
+        try:
             setting_value = self.project_opts[setting]
+        except (KeyError):
+            print("ERROR: {} must at least be defined in project.json".format(setting))
+            raise
+        else:
             if self.opts[setting]:
                 setting_value = self.opts[setting]
-        if fail_on_undefined and setting_value == None:
-            print("ERROR: '{0}' must be defined in the project file or on the command line".format(setting))
-            sys.exit(-1)
-
         return setting_value
 
     def set_from_json(self,setting):
@@ -407,7 +405,7 @@ class SpackEnv(UberEnv):
 
         self.pkg_name = self.set_from_args_or_json("package_name")
         self.pkg_version = self.set_from_json("package_version")
-        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", False)
+        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
 
         # Some additional setup for macos
@@ -594,9 +592,10 @@ class SpackEnv(UberEnv):
         install_cmd = "spack/bin/spack "
         if self.opts["ignore_ssl_errors"]:
             install_cmd += "-k "
-        install_cmd += "dev-build -d {0} ".format(self.pkg_src_dir)
-        if not self.opts["install"] and self.pkg_final_phase:
-            install_cmd += "-u {0} ".format(self.pkg_final_phase)
+        if not self.opts["install"]:
+            install_cmd += "dev-build -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
+        else:
+            install_cmd += "install "
             if self.opts["run_tests"]:
                 install_cmd += "--test=root "
         install_cmd += self.pkg_name + self.opts["spec"]
