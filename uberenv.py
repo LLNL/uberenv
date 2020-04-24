@@ -300,18 +300,15 @@ class UberEnv():
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
 
-
-    def set_from_args_or_json(self, setting, fail_on_undefined=True):
-        # Command line options take precedence over project file
-        setting_value = None
-        if setting in self.project_opts:
+    def set_from_args_or_json(self,setting):
+        try:
             setting_value = self.project_opts[setting]
-        if setting in self.opts:
-            setting_value = self.opts[setting]
-        if fail_on_undefined and setting_value == None:
-            print("ERROR: '{0}' must be defined in the project file or on the command line".format(setting))
-            sys.exit(-1)
-
+        except (KeyError):
+            print("ERROR: '{0}' must at least be defined in project.json".format(setting))
+            raise
+        else:
+            if self.opts[setting]:
+                setting_value = self.opts[setting]
         return setting_value
 
     def set_from_json(self,setting):
@@ -340,7 +337,7 @@ class VcpkgEnv(UberEnv):
         UberEnv.__init__(self,opts,extra_opts)
 
         # setup architecture triplet
-        self.vcpkg_triplet = self.set_from_args_or_json("vcpkg_triplet", False)
+        self.vcpkg_triplet = self.set_from_args_or_json("vcpkg_triplet")
         print("Vcpkg triplet: {}".format(self.vcpkg_triplet))
         if self.vcpkg_triplet is None:
            self.vcpkg_triplet = os.getenv("VCPKG_DEFAULT_TRIPLET", "x86-windows")
@@ -450,7 +447,7 @@ class SpackEnv(UberEnv):
         UberEnv.__init__(self,opts,extra_opts)
 
         self.pkg_version = self.set_from_json("package_version")
-        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", False)
+        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
 
         self.packages_paths = []
