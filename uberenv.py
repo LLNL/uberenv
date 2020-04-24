@@ -262,7 +262,7 @@ class UberEnv():
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            print("ERROR: {} must at least be defined in project.json".format(setting))
+            print("ERROR: {0} must at least be defined in project.json".format(setting))
             raise
         else:
             if self.opts[setting]:
@@ -593,7 +593,7 @@ class SpackEnv(UberEnv):
         if self.opts["ignore_ssl_errors"]:
             install_cmd += "-k "
         if not self.opts["install"]:
-            install_cmd += "dev-build -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
+            install_cmd += "dev-build -d {0} -u {1} ".format(self.pkg_src_dir, self.pkg_final_phase)
         else:
             install_cmd += "install "
             if self.opts["run_tests"]:
