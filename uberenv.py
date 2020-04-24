@@ -771,7 +771,9 @@ class SpackEnv(UberEnv):
         # this may fail general cases
         if self.opts["install"] and "+python" in full_spec:
             activate_cmd = "spack/bin/spack activate /" + self.spec_hash
-            sexe(activate_cmd, echo=True)
+            res = sexe(activate_cmd, echo=True)
+            if res != 0:
+              return res
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
         if self.opts["install"] or self.use_install:
