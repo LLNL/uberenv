@@ -531,12 +531,12 @@ class SpackEnv(UberEnv):
         # note: this assumes package extends python when +python
         # this may fail general cases
         if self.opts["install"] and "+python" in full_spec:
-            activate_cmd = "spack/bin/spack activate " + self.pkg_name + self.opts["spec"]
+            activate_cmd = "spack/bin/spack activate /" + self.spec_hash
             sexe(activate_cmd, echo=True)
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
         if self.opts["install"] or self.use_install:
-            pkg_path = self.find_spack_pkg_path(self.pkg_name,self.opts["spec"])
+            pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {}]".format(self.pkg_name))
                 return -1
