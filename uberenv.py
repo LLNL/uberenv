@@ -282,6 +282,7 @@ class SpackEnv(UberEnv):
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
 
         self.spec_hash = ""
+        self.use_install = False
 
         # Some additional setup for macos
         if is_darwin():
@@ -333,7 +334,7 @@ class SpackEnv(UberEnv):
             sys.exit(-1)
 
 
-    def find_spack_pkg_path_form_hash(self, pkg_name, pkg_hash):
+    def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
         r,rout = sexe("spack/bin/spack find -p /{}".format(pkg_hash), ret_output = True)
         for l in rout.split("\n"):
             if l.startswith(pkg_name):
@@ -445,8 +446,8 @@ class SpackEnv(UberEnv):
             # let spack try to auto find compilers
             sexe("spack/bin/spack compiler find", echo=True)
 
+        # hot-copy our packages into spack
         if self.pkgs:
-            # hot-copy our packages into spack
             dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
             sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
 
@@ -469,21 +470,27 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
-        spec_cmd = "spack/bin/spack spec -IL " + self.pkg_name + self.opts["spec"]
+        # prints install status and 32 characters hash
+        options="--install-status --very-long"
+        spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
 
+        #Check if spec is already installed
         for line in out.split("\n"):
+            # Example of matching line: ("status"  "hash"  "package"...)
+            # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  serac@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
             if re.match(r"^(\[\+\]| - )  [a-z0-9]{32}  " + re.escape(self.pkg_name), line):
                 self.spec_hash = line.split("  ")[1]
+                # if spec already installed
                 if line.startswith("[+]"):
-                    pkg_path = self.find_spack_pkg_path_form_hash(self.pkg_name,self.spec_hash)
+                    pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name,self.spec_hash)
                     install_path = pkg_path["path"]
                     if os.path.isdir(install_path):
-                        print("[Warning: {} {} has already been install in {}]".format(self.pkg_name, self.opts["spec"],install_path))
+                        print("[Warning: {} {} has already been installed in {}]".format(self.pkg_name, self.opts["spec"],install_path))
                         print("[Warning: Uberenv will proceed using this directory]".format(self.pkg_name))
-                        self.opts["use_install"] = True
+                        self.use_install = True
 
         return res
 
@@ -491,7 +498,7 @@ class SpackEnv(UberEnv):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
 
-        if not "use_install" in self.opts:
+        if not self.use_install:
             install_cmd = "spack/bin/spack "
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
@@ -526,7 +533,7 @@ class SpackEnv(UberEnv):
             sexe(activate_cmd, echo=True)
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
-        if self.opts["install"] or "use_install" in self.opts:
+        if self.opts["install"] or self.use_install:
             pkg_path = self.find_spack_pkg_path(self.pkg_name,self.opts["spec"])
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {}]".format(self.pkg_name))
@@ -554,6 +561,8 @@ class SpackEnv(UberEnv):
                     os.symlink(pkg_path["path"],os.path.abspath(pkg_lnk_dir))
                     print("")
                     print("[install complete!]")
+        # otherwise we are in the "only dependencies" case and the host-config
+        # file has to be copied from the do-be-deleted spack-build dir.
         else:
             pattern = "*{}.cmake".format(self.pkg_name)
             build_dir = pjoin(self.pkg_src_dir,"spack-build")
