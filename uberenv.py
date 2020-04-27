@@ -487,6 +487,8 @@ class SpackEnv(UberEnv):
                 if line.startswith("[+]"):
                     pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name,self.spec_hash)
                     install_path = pkg_path["path"]
+                    # testing that the path exists is mandatory until Spack team fixes
+                    # https://github.com/spack/spack/issues/16329
                     if os.path.isdir(install_path):
                         print("[Warning: {} {} has already been installed in {}]".format(self.pkg_name, self.opts["spec"],install_path))
                         print("[Warning: Uberenv will proceed using this directory]".format(self.pkg_name))
