@@ -1,7 +1,7 @@
 #!/bin/sh
 "exec" "python" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2020, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -60,6 +60,7 @@ import platform
 import json
 import datetime
 import glob
+import re
 
 from optparse import OptionParser
 
@@ -280,6 +281,9 @@ class SpackEnv(UberEnv):
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
 
+        self.spec_hash = ""
+        self.use_install = False
+
         # Some additional setup for macos
         if is_darwin():
             if opts["macos_sdk_env_setup"]:
@@ -330,8 +334,16 @@ class SpackEnv(UberEnv):
             sys.exit(-1)
 
 
-    def find_spack_pkg_path(self,pkg_name):
-        r,rout = sexe("spack/bin/spack find -p " + pkg_name,ret_output = True)
+    def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
+        r,rout = sexe("spack/bin/spack find -p /{}".format(pkg_hash), ret_output = True)
+        for l in rout.split("\n"):
+            if l.startswith(pkg_name):
+                   return {"name": pkg_name, "path": l.split()[-1]}
+        print("[ERROR: failed to find package named '{}']".format(pkg_name))
+        sys.exit(-1)
+
+    def find_spack_pkg_path(self, pkg_name, spec = ""):
+        r,rout = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
         for l in rout.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -340,6 +352,7 @@ class SpackEnv(UberEnv):
         print("[ERROR: failed to find package named '{}']".format(pkg_name))
         sys.exit(-1)
 
+    # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
         rv, res = sexe("spack/bin/spack spec " + pkg_name + " " + spec, ret_output=True)
         for l in res.split("\n"):
@@ -432,9 +445,11 @@ class SpackEnv(UberEnv):
         else:
             # let spack try to auto find compilers
             sexe("spack/bin/spack compiler find", echo=True)
-        dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
+
         # hot-copy our packages into spack
-        sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
+        if self.pkgs:
+            dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
+            sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
 
 
     def clean_build(self):
@@ -455,30 +470,53 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
-        spec_cmd = "spack/bin/spack spec " + self.pkg_name + self.opts["spec"]
-        return sexe(spec_cmd, echo=True)
+        # prints install status and 32 characters hash
+        options="--install-status --very-long"
+        spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
+
+        res, out = sexe(spec_cmd, ret_output=True, echo=True)
+        print(out)
+
+        #Check if spec is already installed
+        for line in out.split("\n"):
+            # Example of matching line: ("status"  "hash"  "package"...)
+            # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  serac@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
+            if re.match(r"^(\[\+\]| - )  [a-z0-9]{32}  " + re.escape(self.pkg_name), line):
+                self.spec_hash = line.split("  ")[1]
+                # if spec already installed
+                if line.startswith("[+]"):
+                    pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name,self.spec_hash)
+                    install_path = pkg_path["path"]
+                    # testing that the path exists is mandatory until Spack team fixes
+                    # https://github.com/spack/spack/issues/16329
+                    if os.path.isdir(install_path):
+                        print("[Warning: {} {} has already been installed in {}]".format(self.pkg_name, self.opts["spec"],install_path))
+                        print("[Warning: Uberenv will proceed using this directory]".format(self.pkg_name))
+                        self.use_install = True
+
+        return res
 
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
-        install_cmd = "spack/bin/spack "
-        if self.opts["ignore_ssl_errors"]:
-            install_cmd += "-k "
-        if not self.opts["install"]:
-            install_cmd += "dev-build -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
-        else:
-            install_cmd += "install "
-            if self.opts["run_tests"]:
-                install_cmd += "--test=root "
-        install_cmd += self.pkg_name + self.opts["spec"]
-        res = sexe(install_cmd, echo=True)
-        if res != 0:
-            return res
 
+        if not self.use_install:
+            install_cmd = "spack/bin/spack "
+            if self.opts["ignore_ssl_errors"]:
+                install_cmd += "-k "
+            if not self.opts["install"]:
+                install_cmd += "dev-build --quiet -d {} -u {} ".format(self.pkg_src_dir,self.pkg_final_phase)
+            else:
+                install_cmd += "install "
+                if self.opts["run_tests"]:
+                    install_cmd += "--test=root "
+            install_cmd += self.pkg_name + self.opts["spec"]
+            res, out = sexe(install_cmd, ret_output=True, echo=True)
+
+        full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
             print("[activating dependent packages]")
             # get the full spack spec for our project
-            full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
             pkg_names = self.project_opts["spack_activate"].keys()
             for pkg_name in pkg_names:
                 pkg_spec_requirements = self.project_opts["spack_activate"][pkg_name]
@@ -493,32 +531,53 @@ class SpackEnv(UberEnv):
         # note: this assumes package extends python when +python
         # this may fail general cases
         if self.opts["install"] and "+python" in full_spec:
-            activate_cmd = "spack/bin/spack activate " + self.pkg_name
+            activate_cmd = "spack/bin/spack activate /" + self.spec_hash
             sexe(activate_cmd, echo=True)
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
-        if self.opts["install"]:
-            pkg_path = self.find_spack_pkg_path(self.pkg_name)
+        if self.opts["install"] or self.use_install:
+            pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {}]".format(self.pkg_name))
                 return -1
             else:
-                pkg_lnk_dir = "{}-install".format(self.pkg_name)
-                if os.path.islink(pkg_lnk_dir):
-                    os.unlink(pkg_lnk_dir)
-                print("")
-                print("[symlinking install to {}]").format(pjoin(self.dest_dir,pkg_lnk_dir))
-                os.symlink(pkg_path["path"],os.path.abspath(pkg_lnk_dir))
-                hcfg_glob = glob.glob(pjoin(pkg_lnk_dir,"*.cmake"))
-                if len(hcfg_glob) > 0:
-                    hcfg_path  = hcfg_glob[0]
-                    hcfg_fname = os.path.split(hcfg_path)[1]
-                    if os.path.islink(hcfg_fname):
-                        os.unlink(hcfg_fname)
-                    print("[symlinking host config file to {}]".format(pjoin(self.dest_dir,hcfg_fname)))
-                    os.symlink(hcfg_path,hcfg_fname)
-                print("")
-                print("[install complete!]")
+                # Symlink host-config file
+                hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
+                if len(hc_glob) > 0:
+                    hc_path  = hc_glob[0]
+                    hc_fname = os.path.split(hc_path)[1]
+                    if os.path.islink(hc_fname):
+                        os.unlink(hc_fname)
+                    elif os.path.isfile(hc_fname):
+                        sexe("rm -f {}".format(hc_fname))
+                    print("[symlinking host config file to {}]".format(pjoin(self.dest_dir,hc_fname)))
+                    os.symlink(hc_path,hc_fname)
+
+                # Symlink install directory
+                if self.opts["install"]:
+                    pkg_lnk_dir = "{}-install".format(self.pkg_name)
+                    if os.path.islink(pkg_lnk_dir):
+                        os.unlink(pkg_lnk_dir)
+                    print("")
+                    print("[symlinking install to {}]".format(pjoin(self.dest_dir,pkg_lnk_dir)))
+                    os.symlink(pkg_path["path"],os.path.abspath(pkg_lnk_dir))
+                    print("")
+                    print("[install complete!]")
+        # otherwise we are in the "only dependencies" case and the host-config
+        # file has to be copied from the do-be-deleted spack-build dir.
+        else:
+            pattern = "*{}.cmake".format(self.pkg_name)
+            build_dir = pjoin(self.pkg_src_dir,"spack-build")
+            hc_glob = glob.glob(pjoin(build_dir,pattern))
+            if len(hc_glob) > 0:
+                hc_path  = hc_glob[0]
+                hc_fname = os.path.split(hc_path)[1]
+                if os.path.islink(hc_fname):
+                    os.unlink(hc_fname)
+                print("[copying host config file to {}]".format(pjoin(self.dest_dir,hc_fname)))
+                sexe("cp {} {}".format(hc_path,hc_fname))
+                print("[removing project build directory {}]".format(pjoin(build_dir)))
+                sexe("rm -rf {}".format(build_dir))
 
     def get_mirror_path(self):
         mirror_path = self.opts["mirror"]
