@@ -511,7 +511,10 @@ class SpackEnv(UberEnv):
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
             install_cmd += self.pkg_name + self.opts["spec"]
-            res, out = sexe(install_cmd, ret_output=True, echo=True)
+            res = sexe(install_cmd, echo=True)
+
+            if res != 0:
+                print("[ERROR: failure of spack install/dev-build]")
 
         full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
