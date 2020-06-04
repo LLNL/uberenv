@@ -370,18 +370,22 @@ class SpackEnv(UberEnv):
             clone_opts = ("-c http.sslVerify=false "
                           if self.opts["ignore_ssl_errors"] else "")
 
-            spack_branch = self.project_opts.get("spack_branch", "develop")
             spack_url = self.project_opts.get("spack_url", "https://github.com/spack/spack.git")
+            spack_branch = self.project_opts.get("spack_branch", "develop")
 
-            clone_cmd =  "git {} clone -b {} {}".format(clone_opts, spack_branch,spack_url)
+            clone_cmd =  "git {0} clone -b {1} {2}".format(clone_opts, spack_branch,spack_url)
             sexe(clone_cmd, echo=True)
 
+        if "spack_commit" in self.project_opts:
             # optionally, check out a specific commit
-            if "spack_commit" in self.project_opts:
-                sha1 = self.project_opts["spack_commit"]
+            os.chdir(pjoin(self.dest_dir,"spack"))
+            sha1 = self.project_opts["spack_commit"]
+            res, current_sha1 = sexe("git log -1 --pretty=%H", ret_output=True)
+            if sha1 != current_sha1:
                 print("[info: using spack commit {}]".format(sha1))
-                os.chdir(pjoin(self.dest_dir,"spack"))
-                sexe("git checkout {}".format(sha1),echo=True)
+                sexe("git stash", echo=True)
+                sexe("git fetch origin {0}".format(sha1),echo=True)
+                sexe("git checkout {0}".format(sha1),echo=True)
 
         if self.opts["spack_pull"]:
             # do a pull to make sure we have the latest
