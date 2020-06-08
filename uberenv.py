@@ -519,6 +519,7 @@ class SpackEnv(UberEnv):
 
             if res != 0:
                 print("[ERROR: failure of spack install/dev-build]")
+                return res
 
         full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
