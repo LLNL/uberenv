@@ -453,6 +453,7 @@ class SpackEnv(UberEnv):
         # hot-copy our packages into spack
         if self.pkgs:
             dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
+            print("[copying patched packages from {0}]".format(self.pkgs))
             sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
 
 
