@@ -57,6 +57,6 @@ trigger-serac:
   variables:
     UPDATE_UBERENV: $CI_COMMIT_REF_NAME
   trigger:
-    project: bernede1/serac
-    branch: feature/up-uber
+    project: smith/serac
+    branch: master
     strategy: depend
