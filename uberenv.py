@@ -68,7 +68,7 @@ from os import environ as env
 from os.path import join as pjoin
 
 
-def sexe(cmd,ret_output=False,echo = False):
+def sexe(cmd,ret_output=False,echo=False):
     """ Helper for executing shell commands. """
     if echo:
         print("[exe: {}]".format(cmd))
@@ -77,9 +77,9 @@ def sexe(cmd,ret_output=False,echo = False):
                              shell=True,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
-        res = p.communicate()[0]
-        res = res.decode('utf8')
-        return p.returncode,res
+        out = p.communicate()[0]
+        out = out.decode('utf8')
+        return p.returncode,out
     else:
         return subprocess.call(cmd,shell=True)
 
@@ -335,16 +335,16 @@ class SpackEnv(UberEnv):
 
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
-        r,rout = sexe("spack/bin/spack find -p /{}".format(pkg_hash), ret_output = True)
-        for l in rout.split("\n"):
+        res, out = sexe("spack/bin/spack find -p /{}".format(pkg_hash), ret_output = True)
+        for l in out.split("\n"):
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: failed to find package named '{}']".format(pkg_name))
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        r,rout = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
-        for l in rout.split("\n"):
+        res, out = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
+        for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name):
@@ -354,8 +354,8 @@ class SpackEnv(UberEnv):
 
     # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
-        rv, res = sexe("spack/bin/spack spec " + pkg_name + " " + spec, ret_output=True)
-        for l in res.split("\n"):
+        res, out = sexe("spack/bin/spack spec " + pkg_name + " " + spec, ret_output=True)
+        for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
 
@@ -370,18 +370,22 @@ class SpackEnv(UberEnv):
             clone_opts = ("-c http.sslVerify=false "
                           if self.opts["ignore_ssl_errors"] else "")
 
-            spack_branch = self.project_opts.get("spack_branch", "develop")
             spack_url = self.project_opts.get("spack_url", "https://github.com/spack/spack.git")
+            spack_branch = self.project_opts.get("spack_branch", "develop")
 
-            clone_cmd =  "git {} clone -b {} {}".format(clone_opts, spack_branch,spack_url)
+            clone_cmd =  "git {0} clone -b {1} {2}".format(clone_opts, spack_branch,spack_url)
             sexe(clone_cmd, echo=True)
 
+        if "spack_commit" in self.project_opts:
             # optionally, check out a specific commit
-            if "spack_commit" in self.project_opts:
-                sha1 = self.project_opts["spack_commit"]
+            os.chdir(pjoin(self.dest_dir,"spack"))
+            sha1 = self.project_opts["spack_commit"]
+            res, current_sha1 = sexe("git log -1 --pretty=%H", ret_output=True)
+            if sha1 != current_sha1:
                 print("[info: using spack commit {}]".format(sha1))
-                os.chdir(pjoin(self.dest_dir,"spack"))
-                sexe("git checkout {}".format(sha1),echo=True)
+                sexe("git stash", echo=True)
+                sexe("git fetch origin {0}".format(sha1),echo=True)
+                sexe("git checkout {0}".format(sha1),echo=True)
 
         if self.opts["spack_pull"]:
             # do a pull to make sure we have the latest
@@ -449,6 +453,7 @@ class SpackEnv(UberEnv):
         # hot-copy our packages into spack
         if self.pkgs:
             dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
+            print("[copying patched packages from {0}]".format(self.pkgs))
             sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
 
 
@@ -511,7 +516,11 @@ class SpackEnv(UberEnv):
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
             install_cmd += self.pkg_name + self.opts["spec"]
-            res, out = sexe(install_cmd, ret_output=True, echo=True)
+            res = sexe(install_cmd, echo=True)
+
+            if res != 0:
+                print("[ERROR: failure of spack install/dev-build]")
+                return res
 
         full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
@@ -605,9 +614,9 @@ class SpackEnv(UberEnv):
         Returns the path of a defaults scoped spack mirror with the
         given name, or None if no mirror exists.
         """
-        rv, res = sexe("spack/bin/spack mirror list", ret_output=True)
+        res, out = sexe("spack/bin/spack mirror list", ret_output=True)
         mirror_path = None
-        for mirror in res.split('\n'):
+        for mirror in out.split('\n'):
             if mirror:
                 parts = mirror.split()
                 if parts[0] == mirror_name:
@@ -646,14 +655,14 @@ class SpackEnv(UberEnv):
         """
         upstream_path = None
 
-        rv, res = sexe('spack/bin/spack config get upstreams', ret_output=True)
-        if (not res) and ("upstreams:" in res):
-            res = res.replace(' ', '')
-            res = res.replace('install_tree:', '')
-            res = res.replace(':', '')
-            res = res.splitlines()
-            res = res[1:]
-            upstreams = dict(zip(res[::2], res[1::2]))
+        res, out = sexe('spack/bin/spack config get upstreams', ret_output=True)
+        if (not out) and ("upstreams:" in out):
+            out = out.replace(' ', '')
+            out = out.replace('install_tree:', '')
+            out = out.replace(':', '')
+            out = out.splitlines()
+            out = out[1:]
+            upstreams = dict(zip(out[::2], out[1::2]))
 
             for name in upstreams.keys():
                 if name == upstream_name:
