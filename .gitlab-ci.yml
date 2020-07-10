@@ -50,13 +50,13 @@ trigger-conduit:
     UPDATE_UBERENV: $CI_COMMIT_REF_NAME
   trigger:
     project: radiuss/conduit
-    branch: feature/uberenv_ci
+    branch: feature/update-uberenv
     strategy: depend
 
 trigger-serac:
   variables:
     UPDATE_UBERENV: $CI_COMMIT_REF_NAME
   trigger:
-    project: bernede1/serac
-    branch: feature/up-uber
+    project: smith/serac
+    branch: master
     strategy: depend
