@@ -58,5 +58,5 @@ trigger-serac:
     UPDATE_UBERENV: $CI_COMMIT_REF_NAME
   trigger:
     project: smith/serac
-    branch: master
+    branch: develop
     strategy: depend
