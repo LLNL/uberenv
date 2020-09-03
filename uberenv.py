@@ -345,7 +345,7 @@ class SpackEnv(UberEnv):
 
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
-        res, out = sexe("{0} find -p /{1}".format(spack_cmd,pkg_hash), ret_output = True)
+        res, out = sexe("{0} find -p /{1}".format(self.spack_cmd, pkg_hash), ret_output = True)
         for l in out.split("\n"):
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
@@ -353,7 +353,7 @@ class SpackEnv(UberEnv):
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("{0} find -p {1}".format(spack_cmd,pkg_name+spec),ret_output = True)
+        res, out = sexe("{0} find -p {1}".format(self.spack_cmd, pkg_name+spec),ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -364,7 +364,7 @@ class SpackEnv(UberEnv):
 
     # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
-        res, out = sexe("{} spec ".format(self.spack_cmd)  + pkg_name + " " + spec, ret_output=True)
+        res, out = sexe("{0} spec {1} {2}".format(self.spack_cmd, pkg_name, spec), ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
