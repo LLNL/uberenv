@@ -195,6 +195,13 @@ def parse_args():
                            " but can cause issues with macOS versions >= 10.13. "
                            " so it is disabled by default.")
 
+    # option to stop after spack download and setup
+    parser.add_option("--setup-only",
+                      action="store_true",
+                      dest="setup_only",
+                      default=False,
+                      help="Only download and setup Spack. No further Spack command will be run.")
+
 
     ###############
     # parse args
@@ -768,6 +775,10 @@ def main():
 
     # Clean the build
     env.clean_build()
+
+    # Allow to end uberenv after spack is ready
+    if opts["setup_only"]:
+        return 0
 
     # Show the spec for what will be built
     env.show_info()
