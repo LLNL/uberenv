@@ -227,7 +227,7 @@ def parse_args():
 
 def uberenv_script_dir():
     # returns the directory of the uberenv.py script
-    return os.path.dirname(os.path.abspath(__file__))
+    return os.path.dirname(os.path.realpath(__file__))
 
 def load_json_file(json_file):
     # reads json file
@@ -238,6 +238,27 @@ def is_darwin():
 
 def is_windows():
     return "windows" in platform.system().lower()
+
+def find_project_config(opts):
+    project_json_file = opts["project_json"]
+    lookup_path = os.path.abspath(os.path.join(uberenv_script_dir(), os.pardir))
+    # Default case: project.json seats next to uberenv.py
+    if os.path.isfile(project_json_file):
+        return project_json_file
+    # Submodule case: .uberenv.json is in one of the parent dir
+    else:
+        end_of_search = False
+        while not end_of_search:
+            if os.path.dirname(lookup_path) == lookup_path:
+                end_of_search = True
+            project_json_file = pjoin(lookup_path,".uberenv.json")
+            if os.path.isfile(project_json_file):
+                return project_json_file
+            else:
+                lookup_path = os.path.abspath(os.path.join(lookup_path, os.pardir))
+    print("ERROR: No configuration json file found")
+    sys.exit(-1)
+
 
 class UberEnv():
     """ Base class for package manager """
@@ -252,7 +273,7 @@ class UberEnv():
         print("[uberenv options: {}]".format(str(self.opts)))
 
     def setup_paths_and_dirs(self):
-        self.uberenv_path = os.path.dirname(os.path.realpath(__file__))
+        self.uberenv_path = uberenv_script_dir()
 
     def set_from_args_or_json(self,setting):
         try:
@@ -758,6 +779,10 @@ def main():
 
     # parse args from command line
     opts, extra_opts = parse_args()
+
+    # project options
+    opts["project_json"] = find_project_config(opts)
+
 
     # Initialize the environment
     env = SpackEnv(opts, extra_opts)
