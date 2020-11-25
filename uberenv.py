@@ -251,7 +251,7 @@ def find_project_config(opts):
         while not end_of_search:
             if os.path.dirname(lookup_path) == lookup_path:
                 end_of_search = True
-            project_json_file = pjoin(lookup_path,".uberenv.json")
+            project_json_file = pjoin(lookup_path,".uberenv","config.json")
             if os.path.isfile(project_json_file):
                 return project_json_file
             else:
