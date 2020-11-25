@@ -229,6 +229,10 @@ def uberenv_script_dir():
     # returns the directory of the uberenv.py script
     return os.path.dirname(os.path.realpath(__file__))
 
+def uberenv_config_dir(project_json_file):
+    # returns the directory of the uberenv.py script
+    return os.path.dirname(os.path.realpath(project_json_file))
+
 def load_json_file(json_file):
     # reads json file
     return json.load(open(json_file))
@@ -242,7 +246,7 @@ def is_windows():
 def find_project_config(opts):
     project_json_file = opts["project_json"]
     lookup_path = os.path.abspath(os.path.join(uberenv_script_dir(), os.pardir))
-    # Default case: project.json seats next to uberenv.py
+    # Default case: project.json seats next to uberenv.py or is given on command line.
     if os.path.isfile(project_json_file):
         return project_json_file
     # Submodule case: .uberenv.json is in one of the parent dir
@@ -273,7 +277,7 @@ class UberEnv():
         print("[uberenv options: {}]".format(str(self.opts)))
 
     def setup_paths_and_dirs(self):
-        self.uberenv_path = uberenv_script_dir()
+        self.uberenv_conf_path = uberenv_config_dir(self.opts["project_json"])
 
     def set_from_args_or_json(self,setting):
         try:
@@ -347,7 +351,7 @@ class SpackEnv(UberEnv):
 
         UberEnv.setup_paths_and_dirs(self)
 
-        self.pkgs = pjoin(self.uberenv_path, "packages","*")
+        self.pkgs = pjoin(self.uberenv_conf_path, "packages","*")
 
         # setup destination paths
         self.dest_dir = os.path.abspath(self.opts["prefix"])
@@ -363,7 +367,7 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{}' already exists]".format(self.dest_spack))
 
-        self.pkg_src_dir = os.path.join(self.uberenv_path,self.pkg_src_dir)
+        self.pkg_src_dir = os.path.join(self.uberenv_conf_path,self.pkg_src_dir)
         if not os.path.isdir(self.pkg_src_dir):
             print("[ERROR: package_source_dir '{}' does not exist]".format(self.pkg_src_dir))
             sys.exit(-1)
@@ -434,7 +438,7 @@ class SpackEnv(UberEnv):
         if spack_config_dir is None:
             uberenv_plat = self.detect_platform()
             if not uberenv_plat is None:
-                spack_config_dir = os.path.abspath(pjoin(self.uberenv_path,"spack_configs",uberenv_plat))
+                spack_config_dir = os.path.abspath(pjoin(self.uberenv_conf_path,"spack_configs",uberenv_plat))
         return spack_config_dir
 
 
@@ -462,7 +466,7 @@ class SpackEnv(UberEnv):
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
         # copy in "defaults" config.yaml
-        config_yaml = os.path.abspath(pjoin(self.uberenv_path,"spack_configs","config.yaml"))
+        config_yaml = os.path.abspath(pjoin(self.uberenv_conf_path,"spack_configs","config.yaml"))
         sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir ), echo=True)
 
         # copy in other settings per platform
@@ -782,7 +786,6 @@ def main():
 
     # project options
     opts["project_json"] = find_project_config(opts)
-
 
     # Initialize the environment
     env = SpackEnv(opts, extra_opts)
