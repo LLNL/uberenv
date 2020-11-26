@@ -135,7 +135,7 @@ If the target Spack package supports Spack's testing hooks, you can run tests du
 For details on Spack's spec syntax, see the `Spack Specs & dependencies <http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_ documentation.
 
 
-Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_config/{platform}`` or you can use the **--spack-config-dir** option to specify a directory with compiler and packages yaml files to use with Spack. See the `Spack Compiler Configuration <http://spack.readthedocs.io/en/latest/getting_started.html#manual-compiler-configuration>`_
+Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs/{platform}`` or under ``.uberenv/spack_configs/{platform}``. You may also use the **--spack-config-dir** option to specify a directory with compiler and packages yaml files to use with Spack. See the `Spack Compiler Configuration <http://spack.readthedocs.io/en/latest/getting_started.html#manual-compiler-configuration>`_
 and `Spack System Packages
 <http://spack.readthedocs.io/en/latest/getting_started.html#system-packages>`_
 documentation for details.
@@ -167,6 +167,9 @@ Part of the configuration can also be addressed using a json file. By default, i
   spack_activate       **None**                   Spack packages to activate                       **None**
  ==================== ========================== ================================================ =======================================
 
+However, Uberenv config can also be setup to sit in a location external to the uberenv directory itself. In particular, if no ``project.json`` file is found there, the script will look for ``.uberenv/config.json`` recursively in parent directories. The typical usage is to place it at the root directory of the project.
+
+When ``.uberenv/config.json`` is found, it is assumed that ``.uberenv`` also contains the ``packages`` and the ``spack_configs`` directories.
 
 Optimization
 ------------
@@ -187,7 +190,7 @@ Project Settings
 
 A few notes on using ``uberenv.py`` in a new project:
 
-* For an example of how to craft a ``project.json`` file a target project, see: `Conduit's project.json file <https://github.com/LLNL/conduit/tree/master/scripts/uberenv/project.json>`_
+* For an example of how to craft a ``project.json`` / ``.uberenv/config.json`` file a target project, see: `Conduit's project.json file <https://github.com/LLNL/conduit/tree/master/scripts/uberenv/project.json>`_
 
 * ``uberenv.py`` hot copies ``packages`` to the cloned Spack install, this allows you to easily version control any Spack package overrides necessary
 
