@@ -277,6 +277,7 @@ class UberEnv():
         print("[uberenv options: {}]".format(str(self.opts)))
 
     def setup_paths_and_dirs(self):
+        self.uberenv_path = uberenv_script_dir()
         self.uberenv_conf_path = uberenv_config_dir(self.opts["project_json"])
 
     def set_from_args_or_json(self,setting):
@@ -367,7 +368,7 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{}' already exists]".format(self.dest_spack))
 
-        self.pkg_src_dir = os.path.join(self.uberenv_conf_path,self.pkg_src_dir)
+        self.pkg_src_dir = os.path.join(self.uberenv_path,self.pkg_src_dir)
         if not os.path.isdir(self.pkg_src_dir):
             print("[ERROR: package_source_dir '{}' does not exist]".format(self.pkg_src_dir))
             sys.exit(-1)
