@@ -247,16 +247,16 @@ def is_windows():
 def find_project_config(opts):
     project_json_file = opts["project_json"]
     lookup_path = pabs(os.path.join(uberenv_script_dir(), os.pardir))
-    # Default case: project.json seats next to uberenv.py or is given on command line.
+    # Default case: "project.json" seats next to uberenv.py or is given on command line.
     if os.path.isfile(project_json_file):
         return project_json_file
-    # Submodule case: .uberenv.json is in one of the parent dir
+    # Submodule case: ".uberenv_config.json" should be in one of the parent dir
     else:
         end_of_search = False
         while not end_of_search:
             if os.path.dirname(lookup_path) == lookup_path:
                 end_of_search = True
-            project_json_file = pjoin(lookup_path,".uberenv","config.json")
+            project_json_file = pjoin(lookup_path,".uberenv_config.json")
             if os.path.isfile(project_json_file):
                 return project_json_file
             else:
