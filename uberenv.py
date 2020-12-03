@@ -66,6 +66,7 @@ from optparse import OptionParser
 
 from os import environ as env
 from os.path import join as pjoin
+from os.path import abspath as pabs
 
 
 def sexe(cmd,ret_output=False,echo=False):
@@ -211,7 +212,7 @@ def parse_args():
     # be passed without using optparse
     opts = vars(opts)
     if not opts["spack_config_dir"] is None:
-        opts["spack_config_dir"] = os.path.abspath(opts["spack_config_dir"])
+        opts["spack_config_dir"] = pabs(opts["spack_config_dir"])
         if not os.path.isdir(opts["spack_config_dir"]):
             print("[ERROR: invalid spack config dir: {} ]".format(opts["spack_config_dir"]))
             sys.exit(-1)
@@ -221,7 +222,7 @@ def parse_args():
     #  from shell completion, etc)
     if not opts["mirror"] is None:
         if not opts["mirror"].startswith("http") and not os.path.isabs(opts["mirror"]):
-            opts["mirror"] = os.path.abspath(opts["mirror"])
+            opts["mirror"] = pabs(opts["mirror"])
     return opts, extras
 
 
@@ -245,7 +246,7 @@ def is_windows():
 
 def find_project_config(opts):
     project_json_file = opts["project_json"]
-    lookup_path = os.path.abspath(os.path.join(uberenv_script_dir(), os.pardir))
+    lookup_path = pabs(os.path.join(uberenv_script_dir(), os.pardir))
     # Default case: project.json seats next to uberenv.py or is given on command line.
     if os.path.isfile(project_json_file):
         return project_json_file
@@ -259,7 +260,7 @@ def find_project_config(opts):
             if os.path.isfile(project_json_file):
                 return project_json_file
             else:
-                lookup_path = os.path.abspath(os.path.join(lookup_path, os.pardir))
+                lookup_path = pabs(os.path.join(lookup_path, os.pardir))
     print("ERROR: No configuration json file found")
     sys.exit(-1)
 
@@ -277,8 +278,8 @@ class UberEnv():
         print("[uberenv options: {}]".format(str(self.opts)))
 
     def setup_paths_and_dirs(self):
+        # Script dir
         self.uberenv_path = uberenv_script_dir()
-        self.uberenv_conf_path = uberenv_config_dir(self.opts["project_json"])
 
     def set_from_args_or_json(self,setting):
         try:
@@ -352,10 +353,30 @@ class SpackEnv(UberEnv):
 
         UberEnv.setup_paths_and_dirs(self)
 
-        self.pkgs = pjoin(self.uberenv_conf_path, "packages","*")
+        # Spack yaml configs path (compilers.yaml, packages.yaml, etc.)
+        spack_configs_path = pabs(pjoin(self.uberenv_path,"spack_configs"))
+        if "spack_configs_path" in self.project_opts.keys():
+            new_path = self.project_opts["spack_configs_path"]
+            if new_path is not None:
+                spack_configs_path = pabs(new_path)
+        # Test if the override option was used (--spack-config-dir)
+        self.spack_config_dir = self.opts["spack_config_dir"]
+        if self.spack_config_dir is None:
+            uberenv_plat = self.detect_platform()
+            if not uberenv_plat is None:
+                self.spack_config_dir = pabs(pjoin(spack_configs_path,uberenv_plat))
+
+        # Spack local packages path
+        spack_packages_path = pabs(pjoin(self.uberenv_path,"packages"))
+        if "spack_packages_path" in self.project_opts.keys():
+            new_path = self.project_opts["spack_packages_path"]
+            if new_path is not None:
+                spack_packages_path = pabs(new_path)
+        # All local packages
+        self.pkgs = pjoin(spack_packages_path, "*")
 
         # setup destination paths
-        self.dest_dir = os.path.abspath(self.opts["prefix"])
+        self.dest_dir = pabs(self.opts["prefix"])
         self.dest_spack = pjoin(self.dest_dir,"spack")
         print("[installing to: {0}]".format(self.dest_dir))
 
@@ -433,16 +454,6 @@ class SpackEnv(UberEnv):
             sexe("git stash", echo=True)
             sexe("git pull", echo=True)
 
-    def config_dir(self):
-        """ path to compilers.yaml, which we will use for spack's compiler setup"""
-        spack_config_dir = self.opts["spack_config_dir"]
-        if spack_config_dir is None:
-            uberenv_plat = self.detect_platform()
-            if not uberenv_plat is None:
-                spack_config_dir = os.path.abspath(pjoin(self.uberenv_conf_path,"spack_configs",uberenv_plat))
-        return spack_config_dir
-
-
     def disable_spack_config_scopes(self,spack_dir):
         # disables all config scopes except "defaults", which we will
         # force our settings into
@@ -459,7 +470,7 @@ class SpackEnv(UberEnv):
 
     def patch(self):
 
-        cfg_dir = self.config_dir()
+        cfg_dir = self.spack_config_dir
         spack_dir = self.dest_spack
 
         # force spack to use only "defaults" config scope
@@ -467,8 +478,8 @@ class SpackEnv(UberEnv):
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
         # copy in "defaults" config.yaml
-        config_yaml = os.path.abspath(pjoin(self.uberenv_conf_path,"spack_configs","config.yaml"))
-        sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir ), echo=True)
+        config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
+        sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
 
         # copy in other settings per platform
         if not cfg_dir is None:
@@ -611,7 +622,7 @@ class SpackEnv(UberEnv):
                         os.unlink(pkg_lnk_dir)
                     print("")
                     print("[symlinking install to {}]".format(pjoin(self.dest_dir,pkg_lnk_dir)))
-                    os.symlink(pkg_path["path"],os.path.abspath(pkg_lnk_dir))
+                    os.symlink(pkg_path["path"],pabs(pkg_lnk_dir))
                     print("")
                     print("[install complete!]")
         # otherwise we are in the "only dependencies" case and the host-config
@@ -721,10 +732,10 @@ class SpackEnv(UberEnv):
         if not upstream_path:
             print("[--create-upstream requires a upstream directory]")
             sys.exit(-1)
-        upstream_path = os.path.abspath(upstream_path)
+        upstream_path = pabs(upstream_path)
         upstream_name = self.pkg_name
         existing_upstream_path = self.find_spack_upstream(upstream_name)
-        if (not existing_upstream_path) or (upstream_path != os.path.abspath(existing_upstream_path)):
+        if (not existing_upstream_path) or (upstream_path != pabs(existing_upstream_path)):
             # Existing upstream has different URL, error out
             print("[removing existing spack upstream configuration file]")
             sexe("rm spack/etc/spack/defaults/upstreams.yaml")
