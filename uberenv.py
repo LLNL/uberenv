@@ -446,13 +446,21 @@ class SpackEnv(UberEnv):
                 print("[info: using spack commit {}]".format(sha1))
                 sexe("git stash", echo=True)
                 sexe("git fetch origin {0}".format(sha1),echo=True)
-                sexe("git checkout {0}".format(sha1),echo=True)
+                res = sexe("git checkout {0}".format(sha1),echo=True)
+                if res != 0:
+                    # Usually untracked files that would be overwritten
+                    print("[ERROR: Git failed to checkout]")
+                    sys.exit(-1)
 
         if self.opts["spack_pull"]:
             # do a pull to make sure we have the latest
             os.chdir(pjoin(self.dest_dir,"spack"))
             sexe("git stash", echo=True)
             sexe("git pull", echo=True)
+            if res != 0:
+                #Usually untracked files that would be overwritten
+                print("[ERROR: Git failed to pull]")
+                sys.exit(-1)
 
     def disable_spack_config_scopes(self,spack_dir):
         # disables all config scopes except "defaults", which we will
@@ -563,7 +571,7 @@ class SpackEnv(UberEnv):
             if not self.opts["install"]:
                 install_cmd += "dev-build --quiet -d {} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
-                    install_cmd += "-u {} ".format(self.pkg_final_phase)                
+                    install_cmd += "-u {} ".format(self.pkg_final_phase)
             else:
                 install_cmd += "install "
                 if self.opts["run_tests"]:
