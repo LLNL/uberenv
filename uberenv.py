@@ -230,10 +230,6 @@ def uberenv_script_dir():
     # returns the directory of the uberenv.py script
     return os.path.dirname(os.path.realpath(__file__))
 
-def uberenv_config_dir(project_json_file):
-    # returns the directory of the uberenv.py script
-    return os.path.dirname(os.path.realpath(project_json_file))
-
 def load_json_file(json_file):
     # reads json file
     return json.load(open(json_file))
@@ -278,7 +274,6 @@ class UberEnv():
         print("[uberenv options: {}]".format(str(self.opts)))
 
     def setup_paths_and_dirs(self):
-        # Script dir
         self.uberenv_path = uberenv_script_dir()
 
     def set_from_args_or_json(self,setting):
@@ -857,5 +852,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
 
