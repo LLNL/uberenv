@@ -483,17 +483,23 @@ class SpackEnv(UberEnv):
         # copy in "defaults" config.yaml
         config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
         sexe("cp {} {}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
+        mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
+        sexe("cp {} {}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
 
         # copy in other settings per platform
         if not cfg_dir is None:
             print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
 
             config_yaml    = pjoin(cfg_dir,"config.yaml")
+            mirrors_yaml    = pjoin(cfg_dir,"mirrors.yaml")
             compilers_yaml = pjoin(cfg_dir,"compilers.yaml")
             packages_yaml  = pjoin(cfg_dir,"packages.yaml")
 
             if os.path.isfile(config_yaml):
                 sexe("cp {} {}/".format(config_yaml , spack_etc_defaults_dir ), echo=True)
+
+            if os.path.isfile(mirrors_yaml):
+                sexe("cp {} {}/".format(mirrors_yaml , spack_etc_defaults_dir ), echo=True)
 
             if os.path.isfile(compilers_yaml):
                 sexe("cp {} {}/".format(compilers_yaml, spack_etc_defaults_dir ), echo=True)
