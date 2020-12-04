@@ -68,7 +68,7 @@ https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 
 Uberenv can also be used as a submodule. In that case, it is required to provide a configuration file named ``.uberenv_config.json`` in a parent directory. This file is similar to ``project.json`` in purpose, but should additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``. Details in :ref:`project_configuration`.
 
-``uberenv.py`` is developed by LLNL originally in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_, Axom, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used in `Umpire <https://github.com/llnl/umpire>`, `CHAI <https://github.com/llnl/CHAI>`, `RAJA <https://github.com/llnl/RAJA>` and `Serac <https://github.com/llnl/serac>` for example.
+``uberenv.py`` is developed by LLNL originally in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_, Axom, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used in `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_ and `Serac <https://github.com/llnl/serac>`_ for example.
 
 
 Command Line Options
