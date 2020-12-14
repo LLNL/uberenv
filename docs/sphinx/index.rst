@@ -176,14 +176,17 @@ Project settings are as follows:
   spack_url                 **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
   spack_commit              **None**                   Spack commit to checkout                         **None**
   spack_activate            **None**                   Spack packages to activate                       **None**
-  spack_packages_base_paths **None**                   Spack packages to be copied over cloned Spack    ``packages``
+  spack_packages_base_paths **None**                   List of Spack packages directories to be copied  ``packages``
  ========================== ========================== ================================================ =======================================
 
-When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``, providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. Indeed, they cannot sit next to ``uberenv.py`` as per default, since the Uberenv repo does not provide them.
+When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_base_paths``,
+providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. Indeed, they cannot sit next to
+``uberenv.py`` as per default, since the Uberenv repo does not provide them.
 
 ..note::  For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project, see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
 
-..note:: ``uberenv.py`` hot copies ``packages`` to the cloned Spack install, this allows you to easily version control any Spack package overrides necessary.
+..note:: ``uberenv.py`` forcefully copies all directories listed in `spack_packages_base_paths` to the cloned Spack in order that they are given.
+  This allows you to easily version control any Spack package overrides necessary.
 
 Optimization
 ------------
