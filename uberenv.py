@@ -97,7 +97,7 @@ def parse_args():
     # where to install
     parser.add_option("--prefix",
                       dest="prefix",
-                      default="uberenv_libs",
+                      default=None,
                       help="destination directory")
 
     # what compiler to use
@@ -226,9 +226,13 @@ def parse_args():
     return opts, extras
 
 
+def pretty_print_dictionary(dictionary):
+    for key, value in dictionary.items():
+        print("  {0}: {1}".format(key, value))
+
 def uberenv_script_dir():
     # returns the directory of the uberenv.py script
-    return os.path.dirname(os.path.realpath(__file__))
+    return os.path.dirname(os.path.abspath(__file__))
 
 def load_json_file(json_file):
     # reads json file
@@ -270,8 +274,18 @@ class UberEnv():
 
         # load project settings
         self.project_opts = load_json_file(opts["project_json"])
-        print("[uberenv project settings: {}]".format(str(self.project_opts)))
-        print("[uberenv options: {}]".format(str(self.opts)))
+
+        # Set project.json defaults
+        if not "force_commandline_prefix" in self.project_opts:
+            self.project_opts["force_commandline_prefix"] = false
+
+        print("[uberenv project settings: ")
+        pretty_print_dictionary(self.project_opts)
+        print("]")
+
+        print("[uberenv command line options: ")
+        pretty_print_dictionary(self.opts)
+        print("]")
 
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
@@ -361,16 +375,26 @@ class SpackEnv(UberEnv):
             if not uberenv_plat is None:
                 self.spack_config_dir = pabs(pjoin(spack_configs_path,uberenv_plat))
 
-        # Spack local packages path
-        spack_packages_path = pabs(pjoin(self.uberenv_path,"packages"))
-        if "spack_packages_path" in self.project_opts.keys():
-            new_path = self.project_opts["spack_packages_path"]
-            if new_path is not None:
-                spack_packages_path = pabs(new_path)
-        # All local packages
-        self.pkgs = pjoin(spack_packages_path, "*")
+        # Find project level packages to override spack's internal packages
+        self.spack_packages_base_paths = []
+        if "spack_packages_base_paths" in self.project_opts.keys():
+            # packages directories listed in project.json
+            _paths = self.project_opts["spack_packages_base_paths"]
+            for _path in _paths:
+                self.spack_packages_base_paths.append(pabs(_path))
+        else:
+            # default to packages living next to uberenv script
+            self.spack_packages_base_paths.append(pabs(pjoin(self.uberenv_path,"packages")))
 
         # setup destination paths
+        if not self.opts["prefix"]:
+            if self.project_opts["force_commandline_prefix"]:
+                # project has specified prefix must be on command line
+                print("[ERROR: --prefix flag for library destination is required]")
+                sys.exit(1)
+            # otherwise set default
+            self.opts["prefix"] = "uberenv_libs"
+            
         self.dest_dir = pabs(self.opts["prefix"])
         self.dest_spack = pjoin(self.dest_dir,"spack")
         print("[installing to: {0}]".format(self.dest_dir))
@@ -511,10 +535,13 @@ class SpackEnv(UberEnv):
             sexe("spack/bin/spack compiler find", echo=True)
 
         # hot-copy our packages into spack
-        if self.pkgs:
+        if self.spack_packages_base_paths:
             dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
-            print("[copying patched packages from {0}]".format(self.pkgs))
-            sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
+            for _base_path in self.spack_packages_base_paths:
+                _src_glob = pjoin(_base_path, "*")
+                print("[copying patched packages from {0}]".format(_src_glob))
+                sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
+
 
 
     def clean_build(self):
