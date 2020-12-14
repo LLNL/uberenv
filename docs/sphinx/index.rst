@@ -90,7 +90,7 @@ Build configuration
   ``-k``                  Ignore SSL Errors                              **False**
   ``--install``           Fully install target, not just dependencies    **False**
   ``--run_tests``         Invoke tests during build and against install  **False**
-  ``--project-json``      File for project specific settings             ``project.json``
+  ``--project-json``      File for project specific settings             See :ref:`project_configuration`
  ======================= ============================================== ================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
@@ -154,26 +154,36 @@ copied to destination directory. This file specifies the compiler settings and p
 
 .. _project_configuration:
 
-Project configuration
+Project Configuration
 ---------------------
 
-Part of the configuration can also be addressed using a json file. By default, it is named ``project.json`` and some settings can be overridden on command line:
+Project level configuration options can also be addressed using a json file and some settings can be overridden on command line.  This json file
+is found in the in the following order:
 
- ==================== ========================== ================================================ =======================================
-  Setting              Option                     Description                                      Default
- ==================== ========================== ================================================ =======================================
-  package_name         ``--package-name``         Spack package name                               **None**
-  package_version      **None**                   Spack package version                            **None**
-  package_final_phase  ``--package-final-phase``  Controls after which phase Spack should stop     **None**
-  package_source_dir   ``--package-source-dir``   Controls the source directory Spack should use   **None**
-  spack_url            **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
-  spack_commit         **None**                   Spack commit to checkout                         **None**
-  spack_activate       **None**                   Spack packages to activate                       **None**
- ==================== ========================== ================================================ =======================================
+1. `--project.json=[path/to/project.json]` command line option
+2. `project.json` that lives in the same directory as `uberenv.py`
+3. `.uberenv_config.json` found recursively in a parent directory (typically at the root of your project)
 
-However, Uberenv configuration may instead sit in a location external to the uberenv directory itself. In particular when Uberenv is used as a submodule. Uberenv identifies such a case when no ``project.json`` file is found next to the script. It will then look for ``.uberenv_config.json`` recursively in parent directories. The typical usage is to place it at the root directory of the project.
+Project settings are as follows:
 
-When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``, providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. Indeed, they cannot sit next to ``uberenv.py`` as per default, since Uberenv repo does not provide them.
+ ========================== ========================== ================================================ =======================================
+  Setting                   Command line Option        Description                                      Default
+ ========================== ========================== ================================================ =======================================
+  package_name              ``--package-name``         Spack package name                               **None**
+  package_version           **None**                   Spack package version                            **None**
+  package_final_phase       ``--package-final-phase``  Controls after which phase Spack should stop     **None**
+  package_source_dir        ``--package-source-dir``   Controls the source directory Spack should use   **None**
+  spack_url                 **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
+  spack_commit              **None**                   Spack commit to checkout                         **None**
+  spack_activate            **None**                   Spack packages to activate                       **None**
+  spack_packages_base_paths **None**                   Spack packages to be copied over cloned Spack    ``packages``
+ ========================== ========================== ================================================ =======================================
+
+When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``, providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. Indeed, they cannot sit next to ``uberenv.py`` as per default, since the Uberenv repo does not provide them.
+
+..note::  For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project, see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
+
+..note:: ``uberenv.py`` hot copies ``packages`` to the cloned Spack install, this allows you to easily version control any Spack package overrides necessary.
 
 Optimization
 ------------
@@ -187,14 +197,4 @@ Optimization
   ``--create-mirror``  Creates a Spack mirror at specified location   **None**
   ``--upstream``       Location of a Spack upstream                   **None**
  ==================== ============================================== ================================================
-
-
-Project Settings
-~~~~~~~~~~~~~~~~
-
-A few notes on using ``uberenv.py`` in a new project:
-
-* For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project, see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_
-
-* ``uberenv.py`` hot copies ``packages`` to the cloned Spack install, this allows you to easily version control any Spack package overrides necessary
 
