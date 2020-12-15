@@ -232,7 +232,7 @@ def pretty_print_dictionary(dictionary):
 
 def uberenv_script_dir():
     # returns the directory of the uberenv.py script
-    return os.path.dirname(os.path.realpath(__file__))
+    return os.path.dirname(os.path.abspath(__file__))
 
 def load_json_file(json_file):
     # reads json file
