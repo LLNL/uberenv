@@ -177,19 +177,20 @@ is found in the in the following order:
 
 Project settings are as follows:
 
- ====================== ========================== =============================================== =======================================
-  Setting               Command line Option        Description                                     Default
- ====================== ========================== =============================================== =======================================
-  package_name          ``--package-name``         Spack package name                              **None**
-  package_version       **None**                   Spack package version                           **None**
-  package_final_phase   ``--package-final-phase``  Controls after which phase Spack should stop    **None**
-  package_source_dir    ``--package-source-dir``   Controls the source directory Spack should use  **None**
-  spack_url             **None**                   Url where to download Spack                     ``https://github.com/spack/spack.git``
-  spack_commit          **None**                   Spack commit to checkout                        **None**
-  spack_activate        **None**                   Spack packages to activate                      **None**
-  spack_configs_path    **None**                   Directory with Spack configs to be copied       ``spack_configs``
-  spack_packages_path   **None**                   Directory with Spack packages to be copied      ``packages``
- ====================== ========================== =============================================== =======================================
+ ========================= ========================== ================================================ =======================================
+  Setting                  Command line Option        Description                                      Default
+ ========================= ========================== ================================================ =======================================
+  package_name             ``--package-name``         Spack package name                               **None**
+  package_version          **None**                   Spack package version                            **None**
+  package_final_phase      ``--package-final-phase``  Controls after which phase Spack should stop     **None**
+  package_source_dir       ``--package-source-dir``   Controls the source directory Spack should use   **None**
+  force_commandline_prefix **None**                   Force user to specify `--prefix` on command line ``False``
+  spack_url                **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
+  spack_commit             **None**                   Spack commit to checkout                         **None**
+  spack_activate           **None**                   Spack packages to activate                       **None**
+  spack_configs_path       **None**                   Directory with Spack configs to be copied        ``spack_configs``
+  spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
+ ========================= ========================== ================================================ =======================================
 
 When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``,
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. Indeed, they cannot sit next to

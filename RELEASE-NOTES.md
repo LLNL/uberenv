@@ -10,7 +10,9 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 ## Unreleased
 
 ### Added
-- Allow projects to force prefix on command line via new project option: `force_commandline_prefix`
+- Allow projects to force specifying `--prefix` on command line via new project option:
+  `force_commandline_prefix`.  This is useful when the default `uberenv_libs` can not exist
+  inside of your project's source repository.
 
 ### Changed
 - Added ability to have multiple packages directories that will get copied into spack on top of
