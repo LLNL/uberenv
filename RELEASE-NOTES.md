@@ -19,5 +19,6 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
   each other via project configuration option: `spack_packages_path`
 - Pretty print various options to screen for readability
 - Allow `.uberenv_config.json` to live at the same level as `uberenv.py`
+- No longer removes symlinks when using the directory of `uberenv.py`
 
 ### Fixed
