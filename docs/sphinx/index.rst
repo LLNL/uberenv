@@ -47,9 +47,9 @@
 Uberenv
 ~~~~~~~
 
-**Uberenv** automates using `Spack <ttp://www.spack.io>`_ to build and deploy software.
+**Uberenv** automates using `Spack <https://spack.io>`_ to build and deploy software.
 
-Many projects leverage `Spack <ttp://www.spack.io>`_ to help build the software dependencies needed to
+Many projects leverage `Spack <https://spack.io>`_ to help build the software dependencies needed to
 develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate using Spack to build
 third-party dependencies for development and to deploy Spack packages.
 
@@ -75,7 +75,7 @@ Uberenv can also be used as a submodule. In that case, it is required to provide
 ``.uberenv_config.json`` in a parent directory. This file is similar to ``project.json`` in purpose, but should
 additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``. Details in :ref:`project_configuration`.
 
-Uberenv is developed by LLNL originally in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_,
+Uberenv is developed by LLNL originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
 `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used
 in `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_
 and `Serac <https://github.com/llnl/serac>`_ for example.
@@ -143,7 +143,7 @@ If the target Spack package supports Spack's testing hooks, you can run tests du
     python scripts/uberenv/uberenv.py --install \
                                       --run_tests
 
-For details on Spack's spec syntax, see the `Spack Specs & dependencies <http://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_ documentation.
+For details on Spack's spec syntax, see the `Spack Specs & dependencies <https://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_ documentation.
 
 
 Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs/{platform}`` or under ``{spack_config_paths}/{platform}``, where:
