@@ -393,7 +393,7 @@ class SpackEnv(UberEnv):
         if "spack_packages_path" in self.project_opts.keys():
             # packages directories listed in project.json
             _paths = self.project_opts["spack_packages_path"]
-            if type(_paths) is str:
+            if not isinstance(_paths, list):
                 # user gave a single string
                 self.append_path_to_packages_paths(_paths)
             else:
