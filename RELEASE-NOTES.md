@@ -14,7 +14,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 
 ### Changed
 - Added ability to have multiple packages directories that will get copied into spack on top of
-  each other via renamed project option: `spack_packages_path` to `spack_packages_base_paths`
+  each other via renamed project option: `spack_packages_path` to `spack_packages_paths`
 - Pretty print various options to screen for readability
 
 ### Fixed

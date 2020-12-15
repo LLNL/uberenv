@@ -376,15 +376,15 @@ class SpackEnv(UberEnv):
                 self.spack_config_dir = pabs(pjoin(spack_configs_path,uberenv_plat))
 
         # Find project level packages to override spack's internal packages
-        self.spack_packages_base_paths = []
-        if "spack_packages_base_paths" in self.project_opts.keys():
+        self.spack_packages_paths = []
+        if "spack_packages_paths" in self.project_opts.keys():
             # packages directories listed in project.json
-            _paths = self.project_opts["spack_packages_base_paths"]
+            _paths = self.project_opts["spack_packages_paths"]
             for _path in _paths:
-                self.spack_packages_base_paths.append(pabs(_path))
+                self.spack_packages_paths.append(pabs(_path))
         else:
             # default to packages living next to uberenv script
-            self.spack_packages_base_paths.append(pabs(pjoin(self.uberenv_path,"packages")))
+            self.spack_packages_paths.append(pabs(pjoin(self.uberenv_path,"packages")))
 
         # setup destination paths
         if not self.opts["prefix"]:
@@ -535,9 +535,9 @@ class SpackEnv(UberEnv):
             sexe("spack/bin/spack compiler find", echo=True)
 
         # hot-copy our packages into spack
-        if self.spack_packages_base_paths:
+        if self.spack_packages_paths:
             dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
-            for _base_path in self.spack_packages_base_paths:
+            for _base_path in self.spack_packages_paths:
                 _src_glob = pjoin(_base_path, "*")
                 print("[copying patched packages from {0}]".format(_src_glob))
                 sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))

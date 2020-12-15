@@ -66,15 +66,15 @@ By default, this folder is also used to store extra Spack and Uberenv configurat
 
 https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 
-Uberenv can also be used as a submodule. In that case, it is required to provide a configuration file named ``.uberenv_config.json`` in a parent directory. This file is similar to ``project.json`` in purpose, but should additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``. Details in :ref:`project_configuration`.
+Uberenv can also be used as a submodule. In that case, it is required to provide a configuration file named ``.uberenv_config.json`` in a parent directory. This file is similar to ``project.json`` in purpose, but should additionally provide the entries ``spack_configs_path`` and ``spack_packages_paths``. Details in :ref:`project_configuration`.
 
-``uberenv.py`` is developed by LLNL originally in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_, Axom, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used in `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_ and `Serac <https://github.com/llnl/serac>`_ for example.
+``uberenv.py`` is developed by LLNL originally in support of the `Ascent <http://github.com/alpine-dav/ascent/>`_, `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used in `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_ and `Serac <https://github.com/llnl/serac>`_ for example.
 
 
 Command Line Options
 ~~~~~~~~~~~~~~~~~~~~
 
-Build configuration
+Build Configuration
 -------------------
 
 ``uberenv.py`` has a few options that allow you to control how dependencies are built:
@@ -166,26 +166,27 @@ is found in the in the following order:
 
 Project settings are as follows:
 
- ========================== ========================== ================================================ =======================================
-  Setting                   Command line Option        Description                                      Default
- ========================== ========================== ================================================ =======================================
-  package_name              ``--package-name``         Spack package name                               **None**
-  package_version           **None**                   Spack package version                            **None**
-  package_final_phase       ``--package-final-phase``  Controls after which phase Spack should stop     **None**
-  package_source_dir        ``--package-source-dir``   Controls the source directory Spack should use   **None**
-  spack_url                 **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
-  spack_commit              **None**                   Spack commit to checkout                         **None**
-  spack_activate            **None**                   Spack packages to activate                       **None**
-  spack_packages_base_paths **None**                   List of Spack packages directories to be copied  ``packages``
- ========================== ========================== ================================================ =======================================
+ ====================== ========================== ======================================================= =======================================
+  Setting               Command line Option        Description                                             Default
+ ====================== ========================== ======================================================= =======================================
+  package_name          ``--package-name``         Spack package name                                      **None**
+  package_version       **None**                   Spack package version                                   **None**
+  package_final_phase   ``--package-final-phase``  Controls after which phase Spack should stop            **None**
+  package_source_dir    ``--package-source-dir``   Controls the source directory Spack should use          **None**
+  spack_url             **None**                   Url where to download Spack                             ``https://github.com/spack/spack.git``
+  spack_commit          **None**                   Spack commit to checkout                                **None**
+  spack_activate        **None**                   Spack packages to activate                              **None**
+  spack_configs_path    **None**                   Directory with Spack configs to be copied               ``spack_configs``
+  spack_packages_paths  **None**                   List of directories with packages to be copied in order ``packages``
+ ====================== ========================== ======================================================= =======================================
 
-When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_base_paths``,
+When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_paths``,
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. Indeed, they cannot sit next to
 ``uberenv.py`` as per default, since the Uberenv repo does not provide them.
 
 ..note::  For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project, see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
 
-..note:: ``uberenv.py`` forcefully copies all directories listed in `spack_packages_base_paths` to the cloned Spack in order that they are given.
+..note:: ``uberenv.py`` forcefully copies all directories listed in `spack_packages_paths` to the cloned Spack in order that they are given.
   This allows you to easily version control any Spack package overrides necessary.
 
 Optimization
@@ -193,11 +194,11 @@ Optimization
 
 ``uberenv.py`` also features options to optimize the installation
 
- ==================== ============================================== ================================================
+ ===================== ============================================== ================================================
   Option               Description                                    Default
- ==================== ============================================== ================================================
+ ===================== ============================================== ================================================
   ``--mirror``         Location of a Spack mirror                     **None**
   ``--create-mirror``  Creates a Spack mirror at specified location   **None**
   ``--upstream``       Location of a Spack upstream                   **None**
- ==================== ============================================== ================================================
+ ===================== ============================================== ================================================
 
