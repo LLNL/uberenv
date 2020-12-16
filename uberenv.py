@@ -97,7 +97,7 @@ def parse_args():
     # where to install
     parser.add_option("--prefix",
                       dest="prefix",
-                      default="uberenv_libs",
+                      default=None,
                       help="destination directory")
 
     # what compiler to use
@@ -226,9 +226,13 @@ def parse_args():
     return opts, extras
 
 
+def pretty_print_dictionary(dictionary):
+    for key, value in dictionary.items():
+        print("  {0}: {1}".format(key, value))
+
 def uberenv_script_dir():
     # returns the directory of the uberenv.py script
-    return os.path.dirname(os.path.realpath(__file__))
+    return os.path.dirname(os.path.abspath(__file__))
 
 def load_json_file(json_file):
     # reads json file
@@ -242,12 +246,12 @@ def is_windows():
 
 def find_project_config(opts):
     project_json_file = opts["project_json"]
-    lookup_path = pabs(os.path.join(uberenv_script_dir(), os.pardir))
     # Default case: "project.json" seats next to uberenv.py or is given on command line.
     if os.path.isfile(project_json_file):
         return project_json_file
-    # Submodule case: ".uberenv_config.json" should be in one of the parent dir
+    # Submodule case: Look for ".uberenv_config.json" in current then search parent dirs
     else:
+        lookup_path = pabs(uberenv_script_dir())
         end_of_search = False
         while not end_of_search:
             if os.path.dirname(lookup_path) == lookup_path:
@@ -270,8 +274,18 @@ class UberEnv():
 
         # load project settings
         self.project_opts = load_json_file(opts["project_json"])
-        print("[uberenv project settings: {}]".format(str(self.project_opts)))
-        print("[uberenv options: {}]".format(str(self.opts)))
+
+        # Set project.json defaults
+        if not "force_commandline_prefix" in self.project_opts:
+            self.project_opts["force_commandline_prefix"] = False
+
+        print("[uberenv project settings: ")
+        pretty_print_dictionary(self.project_opts)
+        print("]")
+
+        print("[uberenv command line options: ")
+        pretty_print_dictionary(self.opts)
+        print("]")
 
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
@@ -317,6 +331,8 @@ class SpackEnv(UberEnv):
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
 
+        self.packages_paths = []
+
         self.spec_hash = ""
         self.use_install = False
 
@@ -342,6 +358,18 @@ class SpackEnv(UberEnv):
 
         print("[spack spec: {}]".format(self.opts["spec"]))
 
+
+    def append_path_to_packages_paths(self, path, errorOnNonexistant=True):
+        path = pabs(path)
+        if not os.path.exists(path):
+            if errorOnNonexistant:
+                print("[ERROR: Given path in 'spack_packages_path' does not exist: {0}]".format(path))
+                sys.exit(1)
+            else:
+                return
+        self.packages_paths.append(path)
+
+
     def setup_paths_and_dirs(self):
         # get the current working path, and the glob used to identify the
         # package files we want to hot-copy to spack
@@ -361,16 +389,30 @@ class SpackEnv(UberEnv):
             if not uberenv_plat is None:
                 self.spack_config_dir = pabs(pjoin(spack_configs_path,uberenv_plat))
 
-        # Spack local packages path
-        spack_packages_path = pabs(pjoin(self.uberenv_path,"packages"))
+        # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
-            new_path = self.project_opts["spack_packages_path"]
-            if new_path is not None:
-                spack_packages_path = pabs(new_path)
-        # All local packages
-        self.pkgs = pjoin(spack_packages_path, "*")
+            # packages directories listed in project.json
+            _paths = self.project_opts["spack_packages_path"]
+            if not isinstance(_paths, list):
+                # user gave a single string
+                self.append_path_to_packages_paths(_paths)
+            else:
+                # user gave a list of strings
+                for _path in _paths:
+                    self.append_path_to_packages_paths(_path)
+        else:
+            # default to packages living next to uberenv script if it exists
+            self.append_path_to_packages_paths(pjoin(self.uberenv_path,"packages"), errorOnNonexistant=False)
 
         # setup destination paths
+        if not self.opts["prefix"]:
+            if self.project_opts["force_commandline_prefix"]:
+                # project has specified prefix must be on command line
+                print("[ERROR: --prefix flag for library destination is required]")
+                sys.exit(1)
+            # otherwise set default
+            self.opts["prefix"] = "uberenv_libs"
+            
         self.dest_dir = pabs(self.opts["prefix"])
         self.dest_spack = pjoin(self.dest_dir,"spack")
         print("[installing to: {0}]".format(self.dest_dir))
@@ -491,7 +533,7 @@ class SpackEnv(UberEnv):
             print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
 
             config_yaml    = pjoin(cfg_dir,"config.yaml")
-            mirrors_yaml    = pjoin(cfg_dir,"mirrors.yaml")
+            mirrors_yaml   = pjoin(cfg_dir,"mirrors.yaml")
             compilers_yaml = pjoin(cfg_dir,"compilers.yaml")
             packages_yaml  = pjoin(cfg_dir,"packages.yaml")
 
@@ -511,10 +553,13 @@ class SpackEnv(UberEnv):
             sexe("spack/bin/spack compiler find", echo=True)
 
         # hot-copy our packages into spack
-        if self.pkgs:
+        if len(self.packages_paths) > 0:
             dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
-            print("[copying patched packages from {0}]".format(self.pkgs))
-            sexe("cp -Rf {} {}".format(self.pkgs,dest_spack_pkgs))
+            for _base_path in self.packages_paths:
+                _src_glob = pjoin(_base_path, "*")
+                print("[copying patched packages from {0}]".format(_src_glob))
+                sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
+
 
 
     def clean_build(self):
@@ -858,4 +903,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
