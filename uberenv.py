@@ -367,7 +367,7 @@ class SpackEnv(UberEnv):
                 sys.exit(1)
             else:
                 return
-        self.packages_paths.append(pabs(path))
+        self.packages_paths.append(path)
 
 
     def setup_paths_and_dirs(self):
@@ -903,4 +903,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
