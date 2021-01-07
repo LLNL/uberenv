@@ -1,7 +1,7 @@
 #!/bin/sh
 "exec" "python" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2020, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
