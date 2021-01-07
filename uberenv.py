@@ -109,7 +109,7 @@ def parse_args():
 
     # for vcpkg, what architecture to target
     parser.add_option("--triplet",
-                      dest="triplet",
+                      dest="vcpkg_triplet",
                       default=None,
                       help="vcpkg architecture triplet")
 
@@ -340,9 +340,10 @@ class VcpkgEnv(UberEnv):
         UberEnv.__init__(self,opts,extra_opts)
 
         # setup architecture triplet
-        self.triplet = opts["triplet"]
-        if self.triplet is None:
-           self.triplet = os.getenv("VCPKG_DEFAULT_TRIPLET", "x86-windows")
+        self.vcpkg_triplet = self.set_from_args_or_json("vcpkg_triplet", False)
+        print("Vcpkg triplet: {}".format(self.vcpkg_triplet))
+        if self.vcpkg_triplet is None:
+           self.vcpkg_triplet = os.getenv("VCPKG_DEFAULT_TRIPLET", "x86-windows")
 
     def setup_paths_and_dirs(self):
         # get the current working path, and the glob used to identify the
@@ -372,7 +373,7 @@ class VcpkgEnv(UberEnv):
             clone_opts = ("-c http.sslVerify=false " 
                           if self.opts["ignore_ssl_errors"] else "")
 
-            clone_cmd =  "git {0} clone -b {1} {2}".format(clone_opts, vcpkg_branch,vcpkg_url)
+            clone_cmd =  "git {0} clone -b {1} {2} vcpkg".format(clone_opts, vcpkg_branch,vcpkg_url)
             sexe(clone_cmd, echo=True)
 
             # optionally, check out a specific commit
@@ -427,14 +428,14 @@ class VcpkgEnv(UberEnv):
         
         os.chdir(self.dest_vcpkg)
         install_cmd = "vcpkg.exe "
-        install_cmd += "install {0}:{1}".format(self.pkg_name, self.triplet)
+        install_cmd += "install {0}:{1}".format(self.pkg_name, self.vcpkg_triplet)
 
         res = sexe(install_cmd, echo=True)
 
         # Running the install_cmd eventually generates the host config file,
         # which we copy to the target directory.
-        src_hc = pjoin(self.dest_vcpkg, "installed", self.triplet, "include", self.pkg_name, "hc.cmake")
-        hcfg_fname = pjoin(self.dest_dir, "{0}.{1}.cmake".format(platform.uname()[1], self.triplet))
+        src_hc = pjoin(self.dest_vcpkg, "installed", self.vcpkg_triplet, "include", self.pkg_name, "hc.cmake")
+        hcfg_fname = pjoin(self.dest_dir, "{0}.{1}.cmake".format(platform.uname()[1], self.vcpkg_triplet))
         print("[info: copying host config file to {0}]".format(hcfg_fname))
         shutil.copy(os.path.abspath(src_hc), hcfg_fname)
         print("")
@@ -592,7 +593,7 @@ class SpackEnv(UberEnv):
             spack_url = self.project_opts.get("spack_url", "https://github.com/spack/spack.git")
             spack_branch = self.project_opts.get("spack_branch", "develop")
 
-            clone_cmd =  "git {0} clone --single-branch --depth=1 -b {1} {2}".format(clone_opts, spack_branch, spack_url)
+            clone_cmd =  "git {0} clone --single-branch --depth=1 -b {1} {2} spack".format(clone_opts, spack_branch, spack_url)
             sexe(clone_cmd, echo=True)
 
         if "spack_commit" in self.project_opts:
@@ -867,7 +868,7 @@ class SpackEnv(UberEnv):
         if existing_mirror_path and mirror_path != existing_mirror_path:
             # Existing mirror has different URL, error out
             print("[removing existing spack mirror `{0}` @ {1}]".format(mirror_name,
-                                                                    existing_mirror_path))
+                                                                        existing_mirror_path))
             #
             # Note: In this case, spack says it removes the mirror, but we still
             # get errors when we try to add a new one, sounds like a bug
