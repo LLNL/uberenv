@@ -300,6 +300,23 @@ class UberEnv():
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
 
+        # setup destination paths
+        if not self.opts["prefix"]:
+            if self.project_opts["force_commandline_prefix"]:
+                # project has specified prefix must be on command line
+                print("[ERROR: --prefix flag for library destination is required]")
+                sys.exit(1)
+            # otherwise set default
+            self.opts["prefix"] = "uberenv_libs"
+
+        self.dest_dir = pabs(self.opts["prefix"])
+
+        # print a warning if the dest path already exists
+        if not os.path.isdir(self.dest_dir):
+            os.mkdir(self.dest_dir)
+        else:
+            print("[info: destination '{0}' already exists]".format(self.dest_dir))
+
     def set_from_args_or_json(self,setting):
         try:
             setting_value = self.project_opts[setting]
@@ -351,6 +368,7 @@ class VcpkgEnv(UberEnv):
         self.ports = pjoin(self.uberenv_path, "vcpkg_ports","*")
 
         # setup path for vcpkg repo
+        print("[installing to: {0}]".format(self.dest_dir))
         self.dest_vcpkg = pjoin(self.dest_dir,"vcpkg")
 
         if os.path.isdir(self.dest_vcpkg):
@@ -523,25 +541,9 @@ class SpackEnv(UberEnv):
             # default to packages living next to uberenv script if it exists
             self.append_path_to_packages_paths(pjoin(self.uberenv_path,"packages"), errorOnNonexistant=False)
 
-        # setup destination paths
-        if not self.opts["prefix"]:
-            if self.project_opts["force_commandline_prefix"]:
-                # project has specified prefix must be on command line
-                print("[ERROR: --prefix flag for library destination is required]")
-                sys.exit(1)
-            # otherwise set default
-            self.opts["prefix"] = "uberenv_libs"
-            
-        self.dest_dir = pabs(self.opts["prefix"])
-        self.dest_spack = pjoin(self.dest_dir,"spack")
         print("[installing to: {0}]".format(self.dest_dir))
 
-        # print a warning if the dest path already exists
-        if not os.path.isdir(self.dest_dir):
-            os.mkdir(self.dest_dir)
-        else:
-            print("[info: destination '{0}' already exists]".format(self.dest_dir))
-
+        self.dest_spack = pjoin(self.dest_dir,"spack")
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
