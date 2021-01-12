@@ -52,7 +52,7 @@ It uses `Spack <http://www.spack.io>`_ on Unix-based systems (e.g. Linux and mac
 and `Vcpkg <https://github.com/microsoft/vcpkg>`_ on Windows systems.
 
 Many projects leverage package managers, like Spack and Vcpkg, to help build the software dependencies needed to
-develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate usage of a package manager to build
+develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate the usage of a package manager to build
 third-party dependencies for development and deployment.
 
 Uberenv was released as part of Conduit (https://github.com/LLNL/conduit/). It is included in-source in several projects. The
@@ -78,7 +78,7 @@ https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 Uberenv can also be used as a submodule of the user project, where one must provide a configuration file named
 ``.uberenv_config.json`` in a parent directory. This file is similar to ``project.json`` in purpose, but should
 additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``. 
-Additional details are provided in :ref:`project_configuration`.
+See :ref:`project_configuration` for more details.
 
 Uberenv is developed by LLNL, originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
 `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used
@@ -239,4 +239,3 @@ Uberenv also features options to optimize the installation
 
 .. note::
     These options are only currently available for spack.
-

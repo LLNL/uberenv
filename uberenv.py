@@ -388,7 +388,7 @@ class VcpkgEnv(UberEnv):
             clone_opts = ("-c http.sslVerify=false " 
                           if self.opts["ignore_ssl_errors"] else "")
 
-            clone_cmd =  "git {0} clone -b {1} {2} vcpkg".format(clone_opts, vcpkg_branch,vcpkg_url)
+            clone_cmd =  "git {0} clone --single-branch --depth=1 -b {1} {2} vcpkg".format(clone_opts, vcpkg_branch,vcpkg_url)
             sexe(clone_cmd, echo=True)
 
             # optionally, check out a specific commit
@@ -402,7 +402,12 @@ class VcpkgEnv(UberEnv):
             # do a pull to make sure we have the latest
             os.chdir(self.dest_vcpkg)
             sexe("git stash", echo=True)
-            sexe("git pull", echo=True)
+            res = sexe("git pull", echo=True)
+            if res != 0:
+                #Usually untracked files that would be overwritten
+                print("[ERROR: Git failed to pull]")
+                sys.exit(-1)
+
 
         # Bootstrap vcpkg
         os.chdir(self.dest_vcpkg)
@@ -412,8 +417,7 @@ class VcpkgEnv(UberEnv):
     def patch(self):
         """ hot-copy our ports into vcpkg """
         
-        import distutils
-        from distutils import dir_util
+        import distutils.dir_util
 
         src_vcpkg_ports = pjoin(self.uberenv_path, "vcpkg_ports")
         dest_vcpkg_ports = pjoin(self.dest_vcpkg,"ports")
@@ -614,7 +618,7 @@ class SpackEnv(UberEnv):
             # do a pull to make sure we have the latest
             os.chdir(pjoin(self.dest_dir,"spack"))
             sexe("git stash", echo=True)
-            sexe("git pull", echo=True)
+            res = sexe("git pull", echo=True)
             if res != 0:
                 #Usually untracked files that would be overwritten
                 print("[ERROR: Git failed to pull]")
