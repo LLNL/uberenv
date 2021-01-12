@@ -1,5 +1,5 @@
 .. ############################################################################
-.. # Copyright (c) 2014-2020, Lawrence Livermore National Security, LLC.
+.. # Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
 .. #
 .. # Produced at the Lawrence Livermore National Laboratory
 .. #
@@ -47,11 +47,13 @@
 Uberenv
 ~~~~~~~
 
-**Uberenv** automates using `Spack <https://spack.io>`_ to build and deploy software.
+**Uberenv** automates using a package manager to build and deploy software.
+It uses `Spack <http://www.spack.io>`_ on Unix-based systems (e.g. Linux and macOS)
+and `Vcpkg <https://github.com/microsoft/vcpkg>`_ on Windows systems.
 
-Many projects leverage `Spack <https://spack.io>`_ to help build the software dependencies needed to
-develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate using Spack to build
-third-party dependencies for development and to deploy Spack packages.
+Many projects leverage package managers, like Spack and Vcpkg, to help build the software dependencies needed to
+develop and deploy their projects on HPC systems. Uberenv is a python script that helps automate the usage of a package manager to build
+third-party dependencies for development and deployment.
 
 Uberenv was released as part of Conduit (https://github.com/LLNL/conduit/). It is included in-source in several projects. The
 https://github.com/llnl/uberenv/ repo is used to hold the latest reference version of Uberenv.
@@ -60,25 +62,28 @@ https://github.com/llnl/uberenv/ repo is used to hold the latest reference versi
 uberenv.py
 ~~~~~~~~~~
 
-Uberenv is a single file python script that automates fetching Spack, building and installing third party dependencies,
-and can optionally install top-level packages as well. To automate the full install process, Uberenv uses a target Spack
-package along with extra settings such as Spack compiler and external third party package details for common HPC platforms.
+Uberenv is a single file python script (``uberenv.py``) that automates fetching Spack or Vcpkg, building and installing third party dependencies,
+and can optionally install top-level packages as well. To automate the full install process, Uberenv uses a target Spack or Vcpkg
+package along with extra settings such as compilers and external third party package details for common HPC platforms.
 
-Uberenv is included directly in a project's source code repo, usually in the folder: ``scripts/uberenv/``
-By default, this folder is also used to store extra Spack and Uberenv configuration files unique to the target project.
-Uberenv uses a ``project.json`` file to specify project details, including the target Spack package name and which
-Spack repo is used.  Conduit's source repo serves as an example for Uberenv and Spack configuration files, etc:
+Uberenv is included directly in a project's source code repo, usually in the folder: ``scripts/uberenv/``.
+This folder is also used to store extra configuration files unique to the target project.
+Uberenv uses a ``project.json`` file to specify project details, including the target package name 
+and the base branch or commit in the package manager.  
+
+Conduit's source repo serves as an example for Uberenv and Spack configuration files, etc:
 
 https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 
-Uberenv can also be used as a submodule. In that case, it is required to provide a configuration file named
+Uberenv can also be used as a submodule of the user project, where one must provide a configuration file named
 ``.uberenv_config.json`` in a parent directory. This file is similar to ``project.json`` in purpose, but should
-additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``. Details in :ref:`project_configuration`.
+additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``. 
+See :ref:`project_configuration` for more details.
 
-Uberenv is developed by LLNL originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
+Uberenv is developed by LLNL, originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
 `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used
-in `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_
-and `Serac <https://github.com/llnl/serac>`_ for example.
+by `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_
+and `Serac <https://github.com/llnl/serac>`_, among others.
 
 
 Command Line Options
@@ -101,6 +106,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--install``           Fully install target, not just dependencies    **False**
   ``--run_tests``         Invoke tests during build and against install  **False**
   ``--project-json``      File for project specific settings             See :ref:`project_configuration`
+  ``--triplet``           (vcpkg) Target architecture and linkage        ``x86-Windows``
  ======================= ============================================== ================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
@@ -128,6 +134,14 @@ Default invocation on OSX:
                                       --spec %clang \
                                       --spack-config-dir scripts/uberenv/spack_configs/darwin/
 
+Default invocation on Windows:
+
+.. code:: bash
+
+    python scripts/uberenv/uberenv.py --prefix uberenv_libs \
+                                      --triplet x86-windows
+
+See `Vcpkg user docs <https://vcpkg.readthedocs.io/en/latest/users/triplets/>`_ for more information about triplets.
 
 Use the ``--install`` option to install the target package (not just its development dependencies):
 
@@ -185,16 +199,21 @@ Project settings are as follows:
   package_final_phase      ``--package-final-phase``  Controls after which phase Spack should stop     **None**
   package_source_dir       ``--package-source-dir``   Controls the source directory Spack should use   **None**
   force_commandline_prefix **None**                   Force user to specify `--prefix` on command line ``False``
-  spack_url                **None**                   Url where to download Spack                      ``https://github.com/spack/spack.git``
+  spack_url                **None**                   Download url for Spack                           ``https://github.com/spack/spack.git``
   spack_commit             **None**                   Spack commit to checkout                         **None**
   spack_activate           **None**                   Spack packages to activate                       **None**
   spack_configs_path       **None**                   Directory with Spack configs to be copied        ``spack_configs``
   spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
+  vcpkg_url                **None**                   Download url for Vcpkg                          ``https://github.com/microsoft/vcpkg``
+  vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
+  vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
  ========================= ========================== ================================================ =======================================
 
+If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit`` and ``vcpkg_branch``.
+
 When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``,
-providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. Indeed, they cannot sit next to
-``uberenv.py`` as per default, since the Uberenv repo does not provide them.
+providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. 
+Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv repo does not provide them.
 
 Uberenv forcefully copies all directories that exist under `spack_packages_path` to the cloned Spack in order that they are given.
 This allows you to easily version control any Spack package overrides necessary.
@@ -218,3 +237,5 @@ Uberenv also features options to optimize the installation
   ``--upstream``       Location of a Spack upstream                   **None**
  ===================== ============================================== ================================================
 
+.. note::
+    These options are only currently available for spack.

@@ -13,6 +13,8 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Allow projects to force specifying `--prefix` on command line via new project option:
   `force_commandline_prefix`.  This is useful when the default `uberenv_libs` can not exist
   inside of your project's source repository.
+- Adds support for Windows builds using [Vcpkg].
+- Adds the `--triplet` command line argument for setting the Vcpkg build configuration.
 
 ### Changed
 - Added ability to have multiple packages directories that will get copied into spack on top of
@@ -23,3 +25,6 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Reduce Spack's git history to a bare minimum
 
 ### Fixed
+
+
+[Vcpkg]: https://github.com/microsoft/vcpkg

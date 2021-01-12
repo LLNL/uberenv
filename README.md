@@ -1,10 +1,14 @@
 # uberenv
-Automates using Spack (https://www.spack.io/) to build and deploy software.
+Automates using a package manager to build and deploy software.
 
-Uberenv is a short python script that helps automate using Spack to build
-third-party dependencies for development and to deploy Spack packages. 
+Uberenv is a python script that helps automate building
+third-party dependencies for development and deployment. 
 
-Uberenv was released as part of the Conduit (https://github.com/LLNL/conduit/). It is included in-source in several projects, this repo is used to hold the latest reference version.
+Uberenv uses Spack (https://www.spack.io/) on Unix-based systems (e.g. Linux and macOS)
+and Vcpkg (https://github.com/microsoft/vcpkg) on Windows systems.
+
+Uberenv was released as part of the Conduit project (https://github.com/LLNL/conduit/). 
+It is included in-source in several projects, this repo is used to hold the latest reference version.
 
 For more details, see Uberenv's documention:
 
