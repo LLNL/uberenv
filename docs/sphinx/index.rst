@@ -106,7 +106,8 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--install``           Fully install target, not just dependencies    **False**
   ``--run_tests``         Invoke tests during build and against install  **False**
   ``--project-json``      File for project specific settings             See :ref:`project_configuration`
-  ``--triplet``           (vcpkg) Target architecture and linkage        ``x86-Windows``
+  ``--triplet``           (vcpkg) Target architecture and linkage        ``VCPKG_DEFAULT_TRIPLET`` environment variable, 
+                                                                         if present, ``x86-Windows`` otherwise
  ======================= ============================================== ================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
