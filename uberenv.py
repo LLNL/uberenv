@@ -555,7 +555,11 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
-        self.pkg_src_dir = os.path.join(self.uberenv_path,self.pkg_src_dir)
+        # -------
+        # dev-build is only used for the non install case (he hostconfig case)
+        # can we set build dir relative to to dest?
+        # -------
+        self.pkg_src_dir = os.path.join(self.dest_dir,self.pkg_src_dir)
         if not os.path.isdir(self.pkg_src_dir):
             print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
             sys.exit(-1)
@@ -814,6 +818,10 @@ class SpackEnv(UberEnv):
                     print("[install complete!]")
         # otherwise we are in the "only dependencies" case and the host-config
         # file has to be copied from the do-be-deleted spack-build dir.
+        # -------
+        # NOTE: USING DEV BUILD, there is no `spack-build` dir
+        # THIS SHOULD BE CHANGED TO COPY FROM `self.pkg_src_dir`
+        # -------
         else:
             pattern = "*{0}.cmake".format(self.pkg_name)
             build_dir = pjoin(self.pkg_src_dir,"spack-build")
