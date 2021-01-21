@@ -756,6 +756,7 @@ class SpackEnv(UberEnv):
             if not self.opts["install"]:
                 # create dest dir for dev build
                 build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
+                print("[spack dev build working directory: {0}]".format(build_base))
                 build_dir  = pjoin(build_base,"spack-build")
                 if not os.path.isdir(build_base):
                     os.mkdir(build_base)
@@ -763,7 +764,7 @@ class SpackEnv(UberEnv):
                     os.mkdir(build_dir)
                 # symlink self.pkg_src_dir into dest dir as spack-src
                 os.symlink(self.pkg_src_dir,pjoin(build_base,"spack-src"))
-                install_cmd += "dev-build --quiet -d {0} ".format(self.build_dir)
+                install_cmd += "dev-build --quiet -d {0} ".format(build_dir)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             else:
@@ -838,8 +839,10 @@ class SpackEnv(UberEnv):
         # THIS SHOULD BE CHANGED TO COPY FROM `self.pkg_src_dir`
         # -------
         else:
+            build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
+            build_dir  = pjoin(build_base,"spack-build")
             pattern = "*{0}.cmake".format(self.pkg_name)
-            build_dir = pjoin(self.pkg_src_dir,"spack-build")
+            #build_dir = pjoin(self.pkg_src_dir,"spack-build")
             hc_glob = glob.glob(pjoin(build_dir,pattern))
             if len(hc_glob) > 0:
                 hc_path  = hc_glob[0]
