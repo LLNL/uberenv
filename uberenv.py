@@ -555,15 +555,21 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
-        # -------
-        # dev-build is only used for the non install case (he hostconfig case)
-        # can we set build dir relative to to dest?
-        # -------
         self.pkg_src_dir = os.path.join(self.dest_dir,self.pkg_src_dir)
         if not os.path.isdir(self.pkg_src_dir):
-            os.mkdir(self.pkg_src_dir)
-            #print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
-            #sys.exit(-1)
+            print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
+            sys.exit(-1)
+
+        # # -------
+        # # dev-build is only used for the non install case (he hostconfig case)
+        # # can we set build dir relative to to dest?
+        # # -------
+        # self.pkg_src_dir = os.path.join(self.dest_dir,self.pkg_src_dir)
+        # if not os.path.isdir(self.pkg_src_dir):
+        #     os.mkdir(self.pkg_src_dir)
+        #     #print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
+        #     #sys.exit(-1)
+        
 
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
@@ -743,13 +749,21 @@ class SpackEnv(UberEnv):
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
-
         if not self.use_install:
             install_cmd = "spack/bin/spack "
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             if not self.opts["install"]:
-                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
+                # create dest dir for dev build
+                build_base = pjoin(self.dest_dir,"{0}-build".format(pkg_name))
+                build_dir  = pjoin(build_base,"spack-build")
+                if not os.path.isdir(build_base):
+                    os.mkdir(build_base)
+                if not os.path.isdir(build_dir):
+                    os.mkdir(build_dir)
+                # symlink self.pkg_src_dir into dest dir as spack-src
+                os.symlink(self.pkg_src_dir,pjoin(build_base,"spack-src"))
+                install_cmd += "dev-build --quiet -d {0} ".format(self.build_dir)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             else:
