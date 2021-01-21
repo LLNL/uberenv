@@ -755,7 +755,7 @@ class SpackEnv(UberEnv):
                 install_cmd += "-k "
             if not self.opts["install"]:
                 # create dest dir for dev build
-                build_base = pjoin(self.dest_dir,"{0}-build".format(pkg_name))
+                build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
                 build_dir  = pjoin(build_base,"spack-build")
                 if not os.path.isdir(build_base):
                     os.mkdir(build_base)
