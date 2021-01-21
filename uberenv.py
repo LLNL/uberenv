@@ -561,8 +561,9 @@ class SpackEnv(UberEnv):
         # -------
         self.pkg_src_dir = os.path.join(self.dest_dir,self.pkg_src_dir)
         if not os.path.isdir(self.pkg_src_dir):
-            print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
-            sys.exit(-1)
+            os.mkdir(self.pkg_src_dir)
+            #print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
+            #sys.exit(-1)
 
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
