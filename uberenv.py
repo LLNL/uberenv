@@ -523,6 +523,10 @@ class SpackEnv(UberEnv):
             new_path = self.project_opts["spack_configs_path"]
             if new_path is not None:
                 spack_configs_path = pabs(new_path)
+                if not os.path.isdir(spack_configs_path):
+                    print("[ERROR: Given path in 'spack_configs_path' does not exist: {0}]".format(spack_configs_path))
+                    sys.exit(1)
+
         # Test if the override option was used (--spack-config-dir)
         self.spack_config_dir = self.opts["spack_config_dir"]
         if self.spack_config_dir is None:
