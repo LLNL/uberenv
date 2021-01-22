@@ -164,6 +164,12 @@ def parse_args():
                       default=pjoin(uberenv_script_dir(),"project.json"),
                       help="uberenv project settings json file")
 
+    # option to explicitly set the number of build jobs
+    parser.add_option("-j",
+                      dest="build_jobs",
+                      default=None,
+                      help="Explicitly set build jobs")
+
     # flag to use insecure curl + git
     parser.add_option("-k",
                       action="store_true",
@@ -555,7 +561,7 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
-        self.pkg_src_dir = os.path.join(self.dest_dir,self.pkg_src_dir)
+        self.pkg_src_dir = os.path.abspath(os.path.join(self.dest_dir,self.pkg_src_dir))
         if not os.path.isdir(self.pkg_src_dir):
             print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
             sys.exit(-1)
@@ -720,8 +726,11 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
-        # prints install status and 32 characters hash
+        # print concretized spec
+        # default case prints install status and 32 characters hash
         options="--install-status --very-long"
+        if not self.project_opts["spack_spec_print_options"] is None:
+            options = self.project_opts["spack_spec_print_options"]
         spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
@@ -754,21 +763,20 @@ class SpackEnv(UberEnv):
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             if not self.opts["install"]:
-                # create dest dir for dev build
-                build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
-                print("[spack dev build working directory: {0}]".format(build_base))
-                build_dir  = pjoin(build_base,"spack-build")
-                if not os.path.isdir(build_base):
-                    os.mkdir(build_base)
-                if not os.path.isdir(build_dir):
-                    os.mkdir(build_dir)
-                # symlink self.pkg_src_dir into dest dir as spack-src
-                os.symlink(self.pkg_src_dir,pjoin(build_base,"spack-src"))
-                install_cmd += "dev-build --quiet -d {0} ".format(build_dir)
+                # WE WANT HOST CONFIG TO LAND IN OUR UBERENV PREFIX DIR!
+                # THIS IS A HACK THAT HELPS ACCOMPLISH THAT
+                # The spack looks for this env var, if present
+                # uses it to select the destination. 
+                os.environ["UBERENV_HOSTCONFIG_DEST_DIR"] = self.dest_dir
+                install_cmd += "dev-build -d {0} ".format(self.pkg_src_dir)
+                if self.opts["build_jobs"]:
+                    install_cmd += "-j {0}".format(self.opts["build_jobs"])
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             else:
                 install_cmd += "install "
+                if self.opts["build_jobs"]:
+                    install_cmd += "-j {0}".format(self.opts["build_jobs"])
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
             install_cmd += self.pkg_name + self.opts["spec"]
