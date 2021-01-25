@@ -768,7 +768,7 @@ class SpackEnv(UberEnv):
                 # The spack looks for this env var, if present
                 # uses it to select the destination. 
                 os.environ["UBERENV_HOSTCONFIG_DEST_DIR"] = self.dest_dir
-                install_cmd += "dev-build -d {0} ".format(self.pkg_src_dir)
+                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
                 if self.opts["build_jobs"]:
                     install_cmd += "-j {0}".format(self.opts["build_jobs"])
                 if self.pkg_final_phase:
