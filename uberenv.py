@@ -139,6 +139,12 @@ def parse_args():
                       default=None,
                       help="dir with spack settings files (compilers.yaml, packages.yaml, etc)")
 
+    # this option allows a user to set the directory for their vcpkg ports on Windows
+    parser.add_option("--vcpkg-ports-path",
+                      dest="vcpkg_ports_path",
+                      default=None,
+                      help="dir with vckpkg ports")
+
     # overrides package_name
     parser.add_option("--package-name",
                       dest="package_name",
