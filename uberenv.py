@@ -380,9 +380,9 @@ class VcpkgEnv(UberEnv):
         else:
             # next to uberenv.py script (backwards compatibility)
             self.vcpkg_ports_path = pabs(pjoin(self.uberenv_path, "vcpkg_ports"))
-            _errmsg = "Could not find any directory for vcpkg ports. "
-                      "Use either command line option 'vcpkg-ports-path', "
-                      "config file option 'vcpkg_ports_path', or "
+            _errmsg = "Could not find any directory for vcpkg ports. " \
+                      "Use either command line option 'vcpkg-ports-path', " \
+                      "config file option 'vcpkg_ports_path', or " \
                       "defaulted directory 'vcpkg_ports' next to 'uberenv.py'"
 
         if not os.path.isdir(self.vcpkg_ports_path):
