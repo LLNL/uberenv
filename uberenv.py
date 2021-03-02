@@ -218,7 +218,7 @@ def parse_args():
     # we want a dict b/c the values could
     # be passed without using optparse
     opts = vars(opts)
-    if not opts["spack_config_dir"] is None:
+    if opts["spack_config_dir"] is not None:
         opts["spack_config_dir"] = pabs(opts["spack_config_dir"])
         if not os.path.isdir(opts["spack_config_dir"]):
             print("[ERROR: invalid spack config dir: {0} ]".format(opts["spack_config_dir"]))
@@ -227,7 +227,7 @@ def parse_args():
     # chdirs to avoid confusion related to what it is relative to.
     # (it should be relative to where uberenv is run from, so it matches what you expect
     #  from shell completion, etc)
-    if not opts["mirror"] is None:
+    if opts["mirror"] is not None:
         if not opts["mirror"].startswith("http") and not os.path.isabs(opts["mirror"]):
             opts["mirror"] = pabs(opts["mirror"])
     return opts, extras
@@ -367,7 +367,7 @@ class VcpkgEnv(UberEnv):
 
         # Find path to vcpkg ports
         _errmsg = ""
-        if not self.opts["vcpkg_ports_path"] is None:
+        if self.opts["vcpkg_ports_path"] is not None:
             # Command line option case
             self.vcpkg_ports_path = pabs(self.opts["vcpkg_ports_path"])
             _errmsg = "Given path for command line option `vcpkg-ports-path` does not exist"
@@ -558,7 +558,7 @@ class SpackEnv(UberEnv):
             # If command line option is not used, search for platform under
             # given directory
             uberenv_plat = self.detect_platform()
-            if not uberenv_plat is None:
+            if uberenv_plat is not None:
                 self.spack_config_dir = pabs(pjoin(spack_configs_path,uberenv_plat))
             else:
                 print("[ERROR: Given path for 'spack_configs_path' does not contain platform directories: {0}]".format(spack_configs_path))
@@ -688,7 +688,7 @@ class SpackEnv(UberEnv):
         sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
 
         # copy in other settings per platform
-        if not cfg_dir is None:
+        if cfg_dir is not None:
             print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
 
             config_yaml    = pjoin(cfg_dir,"config.yaml")
@@ -734,7 +734,7 @@ class SpackEnv(UberEnv):
         if self.opts["spack_clean"]:
             if self.project_opts.has_key("spack_clean_packages"):
                 for cln_pkg in self.project_opts["spack_clean_packages"]:
-                    if not self.find_spack_pkg_path(cln_pkg) is None:
+                    if self.find_spack_pkg_path(cln_pkg) is not None:
                         unist_cmd = "spack/bin/spack uninstall -f -y --all --dependents " + cln_pkg
                         res = sexe(unist_cmd, echo=True)
 
@@ -1054,10 +1054,10 @@ def main():
     if opts["create_mirror"]:
         return env.create_mirror()
     else:
-        if not opts["mirror"] is None:
+        if opts["mirror"] is not None:
             env.use_mirror()
 
-        if not opts["upstream"] is None:
+        if opts["upstream"] is not None:
             env.use_spack_upstream()
 
         res = env.install()
