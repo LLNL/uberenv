@@ -373,11 +373,11 @@ class VcpkgEnv(UberEnv):
 
         # Find path to vcpkg ports
         _errmsg = ""
-        if self.opts["vcpkg_ports_path"] is not None:
+        if self.opts["vcpkg_ports_path"]:
             # Command line option case
             self.vcpkg_ports_path = pabs(self.opts["vcpkg_ports_path"])
             _errmsg = "Given path for command line option `vcpkg-ports-path` does not exist"
-        elif "vcpkg_ports_path" in self.project_opts.keys():
+        elif "vcpkg_ports_path" in self.project_opts:
             # .uberenv_config.json case
             new_path = self.project_opts["vcpkg_ports_path"]
             if new_path is not None:
