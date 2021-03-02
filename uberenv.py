@@ -365,7 +365,29 @@ class VcpkgEnv(UberEnv):
 
         UberEnv.setup_paths_and_dirs(self)
 
-        self.ports = pjoin(self.uberenv_path, "vcpkg_ports","*")
+        # Find path to vcpkg ports
+        _errmsg = ""
+        if not self.opts["vcpkg_ports_path"] is None:
+            # Command line option case
+            self.vcpkg_ports_path = pabs(self.opts["vcpkg_ports_path"])
+            _errmsg = "Given path for command line option `vcpkg-ports-path` does not exist"
+        elif "vcpkg_ports_path" in self.project_opts.keys():
+            # .uberenv_config.json case
+            new_path = self.project_opts["vcpkg_ports_path"]
+            if new_path is not None:
+                self.vcpkg_ports_path = pabs(new_path)
+            _errmsg = "Given path in config file option 'vcpkg_ports_path' does not exist"
+        else:
+            # next to uberenv.py script (backwards compatibility)
+            self.vcpkg_ports_path = pabs(pjoin(self.uberenv_path, "vcpkg_ports"))
+            _errmsg = "Could not find any directory for vcpkg ports. "
+                      "Use either command line option 'vcpkg-ports-path', "
+                      "config file option 'vcpkg_ports_path', or "
+                      "defaulted directory 'vcpkg_ports' next to 'uberenv.py'"
+
+        if not os.path.isdir(self.vcpkg_ports_path):
+            print("[ERROR: {0}: {1}]".format(_errmsg, self.vcpkg_ports_path))
+            sys.exit(1)
 
         # setup path for vcpkg repo
         print("[installing to: {0}]".format(self.dest_dir))
@@ -419,11 +441,10 @@ class VcpkgEnv(UberEnv):
         
         import distutils.dir_util
 
-        src_vcpkg_ports = pjoin(self.uberenv_path, "vcpkg_ports")
-        dest_vcpkg_ports = pjoin(self.dest_vcpkg,"ports")
+        dest_vcpkg_ports = pjoin(self.dest_vcpkg, "ports")
 
-        print("[info: copying from {0} to {1}]".format(src_vcpkg_ports,dest_vcpkg_ports))
-        distutils.dir_util.copy_tree(src_vcpkg_ports,dest_vcpkg_ports)
+        print("[info: copying from {0} to {1}]".format(self.vcpkg_ports_path, dest_vcpkg_ports))
+        distutils.dir_util.copy_tree(self.vcpkg_ports_path, dest_vcpkg_ports)
 
 
     def clean_build(self):
@@ -517,8 +538,12 @@ class SpackEnv(UberEnv):
 
         UberEnv.setup_paths_and_dirs(self)
 
-        # Spack yaml configs path (compilers.yaml, packages.yaml, etc.)
+        # Find Spack yaml configs path (compilers.yaml, packages.yaml, etc.)
+
+        # Next to uberenv.py (backwards compatility)
         spack_configs_path = pabs(pjoin(self.uberenv_path,"spack_configs"))
+
+        # In project config file
         if "spack_configs_path" in self.project_opts.keys():
             new_path = self.project_opts["spack_configs_path"]
             if new_path is not None:
@@ -530,9 +555,14 @@ class SpackEnv(UberEnv):
         # Test if the override option was used (--spack-config-dir)
         self.spack_config_dir = self.opts["spack_config_dir"]
         if self.spack_config_dir is None:
+            # If command line option is not used, search for platform under
+            # given directory
             uberenv_plat = self.detect_platform()
             if not uberenv_plat is None:
                 self.spack_config_dir = pabs(pjoin(spack_configs_path,uberenv_plat))
+            else:
+                print("[ERROR: Given path for 'spack_configs_path' does not contain platform directories: {0}]".format(spack_configs_path))
+                sys.exit(1)
 
         # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
