@@ -416,7 +416,7 @@ class VcpkgEnv(UberEnv):
             clone_opts = ("-c http.sslVerify=false " 
                           if self.opts["ignore_ssl_errors"] else "")
 
-            clone_cmd =  "git {0} clone --single-branch --depth=1 -b {1} {2} vcpkg".format(clone_opts, vcpkg_branch,vcpkg_url)
+            clone_cmd =  "git {0} clone --single-branch -b {1} {2} vcpkg".format(clone_opts, vcpkg_branch,vcpkg_url)
             sexe(clone_cmd, echo=True)
 
             # optionally, check out a specific commit
