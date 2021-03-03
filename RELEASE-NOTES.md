@@ -15,6 +15,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
   inside of your project's source repository.
 - Adds support for Windows builds using [Vcpkg].
 - Adds the `--triplet` command line argument for setting the Vcpkg build configuration.
+- Adds the `--vcpkg-ports-path` command line argument for setting the path to the vcpkg ports directory.
 
 ### Changed
 - Added ability to have multiple packages directories that will get copied into spack on top of
