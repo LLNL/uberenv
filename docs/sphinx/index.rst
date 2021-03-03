@@ -208,6 +208,7 @@ Project settings are as follows:
   vcpkg_url                **None**                   Download url for Vcpkg                          ``https://github.com/microsoft/vcpkg``
   vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
   vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
+  vcpkg_ports_path         ``--vcpkg-ports-path``     Folder with vcpkg ports files                    **None**
  ========================= ========================== ================================================ =======================================
 
 If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit`` and ``vcpkg_branch``.
