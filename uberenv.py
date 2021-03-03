@@ -687,14 +687,14 @@ class SpackEnv(UberEnv):
         self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
-        # copy in "defaults" config.yaml
-        config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
-        sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
-        mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
-        sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
-
-        # copy in other settings per platform
         if cfg_dir is not None:
+            # copy in "defaults" config.yaml
+            config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
+            sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
+            mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
+            sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
+
+            # copy in other settings per platform
             print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
 
             config_yaml    = pjoin(cfg_dir,"config.yaml")
