@@ -762,16 +762,9 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
-        # print concretized spec
-        # show short spec first
-        spec_cmd = "spack/bin/spack spec {0}{1}".format(self.pkg_name,self.opts["spec"])
-        res, out = sexe(spec_cmd, ret_output=True, echo=True)
-        print(out)
-        # now show detailed spec with install info
+        # print concretized spec with install info
         # default case prints install status and 32 characters hash
         options="--install-status --very-long"
-        #if not self.project_opts["spack_spec_print_options"] is None:
-        #    options = self.project_opts["spack_spec_print_options"]
         spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
