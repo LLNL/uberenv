@@ -764,7 +764,7 @@ class SpackEnv(UberEnv):
     def show_info(self):
         # print concretized spec
         # show short spec first
-        spec_cmd = "spack/bin/spack spec {1}{2}".format(self.pkg_name,self.opts["spec"])
+        spec_cmd = "spack/bin/spack spec {0}{1}".format(self.pkg_name,self.opts["spec"])
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
         # now show detailed spec with install info
