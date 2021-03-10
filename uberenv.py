@@ -150,6 +150,11 @@ def parse_args():
                       dest="package_name",
                       default=None,
                       help="override the default package name")
+    # overrides uberenv_package_name
+    parser.add_option("--uberenv-package-name",
+                      dest="uberenv_package_name",
+                      default=None,
+                      help="override the default uberenv package name")
 
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
@@ -329,12 +334,15 @@ class UberEnv():
         else:
             print("[info: destination '{0}' already exists]".format(self.dest_dir))
 
-    def set_from_args_or_json(self,setting):
+    def set_from_args_or_json(self,setting, optional=True):
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            print("ERROR: '{0}' must at least be defined in project.json".format(setting))
-            raise
+            if optional:
+                print("ERROR: '{0}' must at least be defined in project.json".format(setting))
+                raise
+            else:
+                return None
         else:
             if self.opts[setting]:
                 setting_value = self.opts[setting]
@@ -502,8 +510,12 @@ class SpackEnv(UberEnv):
         UberEnv.__init__(self,opts,extra_opts)
 
         self.pkg_version = self.set_from_json("package_version")
-        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
+        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",False)
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
+        # check if we are using uberenv fake package to setup dev env
+        self.uberenv_package_name = self.set_from_args_or_json("uberenv_package_name",False)
+        if not self.opts["install"] and self.uberenv_package_name:
+            self.pkg_name = self.uberenv_package_name
 
         self.packages_paths = []
 
@@ -601,18 +613,6 @@ class SpackEnv(UberEnv):
         if not os.path.isdir(self.pkg_src_dir):
             print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
             sys.exit(-1)
-
-        # # -------
-        # # dev-build is only used for the non install case (he hostconfig case)
-        # # can we set build dir relative to to dest?
-        # # -------
-        # self.pkg_src_dir = os.path.join(self.dest_dir,self.pkg_src_dir)
-        # if not os.path.isdir(self.pkg_src_dir):
-        #     os.mkdir(self.pkg_src_dir)
-        #     #print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
-        #     #sys.exit(-1)
-        
-
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
         res, out = sexe("spack/bin/spack find -p /{0}".format(pkg_hash), ret_output = True)
@@ -763,10 +763,15 @@ class SpackEnv(UberEnv):
 
     def show_info(self):
         # print concretized spec
+        # show short spec first
+        spec_cmd = "spack/bin/spack spec {1}{2}".format(self.pkg_name,self.opts["spec"])
+        res, out = sexe(spec_cmd, ret_output=True, echo=True)
+        print(out)
+        # now show detailed spec with install info
         # default case prints install status and 32 characters hash
         options="--install-status --very-long"
-        if not self.project_opts["spack_spec_print_options"] is None:
-            options = self.project_opts["spack_spec_print_options"]
+        #if not self.project_opts["spack_spec_print_options"] is None:
+        #    options = self.project_opts["spack_spec_print_options"]
         spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
@@ -799,12 +804,12 @@ class SpackEnv(UberEnv):
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             if not self.opts["install"]:
-                # WE WANT HOST CONFIG TO LAND IN OUR UBERENV PREFIX DIR!
-                # THIS IS A HACK THAT HELPS ACCOMPLISH THAT
-                # The spack looks for this env var, if present
-                # uses it to select the destination. 
-                os.environ["UBERENV_HOSTCONFIG_DEST_DIR"] = self.dest_dir
-                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
+                if self.uberenv_package_name:
+                    # fake package path
+                    install_cmd += "-d install "
+                else:
+                    # dev build path
+                    install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
                 if self.opts["build_jobs"]:
                     install_cmd += "-j {0}".format(self.opts["build_jobs"])
                 if self.pkg_final_phase:
@@ -846,6 +851,24 @@ class SpackEnv(UberEnv):
             res = sexe(activate_cmd, echo=True)
             if res != 0:
               return res
+        # if we used fake package path:
+        if not self.opts["install"] and not self.use_install and self.uberenv_package_name:
+            pkg_path = self.find_spack_pkg_path(self.pkg_name, self.opts["spec"])
+            if self.pkg_name != pkg_path["name"]:
+                print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
+                return -1
+            else:
+                # Symlink host-config file
+                hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
+                if len(hc_glob) > 0:
+                    hc_path  = hc_glob[0]
+                    hc_fname = os.path.split(hc_path)[1]
+                    if os.path.islink(hc_fname):
+                        os.unlink(hc_fname)
+                    elif os.path.isfile(hc_fname):
+                        sexe("rm -f {0}".format(hc_fname))
+                    print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                    os.symlink(hc_path,hc_fname)
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
         if self.opts["install"] or self.use_install:
