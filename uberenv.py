@@ -335,10 +335,16 @@ class UberEnv():
             print("[info: destination '{0}' already exists]".format(self.dest_dir))
 
     def set_from_args_or_json(self,setting, optional=True):
+        """
+        When optional=False: 
+            If the setting key is not in the json file, error and raise an exception.
+        When optional=True:
+            If the setting key is not in the json file or opts, return None.
+        """
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            if optional:
+            if not optional:
                 print("ERROR: '{0}' must at least be defined in project.json".format(setting))
                 raise
             else:
@@ -510,15 +516,16 @@ class SpackEnv(UberEnv):
         UberEnv.__init__(self,opts,extra_opts)
 
         self.pkg_version = self.set_from_json("package_version")
-        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",False)
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
-        # check if we are using uberenv fake package to setup dev env
-        self.uberenv_package_name = self.set_from_args_or_json("uberenv_package_name",False)
+        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
+        self.use_dev_build = True
+        # check if we are using uberenv package to build tpls
+        self.uberenv_package_name = self.set_from_args_or_json("uberenv_package_name",True)
         if not self.opts["install"] and self.uberenv_package_name:
+            self.use_dev_build = False
             self.pkg_name = self.uberenv_package_name
 
         self.packages_paths = []
-
         self.spec_hash = ""
         self.use_install = False
 
@@ -797,22 +804,20 @@ class SpackEnv(UberEnv):
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             if not self.opts["install"]:
-                if self.uberenv_package_name:
-                    # fake package path
-                    install_cmd += "-d install "
-                else:
+                if self.use_dev_build:
                     # dev build path
                     install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
-                if self.opts["build_jobs"]:
-                    install_cmd += "-j {0}".format(self.opts["build_jobs"])
+                else:
+                    # original fake package path
+                    install_cmd += "install "
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             else:
                 install_cmd += "install "
-                if self.opts["build_jobs"]:
-                    install_cmd += "-j {0}".format(self.opts["build_jobs"])
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
+            if self.opts["build_jobs"]:
+                install_cmd += "-j {0}".format(self.opts["build_jobs"])
             install_cmd += self.pkg_name + self.opts["spec"]
             res = sexe(install_cmd, echo=True)
 
@@ -844,24 +849,6 @@ class SpackEnv(UberEnv):
             res = sexe(activate_cmd, echo=True)
             if res != 0:
               return res
-        # if we used fake package path:
-        if not self.opts["install"] and not self.use_install and self.uberenv_package_name:
-            pkg_path = self.find_spack_pkg_path(self.pkg_name, self.opts["spec"])
-            if self.pkg_name != pkg_path["name"]:
-                print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
-                return -1
-            else:
-                # Symlink host-config file
-                hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
-                if len(hc_glob) > 0:
-                    hc_path  = hc_glob[0]
-                    hc_fname = os.path.split(hc_path)[1]
-                    if os.path.islink(hc_fname):
-                        os.unlink(hc_fname)
-                    elif os.path.isfile(hc_fname):
-                        sexe("rm -f {0}".format(hc_fname))
-                    print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                    os.symlink(hc_path,hc_fname)
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
         if self.opts["install"] or self.use_install:
@@ -892,27 +879,39 @@ class SpackEnv(UberEnv):
                     os.symlink(pkg_path["path"],pabs(pkg_lnk_dir))
                     print("")
                     print("[install complete!]")
-        # otherwise we are in the "only dependencies" case and the host-config
-        # file has to be copied from the do-be-deleted spack-build dir.
-        # -------
-        # NOTE: USING DEV BUILD, there is no `spack-build` dir
-        # THIS SHOULD BE CHANGED TO COPY FROM `self.pkg_src_dir`
-        # -------
         else:
-            build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
-            build_dir  = pjoin(build_base,"spack-build")
-            pattern = "*{0}.cmake".format(self.pkg_name)
-            #build_dir = pjoin(self.pkg_src_dir,"spack-build")
-            hc_glob = glob.glob(pjoin(build_dir,pattern))
-            if len(hc_glob) > 0:
-                hc_path  = hc_glob[0]
-                hc_fname = os.path.split(hc_path)[1]
-                if os.path.islink(hc_fname):
-                    os.unlink(hc_fname)
-                print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                sexe("cp {0} {1}".format(hc_path,hc_fname))
-                print("[removing project build directory {0}]".format(pjoin(build_dir)))
-                sexe("rm -rf {0}".format(build_dir))
+            if self.use_dev_build:
+                build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
+                build_dir  = pjoin(build_base,"spack-build")
+                pattern = "*{0}.cmake".format(self.pkg_name)
+                build_dir = pjoin(self.pkg_src_dir,"spack-build")
+                hc_glob = glob.glob(pjoin(build_dir,pattern))
+                if len(hc_glob) > 0:
+                    hc_path  = hc_glob[0]
+                    hc_fname = os.path.split(hc_path)[1]
+                    if os.path.islink(hc_fname):
+                        os.unlink(hc_fname)
+                    print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                    sexe("cp {0} {1}".format(hc_path,hc_fname))
+                    print("[removing project build directory {0}]".format(pjoin(build_dir)))
+                    sexe("rm -rf {0}".format(build_dir))
+            else: # original uberenv fake package case
+                pkg_path = self.find_spack_pkg_path(self.pkg_name, self.opts["spec"])
+                if self.pkg_name != pkg_path["name"]:
+                    print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
+                    return -1
+                else:
+                    # Symlink host-config file
+                    hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
+                    if len(hc_glob) > 0:
+                        hc_path  = hc_glob[0]
+                        hc_fname = os.path.split(hc_path)[1]
+                        if os.path.islink(hc_fname):
+                            os.unlink(hc_fname)
+                        elif os.path.isfile(hc_fname):
+                            sexe("rm -f {0}".format(hc_fname))
+                        print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                        os.symlink(hc_path,hc_fname)
 
     def get_mirror_path(self):
         mirror_path = self.opts["mirror"]
