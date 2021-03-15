@@ -514,7 +514,6 @@ class SpackEnv(UberEnv):
 
     def __init__(self, opts, extra_opts):
         UberEnv.__init__(self,opts,extra_opts)
-
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
@@ -551,6 +550,13 @@ class SpackEnv(UberEnv):
 
         print("[spack spec: {0}]".format(self.opts["spec"]))
 
+    def print_spack_python_info(self):
+        spack_dir = self.dest_spack
+        cmd = pjoin(spack_dir,"bin","spack")
+        cmd += " python "
+        cmd += '-c "import sys; print(sys.executable);"'
+        res, out = sexe( cmd, ret_output = True)
+        print("[spack python: {0}]".format(out.strip()))
 
     def append_path_to_packages_paths(self, path, errorOnNonexistant=True):
         path = pabs(path)
@@ -706,6 +712,9 @@ class SpackEnv(UberEnv):
 
         cfg_dir = self.spack_config_dir
         spack_dir = self.dest_spack
+
+        # this is an opportunity to show spack python info post obtaining spack
+        self.print_spack_python_info()
 
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
@@ -1058,12 +1067,17 @@ def setup_osx_sdk_env_vars():
     print("[setting SDKROOT to {0}]".format(env[ "SDKROOT"]))
 
 
+def print_uberenv_python_info():
+    print("[uberenv python: {0}]".format(sys.executable))
+
 
 def main():
     """
     Clones and runs a package manager to setup third_party libs.
     Also creates a host-config.cmake file that can be used by our project.
     """
+
+    print_uberenv_python_info()
 
     # parse args from command line
     opts, extra_opts = parse_args()
