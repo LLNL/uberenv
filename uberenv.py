@@ -150,11 +150,6 @@ def parse_args():
                       dest="package_name",
                       default=None,
                       help="override the default package name")
-    # overrides uberenv_package_name
-    parser.add_option("--uberenv-package-name",
-                      dest="uberenv_package_name",
-                      default=None,
-                      help="override the default uberenv package name")
 
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
@@ -354,12 +349,21 @@ class UberEnv():
                 setting_value = self.opts[setting]
         return setting_value
 
-    def set_from_json(self,setting):
+    def set_from_json(self,setting, optional=True):
+        """
+        When optional=False: 
+            If the setting key is not in the json file, error and raise an exception.
+        When optional=True:
+            If the setting key is not in the json file or opts, return None.
+        """
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            print("ERROR: '{0}' must at least be defined in project.json".format(setting))
-            raise
+            if not optional:
+                print("ERROR: '{0}' must at least be defined in project.json".format(setting))
+                raise
+            else:
+                return None
         return setting_value
 
     def detect_platform(self):
@@ -519,7 +523,7 @@ class SpackEnv(UberEnv):
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
         self.use_dev_build = True
         # check if we are using uberenv package to build tpls
-        self.uberenv_package_name = self.set_from_args_or_json("uberenv_package_name",True)
+        self.uberenv_package_name = self.set_from_json("uberenv_package_name",True)
         if not self.opts["install"] and self.uberenv_package_name:
             self.use_dev_build = False
             self.pkg_name = self.uberenv_package_name
