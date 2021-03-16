@@ -350,9 +350,8 @@ class UberEnv():
             if not optional:
                 print("ERROR: '{0}' must at least be defined in project.json".format(setting))
                 raise
-        else:
-            if self.opts[setting]:
-                setting_value = self.opts[setting]
+        if self.opts[setting]:
+            setting_value = self.opts[setting]
         return setting_value
 
     def set_from_json(self,setting, optional=True):
