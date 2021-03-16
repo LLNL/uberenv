@@ -112,9 +112,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
 from github and https hosted source tarballs. When enabled, Uberenv clones Spack using:
 
-.. code:: bash
-
-    git -c http.sslVerify=false clone https://github.com/llnl/spack.git
+``git -c http.sslVerify=false clone https://github.com/llnl/spack.git``
 
 And passes ``-k`` to any Spack commands that may fetch via https.
 
