@@ -151,6 +151,13 @@ def parse_args():
                       default=None,
                       help="override the default package name")
 
+    # uberenv tpl build mode
+    parser.add_option("--build-mode",
+                      dest="build_mode",
+                      default=None,
+                      help="set mode used to build third party dependencies "
+                           "(spack options: 'dev-build' 'uberenv-pkg')")
+
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
                       dest="package_final_phase",
@@ -336,14 +343,13 @@ class UberEnv():
         When optional=True:
             If the setting key is not in the json file or opts, return None.
         """
+        setting_value = None
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
             if not optional:
                 print("ERROR: '{0}' must at least be defined in project.json".format(setting))
                 raise
-            else:
-                return None
         else:
             if self.opts[setting]:
                 setting_value = self.opts[setting]
@@ -356,14 +362,13 @@ class UberEnv():
         When optional=True:
             If the setting key is not in the json file or opts, return None.
         """
+        setting_value = None
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
             if not optional:
                 print("ERROR: '{0}' must at least be defined in project.json".format(setting))
                 raise
-            else:
-                return None
         return setting_value
 
     def detect_platform(self):
@@ -521,13 +526,18 @@ class SpackEnv(UberEnv):
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
-        self.use_dev_build = True
         # check if we are using uberenv package to build tpls
-        self.uberenv_package_name = self.set_from_json("uberenv_package_name",True)
-        if not self.opts["install"] and self.uberenv_package_name:
-            self.use_dev_build = False
-            self.pkg_name = self.uberenv_package_name
+        self.build_mode = self.set_from_args_or_json("build_mode",True)
+        if self.build_mode is None:
+            self.build_mode = "dev-build"
+        # NOTE: install always overrides the build mode to "install"
+        if self.opts["install"]:
+            self.build_mode = "install"
+        # if we are using fake package mode, adjust the pkg name
+        if self.build_mode == "uberenv-pkg":
+            self.pkg_name =  "uberenv-" + self.pkg_name
 
+        print("[uberenv spack build mode: {0}]".format(self.build_mode))
         self.packages_paths = []
         self.spec_hash = ""
         self.use_install = False
@@ -816,24 +826,30 @@ class SpackEnv(UberEnv):
             install_cmd = "spack/bin/spack "
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
-            if not self.opts["install"]:
-                if self.use_dev_build:
-                    # dev build path
-                    install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
-                else:
-                    # original fake package path
-                    install_cmd += "install "
-                if self.pkg_final_phase:
-                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
-            else:
+            # build mode -- install path
+            if self.build_mode == "install":
                 install_cmd += "install "
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
+            # build mode - dev build path
+            elif self.build_mode == "dev-build":
+                # dev build path
+                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
+                if self.pkg_final_phase:
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
+            # build mode -- original fake package path
+            elif self.build_mode == "uberenv-pkg":
+                install_cmd += "install "
+                if self.pkg_final_phase:
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
+            else:
+                print("[ERROR: unsupported build mode: {0}]".format(self.build_mode))
+                return -1
             if self.opts["build_jobs"]:
                 install_cmd += "-j {0}".format(self.opts["build_jobs"])
+            # for all cases we use the pkg name and spec
             install_cmd += self.pkg_name + self.opts["spec"]
             res = sexe(install_cmd, echo=True)
-
             if res != 0:
                 print("[ERROR: failure of spack install/dev-build]")
                 return res
@@ -857,14 +873,14 @@ class SpackEnv(UberEnv):
                       return res
         # note: this assumes package extends python when +python
         # this may fail general cases
-        if self.opts["install"] and "+python" in full_spec:
+        if self.build_mode == "install" and "+python" in full_spec:
             activate_cmd = "spack/bin/spack activate /" + self.spec_hash
             res = sexe(activate_cmd, echo=True)
             if res != 0:
               return res
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
-        if self.opts["install"] or self.use_install:
+        if self.build_mode == "install" or self.use_install:
             pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
@@ -883,7 +899,7 @@ class SpackEnv(UberEnv):
                     os.symlink(hc_path,hc_fname)
 
                 # Symlink install directory
-                if self.opts["install"]:
+                if self.build_mode == "install":
                     pkg_lnk_dir = "{0}-install".format(self.pkg_name)
                     if os.path.islink(pkg_lnk_dir):
                         os.unlink(pkg_lnk_dir)
@@ -893,7 +909,7 @@ class SpackEnv(UberEnv):
                     print("")
                     print("[install complete!]")
         else:
-            if self.use_dev_build:
+            if self.build_mode == "dev-build":
                 build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
                 build_dir  = pjoin(build_base,"spack-build")
                 pattern = "*{0}.cmake".format(self.pkg_name)
