@@ -156,7 +156,8 @@ def parse_args():
                       dest="build_mode",
                       default=None,
                       help="set mode used to build third party dependencies "
-                           "(spack options: 'dev-build' 'uberenv-pkg')")
+                           "(spack options: 'dev-build' 'uberenv-pkg' 'install' "
+                           "[spack default: 'dev-build'] )\n")
 
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
@@ -525,8 +526,9 @@ class SpackEnv(UberEnv):
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
-        # check if we are using uberenv package to build tpls
+        # get build mode
         self.build_mode = self.set_from_args_or_json("build_mode",True)
+        # default spack build mode is dev-build
         if self.build_mode is None:
             self.build_mode = "dev-build"
         # NOTE: install always overrides the build mode to "install"
