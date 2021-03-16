@@ -100,8 +100,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--prefix``            Destination directory                          ``uberenv_libs``
   ``--spec``              Spack spec                                     linux: **%gcc**
                                                                          osx: **%clang**
-  ``--spack-config-dir``  Folder with Spack settings files               linux: (empty)
-                                                                         osx: ``scripts/uberenv/spack_configs/darwin/``
+  ``--spack-config-dir``  Folder with Spack settings files               See :ref:`spack_configs`
   ``-k``                  Ignore SSL Errors                              **False**
   ``--install``           Fully install target, not just dependencies    **False**
   ``--run_tests``         Invoke tests during build and against install  **False**
@@ -120,20 +119,12 @@ from github and https hosted source tarballs. When enabled, Uberenv clones Spack
 And passes ``-k`` to any Spack commands that may fetch via https.
 
 
-Default invocation on Linux:
+Default invocation on Linux/OSX:
 
 .. code:: bash
 
     python scripts/uberenv/uberenv.py --prefix uberenv_libs \
                                       --spec %gcc
-
-Default invocation on OSX:
-
-.. code:: bash
-
-    python scripts/uberenv/uberenv.py --prefix uberenv_libs \
-                                      --spec %clang \
-                                      --spack-config-dir scripts/uberenv/spack_configs/darwin/
 
 Default invocation on Windows:
 
@@ -160,9 +151,10 @@ If the target Spack package supports Spack's testing hooks, you can run tests du
 
 For details on Spack's spec syntax, see the `Spack Specs & dependencies <https://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_ documentation.
 
+.. _spack_configs:
 
 Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs/{platform}`` or under ``{spack_config_paths}/{platform}``, where:
-* ``{platform}`` must match the platform determined by uberenv.
+* ``{platform}`` must match the platform determined by uberenv (`darwin` on OSX).
 * ``{spack_configs_path}`` can be specified in the json config file.
 
 You may instead use the **--spack-config-dir** option to enforce the use of a specific directory. As long as it provides Uberenv with the yaml files to use with Spack.
