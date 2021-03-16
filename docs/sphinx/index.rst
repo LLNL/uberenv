@@ -123,31 +123,26 @@ Default invocations:
 
 **Linux**
 
-`python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %gcc`
+``python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %gcc``
 
 **OSX**
 
-`python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %clang`
+``python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %clang``
 
 **Windows**
 
-`python scripts/uberenv/uberenv.py --prefix uberenv_libs --triplet x86-windows`
+``python scripts/uberenv/uberenv.py --prefix uberenv_libs --triplet x86-windows``
 
 See `Vcpkg user docs <https://vcpkg.readthedocs.io/en/latest/users/triplets/>`_ for more information about triplets.
 
 Use the ``--install`` option to install the target package (not just its development dependencies):
 
-.. code:: bash
-
-    python scripts/uberenv/uberenv.py --install
+``python scripts/uberenv/uberenv.py --install``
 
 
 If the target Spack package supports Spack's testing hooks, you can run tests during the build process to validate the build and install, using the ``--run_tests`` option:
 
-.. code:: bash
-
-    python scripts/uberenv/uberenv.py --install \
-                                      --run_tests
+``python scripts/uberenv/uberenv.py --install --run_tests``
 
 For details on Spack's spec syntax, see the `Spack Specs & dependencies <https://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_ documentation.
 
