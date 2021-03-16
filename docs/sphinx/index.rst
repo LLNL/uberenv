@@ -153,6 +153,9 @@ For details on Spack's spec syntax, see the `Spack Specs & dependencies <https:/
 
 .. _spack_configs:
 
+Spack Configurations
+--------------------
+
 Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs/{platform}`` or under ``{spack_config_paths}/{platform}``, where:
 * ``{platform}`` must match the platform determined by uberenv (`darwin` on OSX).
 * ``{spack_configs_path}`` can be specified in the json config file.
