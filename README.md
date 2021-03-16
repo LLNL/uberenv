@@ -1,6 +1,8 @@
 # uberenv
 Automates using a package manager to build and deploy software.
 
+[![Read the Docs](https://readthedocs.org/projects/uberenv/badge/?version=latest)](https://uberenv.readthedocs.io)
+
 Uberenv is a python script that helps automate building
 third-party dependencies for development and deployment. 
 
