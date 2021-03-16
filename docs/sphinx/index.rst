@@ -212,11 +212,13 @@ Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv 
 Uberenv forcefully copies all directories that exist under `spack_packages_path` to the cloned Spack in order that they are given.
 This allows you to easily version control any Spack package overrides necessary.
 
-..note:: If you want, you may provide `spack_packages_path` with a list of directories that will be copied in order on top of each other.
-  For example, `spack_packages_path: ["first/path", "overwriting/path"]`.
+.. note:: 
+    If you want, you may provide `spack_packages_path` with a list of directories that will be copied in order on top of each other.
+    For example, `spack_packages_path: ["first/path", "overwriting/path"]`.
 
-..note::  For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project,
-  see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
+.. note::  
+    For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project,
+    see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
 
 Optimization
 ------------
