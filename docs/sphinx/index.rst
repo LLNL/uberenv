@@ -112,9 +112,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
 from github and https hosted source tarballs. When enabled, Uberenv clones Spack using:
 
-.. code:: bash
-
-    git -c http.sslVerify=false clone https://github.com/llnl/spack.git
+``git -c http.sslVerify=false clone https://github.com/llnl/spack.git``
 
 And passes ``-k`` to any Spack commands that may fetch via https.
 
@@ -123,35 +121,33 @@ Default invocations:
 
 **Linux**
 
-`python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %gcc`
+``python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %gcc``
 
 **OSX**
 
-`python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %clang`
+``python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %clang``
 
 **Windows**
 
-`python scripts/uberenv/uberenv.py --prefix uberenv_libs --triplet x86-windows`
+``python scripts/uberenv/uberenv.py --prefix uberenv_libs --triplet x86-windows``
 
 See `Vcpkg user docs <https://vcpkg.readthedocs.io/en/latest/users/triplets/>`_ for more information about triplets.
 
 Use the ``--install`` option to install the target package (not just its development dependencies):
 
-.. code:: bash
-
-    python scripts/uberenv/uberenv.py --install
+``python scripts/uberenv/uberenv.py --install``
 
 
 If the target Spack package supports Spack's testing hooks, you can run tests during the build process to validate the build and install, using the ``--run_tests`` option:
 
-.. code:: bash
-
-    python scripts/uberenv/uberenv.py --install \
-                                      --run_tests
+``python scripts/uberenv/uberenv.py --install --run_tests``
 
 For details on Spack's spec syntax, see the `Spack Specs & dependencies <https://spack.readthedocs.io/en/latest/basic_usage.html#specs-dependencies>`_ documentation.
 
 .. _spack_configs:
+
+Spack Configurations
+--------------------
 
 Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs/{platform}`` or under ``{spack_config_paths}/{platform}``, where:
 * ``{platform}`` must match the platform determined by uberenv (`darwin` on OSX).
@@ -197,7 +193,7 @@ Project settings are as follows:
   spack_activate           **None**                   Spack packages to activate                       **None**
   spack_configs_path       **None**                   Directory with Spack configs to be copied        ``spack_configs``
   spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
-  vcpkg_url                **None**                   Download url for Vcpkg                          ``https://github.com/microsoft/vcpkg``
+  vcpkg_url                **None**                   Download url for Vcpkg                           ``https://github.com/microsoft/vcpkg``
   vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
   vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
   vcpkg_ports_path         ``--vcpkg-ports-path``     Folder with vcpkg ports files                    **None**
@@ -212,11 +208,13 @@ Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv 
 Uberenv forcefully copies all directories that exist under `spack_packages_path` to the cloned Spack in order that they are given.
 This allows you to easily version control any Spack package overrides necessary.
 
-..note:: If you want, you may provide `spack_packages_path` with a list of directories that will be copied in order on top of each other.
-  For example, `spack_packages_path: ["first/path", "overwriting/path"]`.
+.. note:: 
+    If you want, you may provide `spack_packages_path` with a list of directories that will be copied in order on top of each other.
+    For example, `spack_packages_path: ["first/path", "overwriting/path"]`.
 
-..note::  For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project,
-  see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
+.. note::  
+    For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project,
+    see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
 
 Optimization
 ------------
