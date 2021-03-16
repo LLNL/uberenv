@@ -119,19 +119,19 @@ from github and https hosted source tarballs. When enabled, Uberenv clones Spack
 And passes ``-k`` to any Spack commands that may fetch via https.
 
 
-Default invocation on Linux/OSX:
+Default invocations:
 
-.. code:: bash
+**Linux**
 
-    python scripts/uberenv/uberenv.py --prefix uberenv_libs \
-                                      --spec %gcc
+`python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %gcc`
 
-Default invocation on Windows:
+**OSX**
 
-.. code:: bash
+`python scripts/uberenv/uberenv.py --prefix uberenv_libs --spec %clang`
 
-    python scripts/uberenv/uberenv.py --prefix uberenv_libs \
-                                      --triplet x86-windows
+**Windows**
+
+`python scripts/uberenv/uberenv.py --prefix uberenv_libs --triplet x86-windows`
 
 See `Vcpkg user docs <https://vcpkg.readthedocs.io/en/latest/users/triplets/>`_ for more information about triplets.
 
