@@ -58,6 +58,7 @@ third-party dependencies for development and deployment.
 Uberenv was released as part of Conduit (https://github.com/LLNL/conduit/). It is included in-source in several projects. The
 https://github.com/llnl/uberenv/ repo is used to hold the latest reference version of Uberenv.
 
+Several projects are using Uberenv for CI purpose. The process is documented `here <https://radiuss-ci.readthedocs.io/en/latest/index.html>`_.
 
 uberenv.py
 ~~~~~~~~~~
