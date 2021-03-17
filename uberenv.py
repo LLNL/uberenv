@@ -151,6 +151,14 @@ def parse_args():
                       default=None,
                       help="override the default package name")
 
+    # uberenv spack tpl build mode
+    parser.add_option("--spack-build-mode",
+                      dest="spack_build_mode",
+                      default=None,
+                      help="set mode used to build third party dependencies with spack"
+                           "(options: 'dev-build' 'uberenv-pkg' 'install' "
+                           "[default: 'dev-build'] )\n")
+
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
                       dest="package_final_phase",
@@ -169,6 +177,12 @@ def parse_args():
                       dest="project_json",
                       default=pjoin(uberenv_script_dir(),"project.json"),
                       help="uberenv project settings json file")
+
+    # option to explicitly set the number of build jobs
+    parser.add_option("-j",
+                      dest="build_jobs",
+                      default=None,
+                      help="Explicitly set build jobs")
 
     # flag to use insecure curl + git
     parser.add_option("-k",
@@ -323,23 +337,38 @@ class UberEnv():
         else:
             print("[info: destination '{0}' already exists]".format(self.dest_dir))
 
-    def set_from_args_or_json(self,setting):
+    def set_from_args_or_json(self,setting, optional=True):
+        """
+        When optional=False: 
+            If the setting key is not in the json file, error and raise an exception.
+        When optional=True:
+            If the setting key is not in the json file or opts, return None.
+        """
+        setting_value = None
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            print("ERROR: '{0}' must at least be defined in project.json".format(setting))
-            raise
-        else:
-            if self.opts[setting]:
-                setting_value = self.opts[setting]
+            if not optional:
+                print("ERROR: '{0}' must at least be defined in project.json".format(setting))
+                raise
+        if self.opts[setting]:
+            setting_value = self.opts[setting]
         return setting_value
 
-    def set_from_json(self,setting):
+    def set_from_json(self,setting, optional=True):
+        """
+        When optional=False: 
+            If the setting key is not in the json file, error and raise an exception.
+        When optional=True:
+            If the setting key is not in the json file or opts, return None.
+        """
+        setting_value = None
         try:
             setting_value = self.project_opts[setting]
         except (KeyError):
-            print("ERROR: '{0}' must at least be defined in project.json".format(setting))
-            raise
+            if not optional:
+                print("ERROR: '{0}' must at least be defined in project.json".format(setting))
+                raise
         return setting_value
 
     def detect_platform(self):
@@ -494,13 +523,23 @@ class SpackEnv(UberEnv):
 
     def __init__(self, opts, extra_opts):
         UberEnv.__init__(self,opts,extra_opts)
-
         self.pkg_version = self.set_from_json("package_version")
-        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
+        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
+        # get build mode
+        self.build_mode = self.set_from_args_or_json("spack_build_mode",True)
+        # default spack build mode is dev-build
+        if self.build_mode is None:
+            self.build_mode = "dev-build"
+        # NOTE: install always overrides the build mode to "install"
+        if self.opts["install"]:
+            self.build_mode = "install"
+        # if we are using fake package mode, adjust the pkg name
+        if self.build_mode == "uberenv-pkg":
+            self.pkg_name =  "uberenv-" + self.pkg_name
 
+        print("[uberenv spack build mode: {0}]".format(self.build_mode))
         self.packages_paths = []
-
         self.spec_hash = ""
         self.use_install = False
 
@@ -526,6 +565,13 @@ class SpackEnv(UberEnv):
 
         print("[spack spec: {0}]".format(self.opts["spec"]))
 
+    def print_spack_python_info(self):
+        spack_dir = self.dest_spack
+        cmd = pjoin(spack_dir,"bin","spack")
+        cmd += " python "
+        cmd += '-c "import sys; print(sys.executable);"'
+        res, out = sexe( cmd, ret_output = True)
+        print("[spack python: {0}]".format(out.strip()))
 
     def append_path_to_packages_paths(self, path, errorOnNonexistant=True):
         path = pabs(path)
@@ -591,11 +637,10 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
-        self.pkg_src_dir = os.path.join(self.uberenv_path,self.pkg_src_dir)
+        self.pkg_src_dir = os.path.abspath(os.path.join(self.dest_dir,self.pkg_src_dir))
         if not os.path.isdir(self.pkg_src_dir):
             print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
             sys.exit(-1)
-
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
         res, out = sexe("spack/bin/spack find -p /{0}".format(pkg_hash), ret_output = True)
@@ -683,6 +728,9 @@ class SpackEnv(UberEnv):
         cfg_dir = self.spack_config_dir
         spack_dir = self.dest_spack
 
+        # this is an opportunity to show spack python info post obtaining spack
+        self.print_spack_python_info()
+
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
@@ -745,7 +793,8 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
-        # prints install status and 32 characters hash
+        # print concretized spec with install info
+        # default case prints install status and 32 characters hash
         options="--install-status --very-long"
         spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
@@ -774,22 +823,34 @@ class SpackEnv(UberEnv):
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
-
         if not self.use_install:
             install_cmd = "spack/bin/spack "
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
-            if not self.opts["install"]:
-                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
-                if self.pkg_final_phase:
-                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
-            else:
+            # build mode -- install path
+            if self.build_mode == "install":
                 install_cmd += "install "
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
+            # build mode - dev build path
+            elif self.build_mode == "dev-build":
+                # dev build path
+                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
+                if self.pkg_final_phase:
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
+            # build mode -- original fake package path
+            elif self.build_mode == "uberenv-pkg":
+                install_cmd += "install "
+                if self.pkg_final_phase:
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
+            else:
+                print("[ERROR: unsupported build mode: {0}]".format(self.build_mode))
+                return -1
+            if self.opts["build_jobs"]:
+                install_cmd += "-j {0}".format(self.opts["build_jobs"])
+            # for all cases we use the pkg name and spec
             install_cmd += self.pkg_name + self.opts["spec"]
             res = sexe(install_cmd, echo=True)
-
             if res != 0:
                 print("[ERROR: failure of spack install/dev-build]")
                 return res
@@ -813,14 +874,14 @@ class SpackEnv(UberEnv):
                       return res
         # note: this assumes package extends python when +python
         # this may fail general cases
-        if self.opts["install"] and "+python" in full_spec:
+        if self.build_mode == "install" and "+python" in full_spec:
             activate_cmd = "spack/bin/spack activate /" + self.spec_hash
             res = sexe(activate_cmd, echo=True)
             if res != 0:
               return res
         # if user opt'd for an install, we want to symlink the final
         # install to an easy place:
-        if self.opts["install"] or self.use_install:
+        if self.build_mode == "install" or self.use_install:
             pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
@@ -839,7 +900,7 @@ class SpackEnv(UberEnv):
                     os.symlink(hc_path,hc_fname)
 
                 # Symlink install directory
-                if self.opts["install"]:
+                if self.build_mode == "install":
                     pkg_lnk_dir = "{0}-install".format(self.pkg_name)
                     if os.path.islink(pkg_lnk_dir):
                         os.unlink(pkg_lnk_dir)
@@ -848,21 +909,41 @@ class SpackEnv(UberEnv):
                     os.symlink(pkg_path["path"],pabs(pkg_lnk_dir))
                     print("")
                     print("[install complete!]")
-        # otherwise we are in the "only dependencies" case and the host-config
-        # file has to be copied from the do-be-deleted spack-build dir.
         else:
-            pattern = "*{0}.cmake".format(self.pkg_name)
-            build_dir = pjoin(self.pkg_src_dir,"spack-build")
-            hc_glob = glob.glob(pjoin(build_dir,pattern))
-            if len(hc_glob) > 0:
-                hc_path  = hc_glob[0]
-                hc_fname = os.path.split(hc_path)[1]
-                if os.path.islink(hc_fname):
-                    os.unlink(hc_fname)
-                print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                sexe("cp {0} {1}".format(hc_path,hc_fname))
-                print("[removing project build directory {0}]".format(pjoin(build_dir)))
-                sexe("rm -rf {0}".format(build_dir))
+            if self.build_mode == "dev-build":
+                # we are in the "only dependencies" dev build case and the host-config
+                # file has to be copied from the do-be-deleted spack-build dir.
+                build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
+                build_dir  = pjoin(build_base,"spack-build")
+                pattern = "*{0}.cmake".format(self.pkg_name)
+                build_dir = pjoin(self.pkg_src_dir,"spack-build")
+                hc_glob = glob.glob(pjoin(build_dir,pattern))
+                if len(hc_glob) > 0:
+                    hc_path  = hc_glob[0]
+                    hc_fname = os.path.split(hc_path)[1]
+                    if os.path.islink(hc_fname):
+                        os.unlink(hc_fname)
+                    print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                    sexe("cp {0} {1}".format(hc_path,hc_fname))
+                    print("[removing project build directory {0}]".format(pjoin(build_dir)))
+                    sexe("rm -rf {0}".format(build_dir))
+            else: # original uberenv fake package case
+                pkg_path = self.find_spack_pkg_path(self.pkg_name, self.opts["spec"])
+                if self.pkg_name != pkg_path["name"]:
+                    print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
+                    return -1
+                else:
+                    # Symlink host-config file
+                    hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
+                    if len(hc_glob) > 0:
+                        hc_path  = hc_glob[0]
+                        hc_fname = os.path.split(hc_path)[1]
+                        if os.path.islink(hc_fname):
+                            os.unlink(hc_fname)
+                        elif os.path.isfile(hc_fname):
+                            sexe("rm -f {0}".format(hc_fname))
+                        print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                        os.symlink(hc_path,hc_fname)
 
     def get_mirror_path(self):
         mirror_path = self.opts["mirror"]
@@ -1009,12 +1090,17 @@ def setup_osx_sdk_env_vars():
     print("[setting SDKROOT to {0}]".format(env[ "SDKROOT"]))
 
 
+def print_uberenv_python_info():
+    print("[uberenv python: {0}]".format(sys.executable))
+
 
 def main():
     """
     Clones and runs a package manager to setup third_party libs.
     Also creates a host-config.cmake file that can be used by our project.
     """
+
+    print_uberenv_python_info()
 
     # parse args from command line
     opts, extra_opts = parse_args()
