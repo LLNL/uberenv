@@ -151,13 +151,13 @@ def parse_args():
                       default=None,
                       help="override the default package name")
 
-    # uberenv tpl build mode
-    parser.add_option("--build-mode",
-                      dest="build_mode",
+    # uberenv spack tpl build mode
+    parser.add_option("--spack-build-mode",
+                      dest="spack_build_mode",
                       default=None,
-                      help="set mode used to build third party dependencies "
-                           "(spack options: 'dev-build' 'uberenv-pkg' 'install' "
-                           "[spack default: 'dev-build'] )\n")
+                      help="set mode used to build third party dependencies with spack"
+                           "(options: 'dev-build' 'uberenv-pkg' 'install' "
+                           "[default: 'dev-build'] )\n")
 
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
@@ -527,7 +527,7 @@ class SpackEnv(UberEnv):
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
         # get build mode
-        self.build_mode = self.set_from_args_or_json("build_mode",True)
+        self.build_mode = self.set_from_args_or_json("spack_build_mode",True)
         # default spack build mode is dev-build
         if self.build_mode is None:
             self.build_mode = "dev-build"
@@ -911,6 +911,8 @@ class SpackEnv(UberEnv):
                     print("[install complete!]")
         else:
             if self.build_mode == "dev-build":
+                # we are in the "only dependencies" dev build case and the host-config
+                # file has to be copied from the do-be-deleted spack-build dir.
                 build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
                 build_dir  = pjoin(build_base,"spack-build")
                 pattern = "*{0}.cmake".format(self.pkg_name)
