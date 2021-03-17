@@ -58,6 +58,7 @@ third-party dependencies for development and deployment.
 Uberenv was released as part of Conduit (https://github.com/LLNL/conduit/). It is included in-source in several projects. The
 https://github.com/llnl/uberenv/ repo is used to hold the latest reference version of Uberenv.
 
+Several projects are using Uberenv for Continuous Integration (CI) purposes. The process is documented `here <https://radiuss-ci.readthedocs.io/en/latest/index.html>`_.
 
 uberenv.py
 ~~~~~~~~~~
@@ -68,8 +69,8 @@ package along with extra settings such as compilers and external third party pac
 
 Uberenv is included directly in a project's source code repo, usually in the folder: ``scripts/uberenv/``.
 This folder is also used to store extra configuration files unique to the target project.
-Uberenv uses a ``project.json`` file to specify project details, including the target package name 
-and the base branch or commit in the package manager.  
+Uberenv uses a ``project.json`` file to specify project details, including the target package name
+and the base branch or commit in the package manager.
 
 Conduit's source repo serves as an example for Uberenv and Spack configuration files, etc:
 
@@ -77,7 +78,7 @@ https://github.com/LLNL/conduit/tree/master/scripts/uberenv
 
 Uberenv can also be used as a submodule of the user project, where one must provide a configuration file named
 ``.uberenv_config.json`` in a parent directory. This file is similar to ``project.json`` in purpose, but should
-additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``. 
+additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``.
 See :ref:`project_configuration` for more details.
 
 Uberenv is developed by LLNL, originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
@@ -105,7 +106,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--install``           Fully install target, not just dependencies    **False**
   ``--run_tests``         Invoke tests during build and against install  **False**
   ``--project-json``      File for project specific settings             See :ref:`project_configuration`
-  ``--triplet``           (vcpkg) Target architecture and linkage        ``VCPKG_DEFAULT_TRIPLET`` environment variable, 
+  ``--triplet``           (vcpkg) Target architecture and linkage        ``VCPKG_DEFAULT_TRIPLET`` environment variable,
                                                                          if present, ``x86-Windows`` otherwise
  ======================= ============================================== ================================================
 
@@ -202,17 +203,17 @@ Project settings are as follows:
 If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit`` and ``vcpkg_branch``.
 
 When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``,
-providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories. 
+providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories.
 Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv repo does not provide them.
 
 Uberenv forcefully copies all directories that exist under `spack_packages_path` to the cloned Spack in order that they are given.
 This allows you to easily version control any Spack package overrides necessary.
 
-.. note:: 
+.. note::
     If you want, you may provide `spack_packages_path` with a list of directories that will be copied in order on top of each other.
     For example, `spack_packages_path: ["first/path", "overwriting/path"]`.
 
-.. note::  
+.. note::
     For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project,
     see: `Axom's project.json file <https://github.com/LLNL/axom/tree/develop/scripts/uberenv/project.json>`_.
 
