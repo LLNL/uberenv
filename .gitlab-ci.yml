@@ -45,18 +45,24 @@
 # Triggers Conduit pipeline asking for uberenv update
 # UPDATE_UBERENV variable, when set, will tell conduit to use the value as
 # a reference to the uberenv env revision to checkout on github.
-trigger-conduit:
-  variables:
-    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
-  trigger:
-    project: radiuss/conduit
-    branch: feature/update-uberenv
-    strategy: depend
 
-trigger-serac:
-  variables:
-    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
-  trigger:
-    project: smith/serac
-    branch: develop
-    strategy: depend
+# Note: the following pipelines have been disabled because
+# - they need to be fixed
+# - they cause quota issues (conduit CI is quite space consuming)
+# - they may cause too much trafic in projects pipeline views
+
+#trigger-conduit:
+#  variables:
+#    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
+#  trigger:
+#    project: radiuss/conduit
+#    branch: feature/update-uberenv
+#    strategy: depend
+#
+#trigger-serac:
+#  variables:
+#    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
+#  trigger:
+#    project: smith/serac
+#    branch: develop
+#    strategy: depend
