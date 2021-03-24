@@ -612,9 +612,6 @@ class SpackEnv(UberEnv):
             uberenv_plat = self.detect_platform()
             if uberenv_plat is not None:
                 self.spack_config_dir = pabs(pjoin(spack_configs_path,uberenv_plat))
-            else:
-                print("[ERROR: Given path for 'spack_configs_path' does not contain platform directories: {0}]".format(spack_configs_path))
-                sys.exit(1)
 
         # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
