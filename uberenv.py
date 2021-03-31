@@ -844,7 +844,7 @@ class SpackEnv(UberEnv):
                 print("[ERROR: unsupported build mode: {0}]".format(self.build_mode))
                 return -1
             if self.opts["build_jobs"]:
-                install_cmd += "-j {0}".format(self.opts["build_jobs"])
+                install_cmd += "-j {0} ".format(self.opts["build_jobs"])
             # for all cases we use the pkg name and spec
             install_cmd += self.pkg_name + self.opts["spec"]
             res = sexe(install_cmd, echo=True)
