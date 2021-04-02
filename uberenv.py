@@ -869,6 +869,7 @@ class SpackEnv(UberEnv):
                     res = sexe(activate_cmd, echo=True)
                     if res != 0:
                       return res
+            print("[done activating dependent packages]")
         # note: this assumes package extends python when +python
         # this may fail general cases
         if self.build_mode == "install" and "+python" in full_spec:
@@ -881,7 +882,7 @@ class SpackEnv(UberEnv):
         if self.build_mode == "install" or self.use_install:
             pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
             if self.pkg_name != pkg_path["name"]:
-                print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
+                print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
                 return -1
             else:
                 # Symlink host-config file
@@ -925,6 +926,7 @@ class SpackEnv(UberEnv):
                     print("[removing project build directory {0}]".format(pjoin(build_dir)))
                     sexe("rm -rf {0}".format(build_dir))
             else: # original uberenv fake package case
+                print("TRYING TO FIND: {0} {1}".format(self.pkg_name, self.opts["spec"]))
                 pkg_path = self.find_spack_pkg_path(self.pkg_name, self.opts["spec"])
                 if self.pkg_name != pkg_path["name"]:
                     print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
