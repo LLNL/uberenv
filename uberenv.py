@@ -926,8 +926,9 @@ class SpackEnv(UberEnv):
                     print("[removing project build directory {0}]".format(pjoin(build_dir)))
                     sexe("rm -rf {0}".format(build_dir))
             else: # original uberenv fake package case
-                print("TRYING TO FIND: {0} {1}".format(self.pkg_name, self.opts["spec"]))
-                pkg_path = self.find_spack_pkg_path(self.pkg_name, self.opts["spec"])
+                # use spec_hash to locate b/c other path won't work if
+                # deps are provided in the spec (e.g: @ver+variant ^package+variant)
+                pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
                 if self.pkg_name != pkg_path["name"]:
                     print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
                     return -1
