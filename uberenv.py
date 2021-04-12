@@ -930,7 +930,7 @@ class SpackEnv(UberEnv):
                 # deps are provided in the spec (e.g: @ver+variant ^package+variant)
                 pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
                 if self.pkg_name != pkg_path["name"]:
-                    print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
+                    print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
                     return -1
                 else:
                     # Symlink host-config file
