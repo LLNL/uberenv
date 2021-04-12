@@ -869,6 +869,7 @@ class SpackEnv(UberEnv):
                     res = sexe(activate_cmd, echo=True)
                     if res != 0:
                       return res
+            print("[done activating dependent packages]")
         # note: this assumes package extends python when +python
         # this may fail general cases
         if self.build_mode == "install" and "+python" in full_spec:
@@ -876,12 +877,15 @@ class SpackEnv(UberEnv):
             res = sexe(activate_cmd, echo=True)
             if res != 0:
               return res
-        # if user opt'd for an install, we want to symlink the final
-        # install to an easy place:
-        if self.build_mode == "install" or self.use_install:
+        # when using install or uberenv-pkg mode, create a symlink to the host config 
+        if self.build_mode == "install" or \
+           self.build_mode == "uberenv-pkg" \
+           or self.use_install:
+            # use spec_hash to locate b/c other helper won't work if complex
+            # deps are provided in the spec (e.g: @ver+variant ^package+variant)
             pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
             if self.pkg_name != pkg_path["name"]:
-                print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
+                print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
                 return -1
             else:
                 # Symlink host-config file
@@ -895,7 +899,8 @@ class SpackEnv(UberEnv):
                         sexe("rm -f {0}".format(hc_fname))
                     print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
                     os.symlink(hc_path,hc_fname)
-
+                # if user opt'd for an install, we want to symlink the final
+                # install to an easy place:
                 # Symlink install directory
                 if self.build_mode == "install":
                     pkg_lnk_dir = "{0}-install".format(self.pkg_name)
@@ -906,8 +911,7 @@ class SpackEnv(UberEnv):
                     os.symlink(pkg_path["path"],pabs(pkg_lnk_dir))
                     print("")
                     print("[install complete!]")
-        else:
-            if self.build_mode == "dev-build":
+        elif self.build_mode == "dev-build":
                 # we are in the "only dependencies" dev build case and the host-config
                 # file has to be copied from the do-be-deleted spack-build dir.
                 build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
@@ -924,23 +928,9 @@ class SpackEnv(UberEnv):
                     sexe("cp {0} {1}".format(hc_path,hc_fname))
                     print("[removing project build directory {0}]".format(pjoin(build_dir)))
                     sexe("rm -rf {0}".format(build_dir))
-            else: # original uberenv fake package case
-                pkg_path = self.find_spack_pkg_path(self.pkg_name, self.opts["spec"])
-                if self.pkg_name != pkg_path["name"]:
-                    print("[ERROR: Could not find install of {0}]".format(self.pkg_name))
-                    return -1
-                else:
-                    # Symlink host-config file
-                    hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
-                    if len(hc_glob) > 0:
-                        hc_path  = hc_glob[0]
-                        hc_fname = os.path.split(hc_path)[1]
-                        if os.path.islink(hc_fname):
-                            os.unlink(hc_fname)
-                        elif os.path.isfile(hc_fname):
-                            sexe("rm -f {0}".format(hc_fname))
-                        print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                        os.symlink(hc_path,hc_fname)
+        else:
+            print("[ERROR: Unsupported build mode {0}]".format(self.build_mode))
+            return -1
 
     def get_mirror_path(self):
         mirror_path = self.opts["mirror"]
