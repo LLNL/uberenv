@@ -198,6 +198,7 @@ Project settings are as follows:
   vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
   vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
   vcpkg_ports_path         ``--vcpkg-ports-path``     Folder with vcpkg ports files                    **None**
+  use_clingo               **None**                   Use Spack's ASP solver for concretization        ``False``
  ========================= ========================== ================================================ =======================================
 
 If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit`` and ``vcpkg_branch``.
