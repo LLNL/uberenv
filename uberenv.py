@@ -62,6 +62,7 @@ import json
 import datetime
 import glob
 import re
+import yaml
 
 from optparse import OptionParser
 
@@ -542,6 +543,12 @@ class SpackEnv(UberEnv):
         self.packages_paths = []
         self.spec_hash = ""
         self.use_install = False
+  
+        if "use_clingo" in self.project_opts and self.project_opts["use_clingo"]:
+            self.use_clingo = True
+            self.setup_clingo()
+        else:
+            self.use_clingo = False
 
         # Some additional setup for macos
         if is_darwin():
@@ -769,6 +776,16 @@ class SpackEnv(UberEnv):
                 _src_glob = pjoin(_base_path, "*")
                 print("[copying patched packages from {0}]".format(_src_glob))
                 sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
+
+        # Update spack's config.yaml if clingo was requested
+        if self.use_clingo:
+            with open(pjoin(spack_etc_defaults_dir, "config.yaml"), 'r') as conf_file:
+                conf_data = conf_file.read()
+            conf_yaml = yaml.load(conf_data)
+            conf_yaml['config']['concretizer'] = 'clingo'
+            # This will leave out all the comments, is this a problem?
+            with open(pjoin(spack_etc_defaults_dir, "config.yaml"), 'w') as conf_file:
+                conf_file.write(yaml.dump(conf_yaml))
 
 
 
@@ -1035,6 +1052,42 @@ class SpackEnv(UberEnv):
                 upstreams_cfg_file.write("  {0}:\n".format(upstream_name))
                 upstreams_cfg_file.write("    install_tree: {0}\n".format(upstream_path))
 
+    def setup_clingo(self):
+        """
+        Attempts to install the clingo answer set programming library
+        if it is not already available as a Python module
+        """
+        try:
+            import clingo
+        except ModuleNotFoundError:
+            import pip
+            pip_ver = pip.__version__
+            # Requirement comes from https://github.com/pypa/manylinux
+            # JBE: I think the string comparison is somewhat correct here, if not we'll
+            # need to install setuptools for 'packaging.version'
+            if pip_ver < "19.3":
+                print("[ERROR: pip version {0} is too old to install clingo".format(pip_ver))
+                print("  pip 19.3 is required for PEP 599 support")
+                print("]")
+                sys.exit(1)
+            py_interp = sys.executable
+            clingo_pkg = "clingo-cffi-wheel"
+            uninstall_cmd = "{0} -m pip uninstall {1}".format(py_interp, clingo_pkg)
+            # Uninstall it first in case the available version failed due to differing arch
+            # pip will still return 0 in the case of a "trivial" uninstall
+            res = sexe(uninstall_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: clingo uninstall failed with returncode {0}]".format(res))
+                sys.exit(1)
+            # This repo is from https://github.com/joshessman-llnl/package-clingo-manylinux
+            # According to https://github.com/potassco/clingo/pull/255 "official" releases
+            # will have PPC builds, so switch over once Clingo releases 5.4.2
+            install_cmd = "{0} -m pip install --user -i https://test.pypi.org/simple/ {1}".format(py_interp, clingo_pkg)
+            res = sexe(install_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: clingo install failed with returncode {0}]".format(res))
+                sys.exit(1)
+
 
 def find_osx_sdks():
     """
@@ -1145,4 +1198,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
