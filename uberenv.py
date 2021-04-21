@@ -544,7 +544,7 @@ class SpackEnv(UberEnv):
         self.spec_hash = ""
         self.use_install = False
   
-        if "use_clingo" in self.project_opts and self.project_opts["use_clingo"]:
+        if "spack_use_new_concretizer" in self.project_opts and self.project_opts["spack_use_new_concretizer"]:
             self.use_clingo = True
             self.setup_clingo()
         else:
