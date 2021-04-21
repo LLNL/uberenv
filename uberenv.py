@@ -1072,7 +1072,7 @@ class SpackEnv(UberEnv):
                 sys.exit(1)
             py_interp = sys.executable
             clingo_pkg = "clingo-cffi-wheel"
-            uninstall_cmd = "{0} -m pip uninstall {1}".format(py_interp, clingo_pkg)
+            uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
             # Uninstall it first in case the available version failed due to differing arch
             # pip will still return 0 in the case of a "trivial" uninstall
             res = sexe(uninstall_cmd, echo=True)
