@@ -62,7 +62,6 @@ import json
 import datetime
 import glob
 import re
-import yaml
 
 from optparse import OptionParser
 
@@ -779,6 +778,7 @@ class SpackEnv(UberEnv):
 
         # Update spack's config.yaml if clingo was requested
         if self.use_clingo:
+            import yaml
             with open(pjoin(spack_etc_defaults_dir, "config.yaml"), 'r') as conf_file:
                 conf_data = conf_file.read()
             conf_yaml = yaml.load(conf_data)
