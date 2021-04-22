@@ -1071,7 +1071,7 @@ class SpackEnv(UberEnv):
                 print("]")
                 sys.exit(1)
             py_interp = sys.executable
-            clingo_pkg = "clingo-cffi-wheel"
+            clingo_pkg = "clingo"
             uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
             # Uninstall it first in case the available version failed due to differing arch
             # pip will still return 0 in the case of a "trivial" uninstall
@@ -1079,10 +1079,7 @@ class SpackEnv(UberEnv):
             if res != 0:
                 print("[ERROR: clingo uninstall failed with returncode {0}]".format(res))
                 sys.exit(1)
-            # This repo is from https://github.com/joshessman-llnl/package-clingo-manylinux
-            # According to https://github.com/potassco/clingo/pull/255 "official" releases
-            # will have PPC builds, so switch over once Clingo releases 5.4.2
-            install_cmd = "{0} -m pip install --user -i https://test.pypi.org/simple/ {1}".format(py_interp, clingo_pkg)
+            install_cmd = "{0} -m pip install --user {1}".format(py_interp, clingo_pkg)
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: clingo install failed with returncode {0}]".format(res))
