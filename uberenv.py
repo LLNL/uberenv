@@ -391,7 +391,7 @@ class VcpkgEnv(UberEnv):
 
         # setup architecture triplet
         self.vcpkg_triplet = self.set_from_args_or_json("vcpkg_triplet")
-        print("Vcpkg triplet: {}".format(self.vcpkg_triplet))
+        print("Vcpkg triplet: {0}".format(self.vcpkg_triplet))
         if self.vcpkg_triplet is None:
            self.vcpkg_triplet = os.getenv("VCPKG_DEFAULT_TRIPLET", "x86-windows")
 
@@ -719,7 +719,7 @@ class SpackEnv(UberEnv):
         self.spack_cmd = "{0} -e {1}".format(self.spack_cmd,self.config_dir())
 
         # A simple proxy script for spack
-        uber_spack='#!/bin/bash\n$(dirname ${{0}})/{} "$@"\n'.format(self.spack_cmd)
+        uber_spack='#!/bin/bash\n$(dirname ${{0}})/{0} "$@"\n'.format(self.spack_cmd)
 
         with open('uber-spack','w+') as script:
             script.write(uber_spack)
@@ -746,11 +746,11 @@ class SpackEnv(UberEnv):
 
     def clean_build(self):
         # clean out any temporary spack build stages
-        cln_cmd = "{} clean ".format(self.spack_cmd)
+        cln_cmd = "{0} clean ".format(self.spack_cmd)
         res = sexe(cln_cmd, echo=True)
 
         # clean out any spack cached stuff
-        cln_cmd = "{} clean --all".format(self.spack_cmd)
+        cln_cmd = "{0} clean --all".format(self.spack_cmd)
         res = sexe(cln_cmd, echo=True)
 
         # check if we need to force uninstall of selected packages
@@ -758,7 +758,7 @@ class SpackEnv(UberEnv):
             if self.project_opts.has_key("spack_clean_packages"):
                 for cln_pkg in self.project_opts["spack_clean_packages"]:
                     if self.find_spack_pkg_path(cln_pkg) is not None:
-                        uninst_cmd = "{} uninstall -f -y --all --dependents ".format(self.spack_cmd) + cln_pkg
+                        uninst_cmd = "{0} uninstall -f -y --all --dependents ".format(self.spack_cmd) + cln_pkg
                         res = sexe(uninst_cmd, echo=True)
 
     def show_info(self):
@@ -793,7 +793,7 @@ class SpackEnv(UberEnv):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
         if not self.use_install:
-            install_cmd = "{} ".format(self.spack_cmd)
+            install_cmd = "{0} ".format(self.spack_cmd)
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             # build mode -- install path
@@ -931,7 +931,7 @@ class SpackEnv(UberEnv):
         Returns the path of a defaults scoped spack mirror with the
         given name, or None if no mirror exists.
         """
-        res, out = sexe("{} mirror list".format(self.spack_cmd), ret_output=True)
+        res, out = sexe("{0} mirror list".format(self.spack_cmd), ret_output=True)
         mirror_path = None
         for mirror in out.split('\n'):
             if mirror:
@@ -972,7 +972,7 @@ class SpackEnv(UberEnv):
         """
         upstream_path = None
 
-        res, out = sexe('{} config get upstreams'.format(self.spack_cmd), ret_output=True)
+        res, out = sexe('{0} config get upstreams'.format(self.spack_cmd), ret_output=True)
         if (not out) and ("upstreams:" in out):
             out = out.replace(' ', '')
             out = out.replace('install_tree:', '')
