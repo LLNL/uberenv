@@ -340,7 +340,7 @@ class UberEnv():
 
     def set_from_args_or_json(self,setting, optional=True):
         """
-        When optional=False: 
+        When optional=False:
             If the setting key is not in the json file, error and raise an exception.
         When optional=True:
             If the setting key is not in the json file or opts, return None.
@@ -358,7 +358,7 @@ class UberEnv():
 
     def set_from_json(self,setting, optional=True):
         """
-        When optional=False: 
+        When optional=False:
             If the setting key is not in the json file, error and raise an exception.
         When optional=True:
             If the setting key is not in the json file or opts, return None.
@@ -443,7 +443,7 @@ class VcpkgEnv(UberEnv):
 
             os.chdir(self.dest_dir)
 
-            clone_opts = ("-c http.sslVerify=false " 
+            clone_opts = ("-c http.sslVerify=false "
                           if self.opts["ignore_ssl_errors"] else "")
 
             clone_cmd =  "git {0} clone --single-branch -b {1} {2} vcpkg".format(clone_opts, vcpkg_branch,vcpkg_url)
@@ -455,7 +455,7 @@ class VcpkgEnv(UberEnv):
                 print("[info: using vcpkg commit {0}]".format(sha1))
                 os.chdir(self.dest_vcpkg)
                 sexe("git checkout {0}".format(sha1),echo=True)
-                
+
         if self.opts["repo_pull"]:
             # do a pull to make sure we have the latest
             os.chdir(self.dest_vcpkg)
@@ -474,7 +474,7 @@ class VcpkgEnv(UberEnv):
 
     def patch(self):
         """ hot-copy our ports into vcpkg """
-        
+
         import distutils.dir_util
 
         dest_vcpkg_ports = pjoin(self.dest_vcpkg, "ports")
@@ -501,7 +501,7 @@ class VcpkgEnv(UberEnv):
         pass
 
     def install(self):
-        
+
         os.chdir(self.dest_vcpkg)
         install_cmd = "vcpkg.exe "
         install_cmd += "install {0}:{1}".format(self.pkg_name, self.vcpkg_triplet)
@@ -849,7 +849,7 @@ class SpackEnv(UberEnv):
             res = sexe(activate_cmd, echo=True)
             if res != 0:
               return res
-        # when using install or uberenv-pkg mode, create a symlink to the host config 
+        # when using install or uberenv-pkg mode, create a symlink to the host config
         if self.build_mode == "install" or \
            self.build_mode == "uberenv-pkg" \
            or self.use_install:
