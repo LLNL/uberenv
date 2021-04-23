@@ -713,10 +713,10 @@ class SpackEnv(UberEnv):
     def load(self):
         # load spack environment, potentially overriding spack defaults
         # uberenv used to handle defaults overriding, now spack environment can
-        # be used to do so, but it relies on each project to make sure their
+        # be used to do so, but it lies with each project to make sure their
         # environment is well designed.
 
-        self.spack_cmd = "{0} -e {1}".format(self.spack_cmd,self.config_dir())
+        self.spack_cmd = "{0} -e {1}".format(self.spack_cmd,self.spack_config_dir)
 
         # A simple proxy script for spack
         uber_spack='#!/bin/bash\n$(dirname ${{0}})/{0} "$@"\n'.format(self.spack_cmd)
