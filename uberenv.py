@@ -733,7 +733,9 @@ class SpackEnv(UberEnv):
         # this is an opportunity to show spack python info post obtaining spack
         self.print_spack_python_info()
 
-
+# TODO: The hot copy may not be necessary any more, but we will deal with this
+#       after we implement the copy of environments and mirror setting.
+#       note: the feature to use here is: spack repo
         # hot-copy our packages into spack
         if len(self.packages_paths) > 0:
             dest_spack_pkgs = pjoin(self.dest_spack,"var","spack","repos","builtin","packages")
