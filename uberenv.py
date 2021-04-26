@@ -779,14 +779,11 @@ class SpackEnv(UberEnv):
 
         # Update spack's config.yaml if clingo was requested
         if self.use_clingo:
-            import yaml
-            with open(pjoin(spack_etc_defaults_dir, "config.yaml"), 'r') as conf_file:
-                conf_data = conf_file.read()
-            conf_yaml = yaml.load(conf_data)
-            conf_yaml['config']['concretizer'] = 'clingo'
-            # This will leave out all the comments, is this a problem?
-            with open(pjoin(spack_etc_defaults_dir, "config.yaml"), 'w') as conf_file:
-                conf_file.write(yaml.dump(conf_yaml))
+            concretizer_cmd = "spack/bin/spack config --scope defaults add config:concretizer:clingo"
+            res = sexe(concretizer_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to update spack configuration to use new concretizer]")
+                sys.exit(-1)
 
 
 
