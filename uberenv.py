@@ -524,7 +524,7 @@ class SpackEnv(UberEnv):
     def __init__(self, opts, extra_opts):
         UberEnv.__init__(self,opts,extra_opts)
         self.pkg_version = self.set_from_json("package_version")
-        self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
+        self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
         # get build mode
         self.build_mode = self.set_from_args_or_json("spack_build_mode",True)
@@ -640,10 +640,11 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
-        self.pkg_src_dir = os.path.abspath(os.path.join(self.dest_dir,self.pkg_src_dir))
-        if not os.path.isdir(self.pkg_src_dir):
-            print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
-            sys.exit(-1)
+        if self.build_mode == "dev-build":
+            self.pkg_src_dir = os.path.abspath(os.path.join(self.uberenv_path,self.pkg_src_dir))
+            if not os.path.isdir(self.pkg_src_dir):
+                print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
+                sys.exit(-1)
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
         res, out = sexe("spack/bin/spack find -p /{0}".format(pkg_hash), ret_output = True)
