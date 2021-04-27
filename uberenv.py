@@ -1057,32 +1057,13 @@ class SpackEnv(UberEnv):
         """
         try:
             import clingo
-        except ModuleNotFoundError:
-            import pip
-            pip_ver = pip.__version__
-            # Requirement comes from https://github.com/pypa/manylinux
-            # JBE: I think the string comparison is somewhat correct here, if not we'll
-            # need to install setuptools for 'packaging.version'
-            if pip_ver < "19.3":
-                print("[ERROR: pip version {0} is too old to install clingo".format(pip_ver))
-                print("  pip 19.3 is required for PEP 599 support")
-                print("]")
-                sys.exit(1)
-            py_interp = sys.executable
-            clingo_pkg = "clingo"
-            uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
-            # Uninstall it first in case the available version failed due to differing arch
-            # pip will still return 0 in the case of a "trivial" uninstall
-            res = sexe(uninstall_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: clingo uninstall failed with returncode {0}]".format(res))
-                sys.exit(1)
+        except ImportError:
             install_cmd = "{0} -m pip install --user {1}".format(py_interp, clingo_pkg)
-            res = sexe(install_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: clingo install failed with returncode {0}]".format(res))
-                sys.exit(1)
-
+            print("[ERROR: clingo module not installed, run the following:")
+            print("  {0}".format(install_cmd))
+            print("  Requires pip >= 19.3")
+            print("]")
+            sys.exit(1)
 
 def find_osx_sdks():
     """
