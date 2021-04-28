@@ -1057,7 +1057,7 @@ class SpackEnv(UberEnv):
         """
         try:
             import clingo
-        except ModuleNotFoundError:
+        except ImportError:
             import pip
             pip_ver = pip.__version__
             # Requirement comes from https://github.com/pypa/manylinux
