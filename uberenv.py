@@ -152,6 +152,14 @@ def parse_args():
                       default=None,
                       help="override the default package name")
 
+    # spack configuration mode
+    parser.add_option("--spack-config-mode",
+                      dest="spack_config_mode",
+                      default=None,
+                      help="set mode used to apply a config to spack"
+                           "(options: 'patch' 'env'"
+                           "[default: 'patch'] )\n")
+
     # uberenv spack tpl build mode
     parser.add_option("--spack-build-mode",
                       dest="spack_build_mode",
@@ -532,6 +540,10 @@ class SpackEnv(UberEnv):
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
         # get build mode
         self.build_mode = self.set_from_args_or_json("spack_build_mode",True)
+        self.spack_config_mode = self.set_from_args_or_json("spack_config_mode",True)
+        # default spack config mode is "patch" (alternative: "env")
+        if self.spack_config_mode is None:
+            self.spack_config_mode = "patch"
         # default spack build mode is dev-build
         if self.build_mode is None:
             self.build_mode = "dev-build"
@@ -710,11 +722,72 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Git failed to pull]")
                 sys.exit(-1)
 
+    #IF Old patching mode
+    def disable_spack_config_scopes(self,spack_dir):
+        # disables all config scopes except "defaults", which we will
+        # force our settings into
+        spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
+        print("[disabling config scope (except defaults) in: {0}]".format(spack_lib_config))
+        cfg_script = open(spack_lib_config).read()
+        for cfg_scope_stmt in ["('system', os.path.join(spack.paths.system_etc_path, 'spack')),",
+                            "('site', os.path.join(spack.paths.etc_path, 'spack')),",
+                            "('user', spack.paths.user_config_path)"]:
+            cfg_script = cfg_script.replace(cfg_scope_stmt,
+                                            "#DISABLED BY UBERENV: " + cfg_scope_stmt)
+        open(spack_lib_config,"w").write(cfg_script)
+
+
+    def patch(self):
+
+        cfg_dir = self.spack_config_dir
+        spack_dir = self.dest_spack
+
+        # this is an opportunity to show spack python info post obtaining spack
+        self.print_spack_python_info()
+
+        # force spack to use only "defaults" config scope
+        self.disable_spack_config_scopes(spack_dir)
+        spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
+
+        if cfg_dir is not None:
+            print("[copying spack settings from {0}]".format(cfg_dir))
+
+            # copy in "defaults" config.yaml
+            config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
+            sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
+            mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
+            sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
+
+            # copy in other settings per platform
+            config_yaml    = pjoin(cfg_dir,"config.yaml")
+            mirrors_yaml   = pjoin(cfg_dir,"mirrors.yaml")
+            compilers_yaml = pjoin(cfg_dir,"compilers.yaml")
+            packages_yaml  = pjoin(cfg_dir,"packages.yaml")
+
+            if os.path.isfile(config_yaml):
+                sexe("cp {0} {1}/".format(config_yaml , spack_etc_defaults_dir ), echo=True)
+
+            if os.path.isfile(mirrors_yaml):
+                sexe("cp {0} {1}/".format(mirrors_yaml , spack_etc_defaults_dir ), echo=True)
+
+            if os.path.isfile(compilers_yaml):
+                sexe("cp {0} {1}/".format(compilers_yaml, spack_etc_defaults_dir ), echo=True)
+
+            if os.path.isfile(packages_yaml):
+                sexe("cp {0} {1}/".format(packages_yaml, spack_etc_defaults_dir ), echo=True)
+        else:
+            # let spack try to auto find compilers
+            sexe("spack/bin/spack compiler find", echo=True)
+
+    # ELSE new environment mode
     def load(self):
         # load spack environment, potentially overriding spack defaults
         # uberenv used to handle defaults overriding, now spack environment can
         # be used to do so, but it lies with each project to make sure their
         # environment is well designed.
+
+        lock_file=self.spack_config_dir+"/spack.lock"
+        sexe("[[ -e ${0} ]] && rm ${0}")
 
         self.spack_cmd = "{0} -e {1}".format(self.spack_cmd,self.spack_config_dir)
 
@@ -728,8 +801,6 @@ class SpackEnv(UberEnv):
         st = os.stat('uber-spack')
         os.chmod('uber-spack', st.st_mode | stat.S_IEXEC)
 
-
-# TODO: To keep or not to keep?
         # this is an opportunity to show spack python info post obtaining spack
         self.print_spack_python_info()
 
@@ -744,7 +815,7 @@ class SpackEnv(UberEnv):
                 print("[copying patched packages from {0}]".format(_src_glob))
                 sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
 
-
+    #ENDIF
 
     def clean_build(self):
         # clean out any temporary spack build stages
@@ -1081,7 +1152,7 @@ def main():
     os.chdir(env.dest_dir)
 
     # Patch the package manager, as necessary
-    if not is_windows():
+    if not is_windows() and self.spack_config_mode == "env":
       env.load()
     else:
       env.patch()
