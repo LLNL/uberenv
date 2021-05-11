@@ -64,5 +64,5 @@ trigger-serac:
     UPDATE_UBERENV: $CI_COMMIT_REF_NAME
   trigger:
     project: smith/serac
-    branch: develop
+    branch: testing/bernede1/fix-uberenv-ci
     strategy: depend
