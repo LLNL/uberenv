@@ -24,6 +24,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Allow `.uberenv_config.json` to live at the same level as `uberenv.py`
 - No longer removes symlinks when using the directory of `uberenv.py`
 - Reduce Spack's git history to a bare minimum
+- Better error message for out-of-date `pip`, better documentation for `spack_concretizer` setting
 
 ### Fixed
 

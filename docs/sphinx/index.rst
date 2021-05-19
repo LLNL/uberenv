@@ -233,3 +233,12 @@ Uberenv also features options to optimize the installation
 
 .. note::
     These options are only currently available for spack.
+
+Spack Concretization
+--------------------
+
+Uberenv provides a ``spack_concretizer`` setting to select the method by which the "concrete" dependency tree is determined.
+The ``original`` option is the default behavior and is often subject to errors where a valid set of constraints fails to
+concretize.  The ``clingo`` option is more robust in this respect but requires the installation of the ``clingo`` Python module.
+This happens automatically when the ``spack_concretizer`` option is set to ``clingo``, but requires ``pip`` >= 19.3 and Python >= 3.6.
+If your ``pip`` version is out of date, Uberenv will prompt you to upgrade it.

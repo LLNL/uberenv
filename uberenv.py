@@ -1064,9 +1064,12 @@ class SpackEnv(UberEnv):
             # JBE: I think the string comparison is somewhat correct here, if not we'll
             # need to install setuptools for 'packaging.version'
             if pip_ver < "19.3":
-                print("[ERROR: pip version {0} is too old to install clingo".format(pip_ver))
+                print("[!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("  ERROR: pip version {0} is too old to install clingo".format(pip_ver))
                 print("  pip 19.3 is required for PEP 599 support")
-                print("]")
+                print("  Try running the following command to upgrade pip:")
+                print("     python3 -m pip install --user --upgrade pip")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!]")
                 sys.exit(1)
             py_interp = sys.executable
             clingo_pkg = "clingo"
