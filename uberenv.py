@@ -230,7 +230,14 @@ def parse_args():
                       default=False,
                       help="Only download and setup Spack. No further Spack command will be run.")
 
-
+    # option to keep staged directories from previous Uberenv runs
+    parser.add_option("--keep-stage",
+                      action="store_true",
+                      dest="keep_stage",
+                      default=False,
+                      help="Keep stage directories from previous Uberenv runs;"
+                           "does not override --clean.")
+    
     ###############
     # parse args
     ###############
@@ -788,13 +795,14 @@ class SpackEnv(UberEnv):
 
 
     def clean_build(self):
-        # clean out any temporary spack build stages
-        cln_cmd = "spack/bin/spack clean "
-        res = sexe(cln_cmd, echo=True)
+        if not self.opts["keep_stage"]:
+           # clean out any temporary spack build stages
+           cln_cmd = "spack/bin/spack clean "
+           res = sexe(cln_cmd, echo=True)
 
-        # clean out any spack cached stuff
-        cln_cmd = "spack/bin/spack clean --all"
-        res = sexe(cln_cmd, echo=True)
+           # clean out any spack cached stuff
+           cln_cmd = "spack/bin/spack clean --all"
+           res = sexe(cln_cmd, echo=True)
 
         # check if we need to force uninstall of selected packages
         if self.opts["spack_clean"]:

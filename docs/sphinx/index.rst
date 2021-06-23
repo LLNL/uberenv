@@ -108,6 +108,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--project-json``      File for project specific settings             See :ref:`project_configuration`
   ``--triplet``           (vcpkg) Target architecture and linkage        ``VCPKG_DEFAULT_TRIPLET`` environment variable,
                                                                          if present, ``x86-Windows`` otherwise
+  ``--keep-stage``        Keep stage dirs from previous Uberenv runs     **False**
  ======================= ============================================== ================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
