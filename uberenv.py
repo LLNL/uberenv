@@ -230,6 +230,7 @@ def parse_args():
                       default=False,
                       help="Only download and setup Spack. No further Spack command will be run.")
 
+
     ###############
     # parse args
     ###############
