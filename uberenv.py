@@ -536,7 +536,7 @@ class SpackEnv(UberEnv):
         self.spack_cmd = "spack/bin/spack"
 
         self.pkg_version = self.set_from_json("package_version")
-        self.pkg_src_dir = self.set_from_args_or_json("package_source_dir")
+        self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
         # get build mode
         self.build_mode = self.set_from_args_or_json("spack_build_mode",True)
@@ -558,6 +558,12 @@ class SpackEnv(UberEnv):
         self.packages_paths = []
         self.spec_hash = ""
         self.use_install = False
+  
+        if "spack_concretizer" in self.project_opts and self.project_opts["spack_concretizer"] == "clingo":
+            self.use_clingo = True
+            self.setup_clingo()
+        else:
+            self.use_clingo = False
 
         # Some additional setup for macos
         if is_darwin():
@@ -650,10 +656,11 @@ class SpackEnv(UberEnv):
         if os.path.isdir(self.dest_spack):
             print("[info: destination '{0}' already exists]".format(self.dest_spack))
 
-        self.pkg_src_dir = os.path.abspath(os.path.join(self.dest_dir,self.pkg_src_dir))
-        if not os.path.isdir(self.pkg_src_dir):
-            print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
-            sys.exit(-1)
+        if self.build_mode == "dev-build":
+            self.pkg_src_dir = os.path.abspath(os.path.join(self.uberenv_path,self.pkg_src_dir))
+            if not os.path.isdir(self.pkg_src_dir):
+                print("[ERROR: package_source_dir '{0}' does not exist]".format(self.pkg_src_dir))
+                sys.exit(-1)
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
         res, out = sexe("{0} find -p /{1}".format(self.spack_cmd, pkg_hash), ret_output = True)
@@ -815,15 +822,20 @@ class SpackEnv(UberEnv):
                 print("[copying patched packages from {0}]".format(_src_glob))
                 sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
 
-    #ENDIF
+        # Update spack's config.yaml if clingo was requested
+        if self.use_clingo:
+            concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_cmd)
+            res = sexe(concretizer_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to update spack configuration to use new concretizer]")
+                sys.exit(-1)
+
+
 
     def clean_build(self):
-        # clean out any temporary spack build stages
-        cln_cmd = "{0} clean ".format(self.spack_cmd)
-        res = sexe(cln_cmd, echo=True)
-
-        # clean out any spack cached stuff
-        cln_cmd = "{0} clean --all".format(self.spack_cmd)
+        # clean out any spack cached stuff (except build stages, downloads, &
+        # spack's bootstrapping software)
+        cln_cmd = "{0} clean --misc-cache --failures --python-cache".format(self.spack_cmd)
         res = sexe(cln_cmd, echo=True)
 
         # check if we need to force uninstall of selected packages
@@ -1080,6 +1092,42 @@ class SpackEnv(UberEnv):
                 upstreams_cfg_file.write("  {0}:\n".format(upstream_name))
                 upstreams_cfg_file.write("    install_tree: {0}\n".format(upstream_path))
 
+    def setup_clingo(self):
+        """
+        Attempts to install the clingo answer set programming library
+        if it is not already available as a Python module
+        """
+        try:
+            import clingo
+        except ImportError:
+            import pip
+            pip_ver = pip.__version__
+            # Requirement comes from https://github.com/pypa/manylinux
+            # JBE: I think the string comparison is somewhat correct here, if not we'll
+            # need to install setuptools for 'packaging.version'
+            if pip_ver < "19.3":
+                print("[!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("  ERROR: pip version {0} is too old to install clingo".format(pip_ver))
+                print("  pip 19.3 is required for PEP 599 support")
+                print("  Try running the following command to upgrade pip:")
+                print("     python3 -m pip install --user --upgrade pip")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!]")
+                sys.exit(1)
+            py_interp = sys.executable
+            clingo_pkg = "clingo"
+            uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
+            # Uninstall it first in case the available version failed due to differing arch
+            # pip will still return 0 in the case of a "trivial" uninstall
+            res = sexe(uninstall_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: clingo uninstall failed with returncode {0}]".format(res))
+                sys.exit(1)
+            install_cmd = "{0} -m pip install --user {1}".format(py_interp, clingo_pkg)
+            res = sexe(install_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: clingo install failed with returncode {0}]".format(res))
+                sys.exit(1)
+
 
 def find_osx_sdks():
     """
@@ -1193,4 +1241,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -58,11 +58,12 @@
 #    project: radiuss/conduit
 #    branch: feature/update-uberenv
 #    strategy: depend
-#
-#trigger-serac:
-#  variables:
-#    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
-#  trigger:
-#    project: smith/serac
-#    branch: develop
-#    strategy: depend
+
+trigger-serac:
+  variables:
+    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
+    ALLOC_BANK: radiuss
+  trigger:
+    project: smith/serac
+    branch: develop
+    strategy: depend
