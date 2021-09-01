@@ -794,7 +794,7 @@ class SpackEnv(UberEnv):
         # environment is well designed.
 
         lock_file=self.spack_config_dir+"/spack.lock"
-        sexe("[[ -e ${0} ]] && rm ${0}")
+        sexe("[[ -e ${0} ]] && rm ${0}".format(lock_file)
 
         self.spack_cmd = "{0} -e {1}".format(self.spack_cmd,self.spack_config_dir)
 
