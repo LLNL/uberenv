@@ -688,6 +688,12 @@ class SpackEnv(UberEnv):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
 
+    def spack_env_dest_dir(self):
+        return pjoin(self.dest_dir,"env-build")
+        
+    def have_spack_env_file(self):
+        return self.spack_env is not None
+
     def clone_repo(self):
         if not os.path.isdir(self.dest_spack):
 
@@ -745,19 +751,18 @@ class SpackEnv(UberEnv):
 
     def setup_spack_env(self):
         # create a folder for the env in dest_dir + "env-build"
-        spack_env_dest_dir = pjoin(self.dest_dir,"env-build")
-        if not os.path.isdir(spack_env_dest_dir):
-            print("[creating spack env dest dir {0}]".format(spack_env_dest_dir))
-            os.mkdir(spack_env_dest_dir)
+        if not os.path.isdir(self.spack_env_dest_dir()):
+            print("[creating spack env dest dir {0}]".format(self.spack_env_dest_dir()))
+            os.mkdir(self.spack_env_dest_dir())
         else:
             # clean up the env ?
             pass
         # copy the env file in, should we patch in the uberenv package?
-        print("[copying spack env config file ({0}) to {1}]".format(self.spack_env,spack_env_dest_dir))
-        sexe("cp {0} {1}".format(self.spack_env,spack_env_dest_dir))
+        print("[copying spack env config file ({0}) to {1}]".format(self.spack_env,self.spack_env_dest_dir()))
+        sexe("cp {0} {1}".format(self.spack_env,self.spack_env_dest_dir()))
         ## create the env
         print("[creating spack env]")
-        os.chdir(spack_env_dest_dir)
+        os.chdir(self.spack_env_dest_dir())
         sexe("{0} env create -d .".format(self.spack_exe_path()))
         ## concretize
         print("[concretizing spack env]")
@@ -765,7 +770,7 @@ class SpackEnv(UberEnv):
         sexe("{0} find -cvl".format(self.spack_env_decorated_cmd()))
 
     def patch(self):
-
+        os.chdir(self.dest_dir)
         cfg_dir = self.spack_config_dir
         env_file = self.spack_env
         spack_dir = self.dest_spack
@@ -778,7 +783,9 @@ class SpackEnv(UberEnv):
         self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
-        if cfg_dir is not None:
+        if self.have_spack_env_file():
+            self.setup_spack_env()
+        elif cfg_dir is not None:
             # copy in "defaults" config.yaml
             config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
             sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
@@ -807,8 +814,6 @@ class SpackEnv(UberEnv):
         elif env_file is None:
             # let spack try to auto find compilers
             sexe("{0} compiler find".format(), echo=True)
-        else:
-            self.setup_spack_env()
 
         # hot-copy our packages into spack
         if len(self.packages_paths) > 0:
@@ -829,6 +834,7 @@ class SpackEnv(UberEnv):
 
 
     def clean_build(self):
+        os.chdir(self.dest_dir)
         # clean out any spack cached stuff (except build stages, downloads, &
         # spack's bootstrapping software)
         cln_cmd = "{0} clean --misc-cache --failures --python-cache".format(self.spack_exe_path())
@@ -843,6 +849,10 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
+        if self.have_spack_env_file():
+            os.chdir(self.spack_env_dest_dir())
+        else:
+            os.chdir(self.dest_dir())
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
         options="--install-status --very-long"
@@ -877,13 +887,14 @@ class SpackEnv(UberEnv):
         return "eval `{0} -d env activate --sh .`  {0} ".format(self.spack_exe_path())
 
     def install(self):
+        os.chdir(self.dest_dir)
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
         if not self.use_install:
             if self.spack_env is None:
                 install_cmd = self.spack_exe_path()
             else:
-                self.setup_spack_env()
+                os.chdir(self.spack_env_dest_dir())
                 install_cmd = self.spack_env_decorated_cmd()
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
@@ -1203,8 +1214,6 @@ def main():
 
     # Clone the package manager
     env.clone_repo()
-
-    os.chdir(env.dest_dir)
 
     # Patch the package manager, as necessary
     env.patch()
