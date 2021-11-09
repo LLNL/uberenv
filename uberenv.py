@@ -853,7 +853,7 @@ class SpackEnv(UberEnv):
             # build mode - dev build path
             elif self.build_mode == "dev-build":
                 # dev build path
-                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
+                install_cmd += "dev-build --reuse --quiet -d {0} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode -- original fake package path
