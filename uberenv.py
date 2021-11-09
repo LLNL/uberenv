@@ -736,7 +736,8 @@ class SpackEnv(UberEnv):
         self.print_spack_python_info()
 
         # force spack to use only "defaults" config scope
-        self.disable_spack_config_scopes(spack_dir)
+        os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "1"
+        #self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
         if cfg_dir is not None:
@@ -745,12 +746,15 @@ class SpackEnv(UberEnv):
             sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
             mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
             sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
+            upstreams_yaml = pabs(pjoin(cfg_dir,"..","upstreams.yaml"))
+            sexe("cp {0} {1}/".format(upstreams_yaml, spack_etc_defaults_dir), echo=True)
 
             # copy in other settings per platform
             print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
 
             config_yaml    = pjoin(cfg_dir,"config.yaml")
             mirrors_yaml   = pjoin(cfg_dir,"mirrors.yaml")
+            upstreams_yaml = pjoin(cfg_dir,"upstreams.yaml")
             compilers_yaml = pjoin(cfg_dir,"compilers.yaml")
             packages_yaml  = pjoin(cfg_dir,"packages.yaml")
 
@@ -759,6 +763,9 @@ class SpackEnv(UberEnv):
 
             if os.path.isfile(mirrors_yaml):
                 sexe("cp {0} {1}/".format(mirrors_yaml , spack_etc_defaults_dir ), echo=True)
+
+            if os.path.isfile(upstreams_yaml):
+                sexe("cp {0} {1}/".format(upstreams_yaml , spack_etc_defaults_dir ), echo=True)
 
             if os.path.isfile(compilers_yaml):
                 sexe("cp {0} {1}/".format(compilers_yaml, spack_etc_defaults_dir ), echo=True)
@@ -778,12 +785,14 @@ class SpackEnv(UberEnv):
                 sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
 
         # Update spack's config.yaml if clingo was requested
-        if self.use_clingo:
-            concretizer_cmd = "spack/bin/spack config --scope defaults add config:concretizer:clingo"
-            res = sexe(concretizer_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Failed to update spack configuration to use new concretizer]")
-                sys.exit(-1)
+        #if self.use_clingo:
+        #    concretizer_cmd = "spack/bin/spack config update "+self.uberenv_path+"/enable-clingo.yaml"
+        #    #concretizer_cmd = "spack/bin/spack config add config:concretizer:clingo"
+        #    #concretizer_cmd = "spack/bin/spack config --scope defaults add config:concretizer:clingo"
+        #    res = sexe(concretizer_cmd, echo=True)
+        #    if res != 0:
+        #        print("[ERROR: Failed to update spack configuration to use new concretizer]")
+        #        sys.exit(-1)
 
 
 
@@ -795,7 +804,7 @@ class SpackEnv(UberEnv):
 
         # check if we need to force uninstall of selected packages
         if self.opts["spack_clean"]:
-            if self.project_opts.has_key("spack_clean_packages"):
+            if "spack_clean_packages" in self.project_opts:
                 for cln_pkg in self.project_opts["spack_clean_packages"]:
                     if self.find_spack_pkg_path(cln_pkg) is not None:
                         unist_cmd = "spack/bin/spack uninstall -f -y --all --dependents " + cln_pkg
@@ -804,8 +813,8 @@ class SpackEnv(UberEnv):
     def show_info(self):
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
-        options="--install-status --very-long"
-        spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
+        options="--reuse --install-status --very-long"
+        spec_cmd = "spack/bin/spack -d spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -838,7 +847,7 @@ class SpackEnv(UberEnv):
                 install_cmd += "-k "
             # build mode -- install path
             if self.build_mode == "install":
-                install_cmd += "install "
+                install_cmd += "install --reuse "
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
             # build mode - dev build path
