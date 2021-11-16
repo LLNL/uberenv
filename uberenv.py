@@ -132,6 +132,12 @@ def parse_args():
                       default=None,
                       help="add an external spack instance as upstream")
 
+    # optional spack --reuse concretizer behaviour
+    parser.add_option("--reuse",
+                      dest="reuse",
+                      default=False,
+                      help="Use spack v0.17+ --reuse functionality for spec, install and dev-build.")
+
     # this option allows a user to explicitly to select a
     # group of spack settings files (compilers.yaml , packages.yaml)
     parser.add_option("--spack-config-dir",
@@ -813,7 +819,9 @@ class SpackEnv(UberEnv):
     def show_info(self):
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
-        options="--reuse --install-status --very-long"
+        if self.opts["reuse"]:
+            options = "--reuse "
+        options += "--install-status --very-long"
         spec_cmd = "spack/bin/spack -d spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
@@ -847,13 +855,18 @@ class SpackEnv(UberEnv):
                 install_cmd += "-k "
             # build mode -- install path
             if self.build_mode == "install":
-                install_cmd += "install --reuse "
+                install_cmd += "install "
+                if self.opts["reuse"]:
+                    install_cmd += "--reuse "
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
             # build mode - dev build path
             elif self.build_mode == "dev-build":
                 # dev build path
-                install_cmd += "dev-build --reuse --quiet -d {0} ".format(self.pkg_src_dir)
+                install_cmd += "dev-build "
+                if self.opts["reuse"]:
+                    install_cmd += "--reuse "
+                install_cmd += "--quiet -d {0} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode -- original fake package path
