@@ -819,6 +819,7 @@ class SpackEnv(UberEnv):
     def show_info(self):
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
+        options = ""
         if self.opts["reuse"]:
             options = "--reuse "
         options += "--install-status --very-long"
@@ -1186,9 +1187,6 @@ def main():
     if opts["setup_only"]:
         return 0
 
-    # Show the spec for what will be built
-    env.show_info()
-
 
     ###########################################################
     # we now have an instance of our package manager configured
@@ -1201,6 +1199,9 @@ def main():
     #
     ###########################################################
     if opts["create_mirror"]:
+        # Show the spec for what will be built
+        env.show_info()
+
         return env.create_mirror()
     else:
         if opts["mirror"] is not None:
@@ -1208,6 +1209,9 @@ def main():
 
         if opts["upstream"] is not None:
             env.use_spack_upstream()
+
+        # Show the spec for what will be built
+        env.show_info()
 
         res = env.install()
 
