@@ -10,8 +10,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Run Uberenv
-    run: |
-        cd .ci/test-project && python ../../uberenv.py  --project-json=uberenv_config.json
+      run: |
+        cd  .ci/test-project && python ../../uberenv.py  --project-json=uberenv_config.json
         cat .ci/test-project/uberenv_libs/*.cmake
     - uses: actions/checkout@v2
 
