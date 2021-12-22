@@ -28,8 +28,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
-        cd .ci/test-project && python ../../uberenv.py  --project-json=uberenv_config.json
-        cat .ci/test-project/uberenv_libs/*.cmake
+          cd  .ci/test-project
+          python ../../uberenv.py  --project-json=uberenv_config.json
+          cat uberenv_libs/*.cmake
 
 
 
