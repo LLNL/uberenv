@@ -1,0 +1,35 @@
+name: linux
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build_basic:
+    name: Basic
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Deps
+      run: |
+           sudo apt-get update
+           sudo apt-get install binutils \
+                                gcc \
+                                g++ \
+                                gfortran \
+                                python \
+                                perl \
+                                git \
+                                git-lfs \
+                                curl \
+                                wget \
+                                tar \
+                                unzip \
+                                build-essential
+    - name: Run Uberenv
+    run: |
+        cd .ci/test-project && python ../../uberenv.py  --project-json=uberenv_config.json
+        cat .ci/test-project/uberenv_libs/*.cmake
+    - uses: actions/checkout@v2
+
+
+
