@@ -575,7 +575,8 @@ class SpackEnv(UberEnv):
         # setup default spec
         if opts["spec"] is None:
             if is_darwin():
-                opts["spec"] = "%clang"
+                # Note: newer spack, for macOS we need to use `apple-clang`
+                opts["spec"] = "%apple-clang"
             else:
                 opts["spec"] = "%gcc"
             self.opts["spec"] = "@{0}{1}".format(self.pkg_version,opts["spec"])
@@ -736,11 +737,25 @@ class SpackEnv(UberEnv):
         spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
         print("[disabling config scope (except defaults) in: {0}]".format(spack_lib_config))
         cfg_script = open(spack_lib_config).read()
-        for cfg_scope_stmt in ["('system', os.path.join(spack.paths.system_etc_path, 'spack')),",
-                            "('site', os.path.join(spack.paths.etc_path, 'spack')),",
-                            "('user', spack.paths.user_config_path)"]:
-            cfg_script = cfg_script.replace(cfg_scope_stmt,
-                                            "#DISABLED BY UBERENV: " + cfg_scope_stmt)
+        #
+        # For newer versions of spack, we can use the SPACK_DISABLE_LOCAL_CONFIG
+        # env var plumbing. We patch it to True to make a permanent change.
+        #
+        # Note: This path does not disable the 'site' config, but disabling 'user' config
+        # is our primary goal.
+        #
+        spack_disable_env_stmt = 'disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ'
+        spack_disable_env_stmt_perm = "disable_local_config = True"
+        if cfg_script.count(spack_disable_env_stmt) > 0:
+            cfg_script = cfg_script.replace(spack_disable_env_stmt,
+                                            spack_disable_env_stmt_perm)
+        # path for older versions of spack
+        elif cfg_script.count(spack_disable_env_stmt_perm) == 0:
+            for cfg_scope_stmt in ["('system', os.path.join(spack.paths.system_etc_path, 'spack')),",
+                                "('site', os.path.join(spack.paths.etc_path, 'spack')),",
+                                "('user', spack.paths.user_config_path)"]:
+                cfg_script = cfg_script.replace(cfg_scope_stmt,
+                                                "#DISABLED BY UBERENV: " + cfg_scope_stmt)
         open(spack_lib_config,"w").write(cfg_script)
 
     def setup_spack_env(self):
@@ -781,9 +796,11 @@ class SpackEnv(UberEnv):
         if cfg_dir is not None:
             # copy in "defaults" config.yaml
             config_yaml = pabs(pjoin(cfg_dir,"..","config.yaml"))
-            sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
+            if os.path.isfile(config_yaml):
+                sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
             mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
-            sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
+            if os.path.isfile(mirrors_yaml):
+                sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
 
             # copy in other settings per platform
             print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
