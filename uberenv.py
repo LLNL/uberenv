@@ -943,6 +943,7 @@ class SpackEnv(UberEnv):
             else:
                 os.chdir(self.spack_env_dest_dir())
                 install_cmd = self.spack_env_decorated_cmd()
+            install_cmd += " "
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             # build mode -- install path
