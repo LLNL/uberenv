@@ -64,6 +64,7 @@ import glob
 import re
 
 from optparse import OptionParser
+from distutils.version import LooseVersion
 
 from os import environ as env
 from os.path import join as pjoin
@@ -330,6 +331,25 @@ class UberEnv():
         print("[uberenv command line options: ")
         pretty_print_dictionary(self.opts)
         print("]")
+
+    ###########################
+    # basic spack helpers
+    ###########################
+    def spack_exe_path(self):
+        return pjoin(self.dest_dir,"spack/bin/spack")
+
+    def spack_version(self):
+        res, out = sexe('{0} --version'.format(self.spack_exe_path()), ret_output=True)
+        return LooseVersion(out)
+
+    def spack_env_decorated_cmd(self):
+        return "{0} -e {1} ".format(self.spack_exe_path(), self.spack_env_dest_dir())
+
+    def spack_env_dest_dir(self):
+        return pjoin(self.dest_dir,"env-build")
+        
+    def using_spack_env(self):
+        return not self.spack_env is None
 
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
@@ -912,18 +932,6 @@ class SpackEnv(UberEnv):
                         self.use_install = True
 
         return res
-
-    def spack_exe_path(self):
-        return pjoin(self.dest_dir,"spack/bin/spack")
-
-    def spack_env_decorated_cmd(self):
-        return "{0} -e {1} ".format(self.spack_exe_path(), self.spack_env_dest_dir())
-
-    def spack_env_dest_dir(self):
-        return pjoin(self.dest_dir,"env-build")
-        
-    def using_spack_env(self):
-        return not self.spack_env is None
 
     def install(self):
         os.chdir(self.dest_dir)
