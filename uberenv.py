@@ -885,7 +885,7 @@ class SpackEnv(UberEnv):
         if self.using_spack_env():
             os.chdir(self.spack_env_dest_dir())
         else:
-            os.chdir(self.dest_dir())
+            os.chdir(self.dest_dir)
 
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
