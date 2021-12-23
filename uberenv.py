@@ -556,7 +556,6 @@ class SpackEnv(UberEnv):
         self.packages_paths = []
         self.spec_hash = ""
         self.use_install = False
-        self.use_env = False
   
         if "spack_concretizer" in self.project_opts and self.project_opts["spack_concretizer"] == "clingo":
             self.use_clingo = True
@@ -840,9 +839,9 @@ class SpackEnv(UberEnv):
 
             if os.path.isfile(packages_yaml):
                 sexe("cp {0} {1}/".format(packages_yaml, spack_etc_defaults_dir ), echo=True)
-        elif env_file is None:
+        elif not self.using_spack_env():
             # let spack try to auto find compilers
-            sexe("{0} compiler find".format(), echo=True)
+            sexe("{0} compiler find".format(self.spack_exe_path()), echo=True)
 
         # hot-copy our packages into spack
         if len(self.packages_paths) > 0:
@@ -960,7 +959,7 @@ class SpackEnv(UberEnv):
             if self.opts["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.opts["build_jobs"])
             # for almost all cases we use the pkg name and spec
-            if self.spack_env is None:
+            if not self.using_spack_env():
                 install_cmd += self.pkg_name + self.opts["spec"]
             res = sexe(install_cmd, echo=True)
             if res != 0:
