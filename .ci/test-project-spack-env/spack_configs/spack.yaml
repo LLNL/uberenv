@@ -13,11 +13,10 @@ spack:
 
   config:
     install_tree:
-      root: $spack/../install
-      padded_length: 128
+      root: $spack/../env-build/install
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-    misc_cache: $spack/../misc_cache
-    test_stage: $spack/../test_stage
+    misc_cache: $spack/../env-build/misc_cache
+    test_stage: $spack/../env-build/test_stage
     build_stage::
-    - $spack/../stage
+    - $spack/../env-build/stage
