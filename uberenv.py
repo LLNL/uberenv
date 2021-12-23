@@ -667,6 +667,8 @@ class SpackEnv(UberEnv):
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
         res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(),pkg_hash), ret_output = True)
         for l in out.split("\n"):
+            # TODO: at least print a warning when several choices exist. This will
+            # pick the first in the list.
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: failed to find package named '{0}']".format(pkg_name))
@@ -679,6 +681,22 @@ class SpackEnv(UberEnv):
             # pick the first in the list.
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
+        print("[ERROR: failed to find package named '{0}']".format(pkg_name))
+        sys.exit(-1)
+
+    def find_spack_env_pkg_path(self, pkg_name):
+        print('[finding install path of {0}]'.format(pkg_name))
+        # if we are using spack env, we need to use the proper env cmd
+        res, out = sexe("{0} find -p {1}".format(self.spack_env_decorated_cmd(),pkg_name), ret_output = True)
+        for l in out.split("\n"):
+            # TODO: at least print a warning when several choices exist.
+            #
+            # Env output is different, it will show the the package w/o the path first
+            #
+            if l.startswith(pkg_name) and len(l.strip().split()) > 1:
+                if self.using_spack_env():
+                   return {"name": pkg_name, "path": pjoin(self.spack_env_dest_dir(),
+                                                           l.split()[-1])}
         print("[ERROR: failed to find package named '{0}']".format(pkg_name))
         sys.exit(-1)
 
@@ -760,19 +778,19 @@ class SpackEnv(UberEnv):
 
     def setup_spack_env(self):
         # create a folder for the env in dest_dir + "env-build"
-        spack_env_dest_dir = pjoin(self.dest_dir,"env-build")
-        if not os.path.isdir(spack_env_dest_dir):
-            print("[creating spack env dest dir {0}]".format(spack_env_dest_dir))
-            os.mkdir(spack_env_dest_dir)
+        env_dest_dir = self.spack_env_dest_dir()
+        if not os.path.isdir(env_dest_dir):
+            print("[creating spack env dest dir {0}]".format(env_dest_dir))
+            os.mkdir(env_dest_dir)
         else:
             # clean up the env ?
             pass
         # copy the env file in, should we patch in the uberenv package?
-        print("[copying spack env config file ({0}) to {1}]".format(self.spack_env,spack_env_dest_dir))
-        sexe("cp {0} {1}".format(self.spack_env,spack_env_dest_dir))
+        print("[copying spack env config file ({0}) to {1}]".format(self.spack_env,env_dest_dir))
+        sexe("cp {0} {1}".format(self.spack_env,env_dest_dir))
         ## create the env
         print("[creating spack env]")
-        os.chdir(spack_env_dest_dir)
+        os.chdir(env_dest_dir)
         sexe("{0} env create -d .".format(self.spack_exe_path()))
         ## concretize
         print("[concretizing spack env]")
@@ -860,6 +878,10 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
+        # TODO: if we are using envs, skip this
+        if self.using_spack_env():
+            return;
+
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
         options="--install-status --very-long"
@@ -891,7 +913,13 @@ class SpackEnv(UberEnv):
         return pjoin(self.dest_dir,"spack/bin/spack")
 
     def spack_env_decorated_cmd(self):
-        return "eval `{0} -d env activate --sh .`  {0} ".format(self.spack_exe_path())
+        return "{0} -e {1} ".format(self.spack_exe_path(), self.spack_env_dest_dir())
+
+    def spack_env_dest_dir(self):
+        return pjoin(self.dest_dir,"env-build")
+        
+    def using_spack_env(self):
+        return not self.spack_env is None
 
     def install(self):
         # use the uberenv package to trigger the right builds
@@ -932,7 +960,6 @@ class SpackEnv(UberEnv):
             if res != 0:
                 print("[ERROR: failure of spack install/dev-build]")
                 return res
-
         full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
             print("[activating dependent packages]")
@@ -964,7 +991,11 @@ class SpackEnv(UberEnv):
            or self.use_install:
             # use spec_hash to locate b/c other helper won't work if complex
             # deps are provided in the spec (e.g: @ver+variant ^package+variant)
-            pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
+            if self.using_spack_env():
+                pkg_path = self.find_spack_env_pkg_path(self.pkg_name)
+            else:
+                pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
+            print(pkg_path)
             if self.pkg_name != pkg_path["name"]:
                 print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
                 return -1
@@ -974,12 +1005,13 @@ class SpackEnv(UberEnv):
                 if len(hc_glob) > 0:
                     hc_path  = hc_glob[0]
                     hc_fname = os.path.split(hc_path)[1]
-                    if os.path.islink(hc_fname):
-                        os.unlink(hc_fname)
-                    elif os.path.isfile(hc_fname):
-                        sexe("rm -f {0}".format(hc_fname))
-                    print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                    os.symlink(hc_path,hc_fname)
+                    hc_dest = pjoin(self.dest_dir,hc_fname)
+                    if os.path.islink(hc_dest):
+                        os.unlink(hc_dest)
+                    elif os.path.isfile(hc_dest):
+                        os.remove(hc_dest)
+                    print("[symlinking host config file to {0}]".format(hc_dest))
+                    os.symlink(hc_path,hc_dest)
                 # if user opt'd for an install, we want to symlink the final
                 # install to an easy place:
                 # Symlink install directory

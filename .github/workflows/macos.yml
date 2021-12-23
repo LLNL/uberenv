@@ -5,8 +5,8 @@ on:
     branches: [ master ]
 
 jobs:
-  build_basic:
-    name: Basic
+  build_uberenv_pkg:
+    name: Uberenv Pkg Mode
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,7 +15,15 @@ jobs:
           cd  .ci/test-project
           python ../../uberenv.py  --project-json=uberenv_config.json
           cat uberenv_libs/*.cmake
-
-
+  build_env:
+    name: Spack Env Mode
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run Uberenv
+      run: |
+          cd  .ci/test-project-spack-env
+          python ../../uberenv.py  --spack-env=spack_configs/spack.yaml  --project-json=uberenv_config.json
+          cat uberenv_libs/*.cmake
 
 
