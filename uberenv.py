@@ -752,15 +752,12 @@ class SpackEnv(UberEnv):
             sexe("cp {0} {1}/".format(config_yaml, spack_etc_defaults_dir), echo=True)
             mirrors_yaml = pabs(pjoin(cfg_dir,"..","mirrors.yaml"))
             sexe("cp {0} {1}/".format(mirrors_yaml, spack_etc_defaults_dir), echo=True)
-            upstreams_yaml = pabs(pjoin(cfg_dir,"..","upstreams.yaml"))
-            sexe("cp {0} {1}/".format(upstreams_yaml, spack_etc_defaults_dir), echo=True)
 
             # copy in other settings per platform
             print("[copying uberenv compiler and packages settings from {0}]".format(cfg_dir))
 
             config_yaml    = pjoin(cfg_dir,"config.yaml")
             mirrors_yaml   = pjoin(cfg_dir,"mirrors.yaml")
-            upstreams_yaml = pjoin(cfg_dir,"upstreams.yaml")
             compilers_yaml = pjoin(cfg_dir,"compilers.yaml")
             packages_yaml  = pjoin(cfg_dir,"packages.yaml")
 
@@ -769,9 +766,6 @@ class SpackEnv(UberEnv):
 
             if os.path.isfile(mirrors_yaml):
                 sexe("cp {0} {1}/".format(mirrors_yaml , spack_etc_defaults_dir ), echo=True)
-
-            if os.path.isfile(upstreams_yaml):
-                sexe("cp {0} {1}/".format(upstreams_yaml , spack_etc_defaults_dir ), echo=True)
 
             if os.path.isfile(compilers_yaml):
                 sexe("cp {0} {1}/".format(compilers_yaml, spack_etc_defaults_dir ), echo=True)
@@ -1185,6 +1179,10 @@ def main():
 
     # Allow to end uberenv after spack is ready
     if opts["setup_only"]:
+
+        if opts["upstream"] is not None:
+            env.use_spack_upstream()
+
         return 0
 
 
