@@ -757,8 +757,7 @@ class SpackEnv(UberEnv):
         self.print_spack_python_info()
 
         # force spack to use only "defaults" config scope
-        os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "1"
-        #self.disable_spack_config_scopes(spack_dir)
+        self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
         if cfg_dir is not None:
@@ -802,14 +801,12 @@ class SpackEnv(UberEnv):
                 sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
 
         # Update spack's config.yaml if clingo was requested
-        #if self.use_clingo:
-        #    concretizer_cmd = "spack/bin/spack config update "+self.uberenv_path+"/enable-clingo.yaml"
-        #    #concretizer_cmd = "spack/bin/spack config add config:concretizer:clingo"
-        #    #concretizer_cmd = "spack/bin/spack config --scope defaults add config:concretizer:clingo"
-        #    res = sexe(concretizer_cmd, echo=True)
-        #    if res != 0:
-        #        print("[ERROR: Failed to update spack configuration to use new concretizer]")
-        #        sys.exit(-1)
+        if self.use_clingo:
+            concretizer_cmd = "spack/bin/spack config --scope defaults add config:concretizer:clingo"
+            res = sexe(concretizer_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to update spack configuration to use new concretizer]")
+                sys.exit(-1)
 
 
 
@@ -834,7 +831,7 @@ class SpackEnv(UberEnv):
         if self.opts["reuse"]:
             options = "--reuse "
         options += "--install-status --very-long"
-        spec_cmd = "spack/bin/spack -d spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
+        spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -1202,6 +1199,9 @@ def main():
 
         return 0
 
+    # Show the spec for what will be built
+    env.show_info()
+
 
     ###########################################################
     # we now have an instance of our package manager configured
@@ -1214,9 +1214,6 @@ def main():
     #
     ###########################################################
     if opts["create_mirror"]:
-        # Show the spec for what will be built
-        env.show_info()
-
         return env.create_mirror()
     else:
         if opts["mirror"] is not None:
@@ -1224,9 +1221,6 @@ def main():
 
         if opts["upstream"] is not None:
             env.use_spack_upstream()
-
-        # Show the spec for what will be built
-        env.show_info()
 
         res = env.install()
 
