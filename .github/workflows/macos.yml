@@ -1,0 +1,21 @@
+name: macos
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build_basic:
+    name: Basic
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Uberenv
+        run: |
+          cd  .ci/test-project
+          python ../../uberenv.py  --project-json=uberenv_config.json
+          cat uberenv_libs/*.cmake
+
+
+
+
