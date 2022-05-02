@@ -1219,7 +1219,7 @@ def main():
         if opts["mirror"] is not None:
             env.use_mirror()
 
-        if opts["upstream"] is not None:
+        if not is_windows() and opts["upstream"] is not None:
             env.use_spack_upstream()
 
         res = env.install()
