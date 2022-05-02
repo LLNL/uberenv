@@ -253,7 +253,7 @@ def parse_args():
     # chdirs to avoid confusion related to what it is relative to.
     # (it should be relative to where uberenv is run from, so it matches what you expect
     #  from shell completion, etc)
-    if opts["mirror"] is not None:
+    if not is_windows() and opts["mirror"] is not None:
         if not opts["mirror"].startswith("http") and not os.path.isabs(opts["mirror"]):
             opts["mirror"] = pabs(opts["mirror"])
     return opts, extras
