@@ -1194,7 +1194,7 @@ def main():
     # Allow to end uberenv after spack is ready
     if opts["setup_only"]:
 
-        if opts["upstream"] is not None:
+        if not is_windows() and opts["upstream"] is not None:
             env.use_spack_upstream()
 
         return 0
