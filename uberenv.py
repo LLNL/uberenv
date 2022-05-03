@@ -132,6 +132,12 @@ def parse_args():
                       default=None,
                       help="add an external spack instance as upstream")
 
+    # optional spack --reuse concretizer behaviour
+    parser.add_option("--reuse",
+                      dest="reuse",
+                      default=False,
+                      help="Use spack v0.17+ --reuse functionality for spec, install and dev-build.")
+
     # this option allows a user to explicitly to select a
     # group of spack settings files (compilers.yaml , packages.yaml)
     parser.add_option("--spack-config-dir",
@@ -247,7 +253,7 @@ def parse_args():
     # chdirs to avoid confusion related to what it is relative to.
     # (it should be relative to where uberenv is run from, so it matches what you expect
     #  from shell completion, etc)
-    if opts["mirror"] is not None:
+    if not is_windows() and opts["mirror"] is not None:
         if not opts["mirror"].startswith("http") and not os.path.isabs(opts["mirror"]):
             opts["mirror"] = pabs(opts["mirror"])
     return opts, extras
@@ -812,7 +818,7 @@ class SpackEnv(UberEnv):
 
         # check if we need to force uninstall of selected packages
         if self.opts["spack_clean"]:
-            if self.project_opts.has_key("spack_clean_packages"):
+            if "spack_clean_packages" in self.project_opts:
                 for cln_pkg in self.project_opts["spack_clean_packages"]:
                     if self.find_spack_pkg_path(cln_pkg) is not None:
                         unist_cmd = "spack/bin/spack uninstall -f -y --all --dependents " + cln_pkg
@@ -821,7 +827,10 @@ class SpackEnv(UberEnv):
     def show_info(self):
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
-        options="--install-status --very-long"
+        options = ""
+        if self.opts["reuse"]:
+            options = "--reuse "
+        options += "--install-status --very-long"
         spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
@@ -856,12 +865,17 @@ class SpackEnv(UberEnv):
             # build mode -- install path
             if self.build_mode == "install":
                 install_cmd += "install "
+                if self.opts["reuse"]:
+                    install_cmd += "--reuse "
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
             # build mode - dev build path
             elif self.build_mode == "dev-build":
                 # dev build path
-                install_cmd += "dev-build --quiet -d {0} ".format(self.pkg_src_dir)
+                install_cmd += "dev-build "
+                if self.opts["reuse"]:
+                    install_cmd += "--reuse "
+                install_cmd += "--quiet -d {0} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode -- original fake package path
@@ -1179,6 +1193,10 @@ def main():
 
     # Allow to end uberenv after spack is ready
     if opts["setup_only"]:
+
+        if not is_windows() and opts["upstream"] is not None:
+            env.use_spack_upstream()
+
         return 0
 
     # Show the spec for what will be built
@@ -1201,7 +1219,7 @@ def main():
         if opts["mirror"] is not None:
             env.use_mirror()
 
-        if opts["upstream"] is not None:
+        if not is_windows() and opts["upstream"] is not None:
             env.use_spack_upstream()
 
         res = env.install()
