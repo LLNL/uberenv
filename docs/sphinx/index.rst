@@ -195,6 +195,7 @@ Project settings are as follows:
   spack_configs_path       **None**                   Directory with Spack configs to be copied        ``spack_configs``
   spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
   spack_concretizer        **None**                   Spack concretizer to use ``original, clingo``    ``original``
+  spack_setup_clingo       **None**                   Prevent from installing clingo if set to ``no``  ``yes``
   vcpkg_url                **None**                   Download url for Vcpkg                           ``https://github.com/microsoft/vcpkg``
   vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
   vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
