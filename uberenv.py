@@ -551,7 +551,7 @@ class SpackEnv(UberEnv):
   
         if "spack_concretizer" in self.project_opts and self.project_opts["spack_concretizer"] == "clingo":
             self.use_clingo = True
-            if "spack_setup_clingo" in self.project_opts and self.project_opts["spack_setup_clingo"] == "no":
+            if "spack_setup_clingo" in self.project_opts and self.project_opts["spack_setup_clingo"] == False:
                 print("[info: clingo will not be installed by uberenv]")
             else:
                 self.setup_clingo()

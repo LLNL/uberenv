@@ -188,14 +188,14 @@ Project settings are as follows:
   package_version          **None**                   Spack package version                            **None**
   package_final_phase      ``--package-final-phase``  Controls after which phase Spack should stop     **None**
   package_source_dir       ``--package-source-dir``   Controls the source directory Spack should use   **None**
-  force_commandline_prefix **None**                   Force user to specify `--prefix` on command line ``False``
+  force_commandline_prefix **None**                   Force user to specify `--prefix` on command line ``false``
   spack_url                **None**                   Download url for Spack                           ``https://github.com/spack/spack.git``
   spack_commit             **None**                   Spack commit to checkout                         **None**
   spack_activate           **None**                   Spack packages to activate                       **None**
   spack_configs_path       **None**                   Directory with Spack configs to be copied        ``spack_configs``
   spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
   spack_concretizer        **None**                   Spack concretizer to use ``original, clingo``    ``original``
-  spack_setup_clingo       **None**                   Prevent from installing clingo if set to ``no``  ``yes``
+  spack_setup_clingo       **None**                   Do not install clingo if set to ``false``        ``true``
   vcpkg_url                **None**                   Download url for Vcpkg                           ``https://github.com/microsoft/vcpkg``
   vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
   vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
