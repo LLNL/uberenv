@@ -18,6 +18,8 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Adds the `--vcpkg-ports-path` command line argument for setting the path to the vcpkg ports directory.
 - Adds support for the spack `--reuse` option for more relaxed tpl/dependency matching.
 - Adds support for `--upstream` with `--setup-only`.
+- Allow to prevent Uberenv from installing clingo setting `spack_setup_clingo`
+  to `no` in `.uberenv_config.json`.
 
 ### Changed
 - Added ability to have multiple packages directories that will get copied into spack on top of
