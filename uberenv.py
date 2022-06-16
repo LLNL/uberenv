@@ -752,7 +752,7 @@ class SpackEnv(UberEnv):
 
     def disable_spack_activate_protection(self,spack_dir):
         spack_fsview = pjoin(spack_dir,"lib","spack","spack","filesystem_view.py")
-        print("[activate protection in  {0}]".format(spack_fsview))
+        print("[disabling activate protection in  {0}]".format(spack_fsview))
         blocker = "raise SingleMergeConflictError(conflicts[0])"
         fsview_src = open(spack_fsview).read()
         if fsview_src.count(blocker) > 0:
