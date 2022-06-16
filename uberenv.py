@@ -858,6 +858,28 @@ class SpackEnv(UberEnv):
 
         return res
 
+    def uberenv_spack_activate_protection(self):
+        # find python install
+        python_info = self.find_spack_pkg_path("python")
+        # if we find python we need to remove the site-pacakges and setuptools folders
+        # upon first activate
+        # b/c any spack package that depends on setuptools will cause 
+        # an activate conflict with various folders in the main python dir
+        # when we try to `spack activate py-setuptools``
+        if python_info is not None:
+            site_pkgs_pat = pjoin(python_info["path"],"lib","python*.*","site-packages")
+            site_pkgs_dir = glob.glob(site_pkgs_pat)
+            if len(site_pkgs_dir) != 1:
+                print("[ERROR: found more than one python site-packages dir using : {0}]".format(site_pkgs_pat))
+                return -1
+            else:
+                site_pkgs_dir = site_pkgs_dir[0]
+            ub_was_here = pjoin(site_pkgs_dir,"_uberenv_activate_protection")
+            if not os.path.isfile(ub_was_here):
+                # scortched earth
+                shutil.rmtree(site_pkgs_dir)
+                os.mkdir(site_pkgs_dir)
+
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
@@ -901,7 +923,9 @@ class SpackEnv(UberEnv):
         full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
             print("[activating dependent packages]")
-            # get the full spack spec for our project
+            # if this is the first time we activate, we need to defend
+            # to forsake site-pacakges b/c of https://github.com/spack/spack/issues/31166
+            self.uberenv_spack_activate_protection()
             pkg_names = self.project_opts["spack_activate"].keys()
             for pkg_name in pkg_names:
                 pkg_spec_requirements = self.project_opts["spack_activate"][pkg_name]
