@@ -756,8 +756,9 @@ class SpackEnv(UberEnv):
         blocker = "raise SingleMergeConflictError(conflicts[0])"
         fsview_src = open(spack_fsview).read()
         if fsview_src.count(blocker) > 0:
-            cfg_script = cfg_script.replace(blocker,
-                                            "pass")
+            blocker = fsview_src.replace(blocker,
+                                         "pass # DISABLED BY UBERENV: " + blocker)
+            open(spack_fsview,"w").write(fsview_src)
 
 
     def patch(self):
