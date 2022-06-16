@@ -750,16 +750,6 @@ class SpackEnv(UberEnv):
                                                 "#DISABLED BY UBERENV: " + cfg_scope_stmt)
         open(spack_lib_config,"w").write(cfg_script)
 
-    def disable_spack_activate_protection(self,spack_dir):
-        spack_fsview = pjoin(spack_dir,"lib","spack","spack","filesystem_view.py")
-        print("[activate protection in  {0}]".format(spack_fsview))
-        blocker = "raise SingleMergeConflictError(conflicts[0])"
-        fsview_src = open(spack_fsview).read()
-        if fsview_src.count(blocker) > 0:
-            fsview_src = fsview_src.replace(blocker,
-                                         "pass # DISABLED BY UBERENV: " + blocker)
-            open(spack_fsview,"w").write(fsview_src)
-
     def patch(self):
 
         cfg_dir = self.spack_config_dir
@@ -770,7 +760,6 @@ class SpackEnv(UberEnv):
 
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
-        self.disable_spack_activate_protection(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
         if cfg_dir is not None:
@@ -921,7 +910,10 @@ class SpackEnv(UberEnv):
                         activate=False
                         break
                 if activate:
-                    activate_cmd = "spack/bin/spack activate " + pkg_name
+                    # Note: -f disables protection against same-named files
+                    # blocking activation. We have to use this to avoid
+                    # issues with python builtin vs external setuptools, etc
+                    activate_cmd = "spack/bin/spack activate -f " + pkg_name
                     res = sexe(activate_cmd, echo=True)
                     if res != 0:
                       return res
