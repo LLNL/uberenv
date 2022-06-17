@@ -70,7 +70,7 @@ from os.path import join as pjoin
 from os.path import abspath as pabs
 
 
-def sexe(cmd,ret_output=True,echo=False):
+def sexe(cmd,ret_output=False,echo=False):
     """ Helper for executing shell commands. """
     if echo:
         print("[exe: {0}]".format(cmd), flush=True)
@@ -81,7 +81,6 @@ def sexe(cmd,ret_output=True,echo=False):
                              stderr=subprocess.STDOUT)
         out = p.communicate()[0]
         out = out.decode('utf8')
-        print(out, flush=True)
         return p.returncode,out
     else:
         return subprocess.call(cmd,shell=True)
