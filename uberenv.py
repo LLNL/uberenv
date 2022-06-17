@@ -837,6 +837,7 @@ class SpackEnv(UberEnv):
         spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
+        print(out, flush=True)
 
         #Check if spec is already installed
         for line in out.split("\n"):
