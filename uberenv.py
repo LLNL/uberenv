@@ -62,6 +62,7 @@ import json
 import datetime
 import glob
 import re
+import time
 
 from optparse import OptionParser
 
@@ -665,7 +666,7 @@ class SpackEnv(UberEnv):
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
+        res, out = sexe("spack/bin/spack find -p " + pkg_name + spec, ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -837,6 +838,7 @@ class SpackEnv(UberEnv):
         spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
+        time.sleep(1)
         print(out, flush=True)
 
         #Check if spec is already installed
