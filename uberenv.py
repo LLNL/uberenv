@@ -1169,6 +1169,10 @@ def main():
     Also creates a host-config.cmake file that can be used by our project.
     """
 
+    # Since we use subprocesses, flushing prints allows us to keep logs in
+    # order.
+    print = functools.partial(print, flush=True)
+
     print_uberenv_python_info()
 
     # parse args from command line
