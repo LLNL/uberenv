@@ -64,6 +64,7 @@ import glob
 import re
 
 from optparse import OptionParser
+from functools import partial
 
 from os import environ as env
 from os.path import join as pjoin
@@ -1171,7 +1172,7 @@ def main():
 
     # Since we use subprocesses, flushing prints allows us to keep logs in
     # order.
-    print = functools.partial(print, flush=True)
+    print = partial(print, flush=True)
 
     print_uberenv_python_info()
 
