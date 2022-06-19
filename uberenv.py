@@ -70,6 +70,9 @@ from os import environ as env
 from os.path import join as pjoin
 from os.path import abspath as pabs
 
+# Since we use subprocesses, flushing prints allows us to keep logs in
+# order.
+print = partial(print, flush=True)
 
 def sexe(cmd,ret_output=False,echo=False):
     """ Helper for executing shell commands. """
@@ -1169,10 +1172,6 @@ def main():
     Clones and runs a package manager to setup third_party libs.
     Also creates a host-config.cmake file that can be used by our project.
     """
-
-    # Since we use subprocesses, flushing prints allows us to keep logs in
-    # order.
-    print = partial(print, flush=True)
 
     print_uberenv_python_info()
 
