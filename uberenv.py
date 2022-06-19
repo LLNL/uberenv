@@ -754,7 +754,6 @@ class SpackEnv(UberEnv):
                                                 "#DISABLED BY UBERENV: " + cfg_scope_stmt)
         open(spack_lib_config,"w").write(cfg_script)
 
-
     def patch(self):
 
         cfg_dir = self.spack_config_dir
@@ -862,6 +861,7 @@ class SpackEnv(UberEnv):
 
         return res
 
+
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
@@ -905,7 +905,6 @@ class SpackEnv(UberEnv):
         full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
         if "spack_activate" in self.project_opts:
             print("[activating dependent packages]")
-            # get the full spack spec for our project
             pkg_names = self.project_opts["spack_activate"].keys()
             for pkg_name in pkg_names:
                 pkg_spec_requirements = self.project_opts["spack_activate"][pkg_name]
@@ -915,7 +914,10 @@ class SpackEnv(UberEnv):
                         activate=False
                         break
                 if activate:
-                    activate_cmd = "spack/bin/spack activate " + pkg_name
+                    # Note: -f disables protection against same-named files
+                    # blocking activation. We have to use this to avoid
+                    # issues with python builtin vs external setuptools, etc
+                    activate_cmd = "spack/bin/spack activate -f " + pkg_name
                     res = sexe(activate_cmd, echo=True)
                     if res != 0:
                       return res
