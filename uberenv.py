@@ -1,5 +1,5 @@
 #!/bin/sh
-"exec" "python" "-u" "-B" "$0" "$@"
+"exec" "python3" "-u" "-B" "$0" "$@"
 ###############################################################################
 # Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
 #
