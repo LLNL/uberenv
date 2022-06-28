@@ -680,7 +680,7 @@ class SpackEnv(UberEnv):
 
     # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
-        res, out = sexe("spack/bin/spack spec '" + pkg_name + " " + spec "'", ret_output=True)
+        res, out = sexe("spack/bin/spack spec '" + pkg_name + " " + spec + "'", ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
