@@ -81,6 +81,9 @@ Uberenv can also be used as a submodule of the user project, where one must prov
 additionally provide the entries ``spack_configs_path`` and ``spack_packages_path``.
 See :ref:`project_configuration` for more details.
 
+.. Note::
+   Uberenv requires python 3.3 or above.
+
 Uberenv is developed by LLNL, originally in support of the `Ascent <https://github.com/alpine-dav/ascent/>`_,
 `Axom <https://github.com/llnl/axom>`_, and `Conduit <https://github.com/llnl/conduit>`_  projects. It is now also used
 by `Umpire <https://github.com/llnl/umpire>`_, `CHAI <https://github.com/llnl/CHAI>`_, `RAJA <https://github.com/llnl/RAJA>`_

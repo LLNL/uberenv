@@ -1,5 +1,5 @@
 #!/bin/sh
-"exec" "python" "-u" "-B" "$0" "$@"
+"exec" "python3" "-u" "-B" "$0" "$@"
 ###############################################################################
 # Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
 #
@@ -64,11 +64,15 @@ import glob
 import re
 
 from optparse import OptionParser
+from functools import partial
 
 from os import environ as env
 from os.path import join as pjoin
 from os.path import abspath as pabs
 
+# Since we use subprocesses, flushing prints allows us to keep logs in
+# order.
+print = partial(print, flush=True)
 
 def sexe(cmd,ret_output=False,echo=False):
     """ Helper for executing shell commands. """
@@ -460,7 +464,7 @@ class VcpkgEnv(UberEnv):
                 print("[info: using vcpkg commit {0}]".format(sha1))
                 os.chdir(self.dest_vcpkg)
                 sexe("git checkout {0}".format(sha1),echo=True)
-                
+
         if self.opts["repo_pull"]:
             # do a pull to make sure we have the latest
             os.chdir(self.dest_vcpkg)
@@ -479,7 +483,7 @@ class VcpkgEnv(UberEnv):
 
     def patch(self):
         """ hot-copy our ports into vcpkg """
-        
+
         import distutils.dir_util
 
         dest_vcpkg_ports = pjoin(self.dest_vcpkg, "ports")
