@@ -669,7 +669,7 @@ class SpackEnv(UberEnv):
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
+        res, out = sexe("spack/bin/spack find -p '{0}{1}'".format(pkg_name,spec), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -680,7 +680,7 @@ class SpackEnv(UberEnv):
 
     # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
-        res, out = sexe("spack/bin/spack spec '" + pkg_name + " " + spec + "'", ret_output=True)
+        res, out = sexe("spack/bin/spack spec '{0}{1}'".format(pkg_name,spec), ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
@@ -896,7 +896,7 @@ class SpackEnv(UberEnv):
             if self.opts["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.opts["build_jobs"])
             # for all cases we use the pkg name and spec
-            install_cmd += "'" + self.pkg_name + self.opts["spec"] + "'"
+            install_cmd += "'{0}{1}'".format(self.pkg_name,self.opts["spec"])
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: failure of spack install/dev-build]")
