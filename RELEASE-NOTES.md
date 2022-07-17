@@ -22,6 +22,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
   to `no` in `.uberenv_config.json`.
 
 ### Changed
+- All spack specs are now expressed inside single quotes to protect the parsing of complex flags.
 - Added ability to have multiple packages directories that will get copied into spack on top of
   each other via project configuration option: `spack_packages_path`
 - Pretty print various options to screen for readability
