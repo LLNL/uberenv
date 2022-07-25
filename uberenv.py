@@ -669,7 +669,7 @@ class SpackEnv(UberEnv):
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
+        res, out = sexe("spack/bin/spack find -p '{0}{1}'".format(pkg_name,spec), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -680,7 +680,7 @@ class SpackEnv(UberEnv):
 
     # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
-        res, out = sexe("spack/bin/spack spec " + pkg_name + " " + spec, ret_output=True)
+        res, out = sexe("spack/bin/spack spec '{0}{1}'".format(pkg_name,spec), ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
@@ -837,7 +837,7 @@ class SpackEnv(UberEnv):
         if self.opts["reuse"]:
             options = "--reuse "
         options += "--install-status --very-long"
-        spec_cmd = "spack/bin/spack spec {0} {1}{2}".format(options,self.pkg_name,self.opts["spec"])
+        spec_cmd = "spack/bin/spack spec {0} '{1}{2}'".format(options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -896,7 +896,7 @@ class SpackEnv(UberEnv):
             if self.opts["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.opts["build_jobs"])
             # for all cases we use the pkg name and spec
-            install_cmd += self.pkg_name + self.opts["spec"]
+            install_cmd += "'{0}{1}'".format(self.pkg_name,self.opts["spec"])
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: failure of spack install/dev-build]")
@@ -1001,7 +1001,7 @@ class SpackEnv(UberEnv):
         mirror_cmd = "spack/bin/spack "
         if self.opts["ignore_ssl_errors"]:
             mirror_cmd += "-k "
-        mirror_cmd += "mirror create -d {0} --dependencies {1}{2}".format(mirror_path,
+        mirror_cmd += "mirror create -d {0} --dependencies '{1}{2}'".format(mirror_path,
                                                                     self.pkg_name,
                                                                     self.opts["spec"])
         return sexe(mirror_cmd, echo=True)
