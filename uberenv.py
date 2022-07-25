@@ -585,22 +585,28 @@ class SpackEnv(UberEnv):
 
         print("[spack spec: {0}]".format(self.opts["spec"]))
 
-        # Use '--fresh' argument if it exists and if not using '--reuse'
+        # List of concretizer options not in all versions of spack
         # (to be checked if it exists after cloning spack)
         self.fresh_exists = False
+        self.reuse_exists = False
 
     def check_for_fresh(self):
         spack_dir = self.dest_spack
         cmd = pjoin(spack_dir,"bin","spack")
         cmd += " help install"
-        print("[Checking for --fresh...]")
+        print("[Checking for concretizer options...]")
         res, out = sexe( cmd, ret_output = True)
         if "--fresh" in out:
             self.fresh_exists = True
             print("[--fresh exists.]")
+        if "--reuse" in out:
+            self.reuse_exists = True
+            print("[--reuse exists.]")
 
     def add_concretizer_opts(self, options):
-        if self.opts["reuse"]:
+        # reuse is now default in spack, if on and exists use that
+        # otherwise use fresh if it exists
+        if self.opts["reuse"] and self.reuse_exists:
             options += "--reuse "
         elif self.fresh_exists:
             options += "--fresh "
