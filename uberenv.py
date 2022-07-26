@@ -590,7 +590,7 @@ class SpackEnv(UberEnv):
         self.fresh_exists = False
         self.reuse_exists = False
 
-    def check_for_fresh(self):
+    def check_concretizer_opts(self):
         spack_dir = self.dest_spack
         cmd = pjoin(spack_dir,"bin","spack")
         cmd += " help install"
@@ -788,8 +788,8 @@ class SpackEnv(UberEnv):
         # this is an opportunity to show spack python info post obtaining spack
         self.print_spack_python_info()
 
-        # check if this spack has `--fresh`
-        self.check_for_fresh()
+        # Check which concretizer this version of Spack has
+        self.check_concretizer_opts()
 
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
