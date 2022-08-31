@@ -709,7 +709,7 @@ class SpackEnv(UberEnv):
     def read_spack_full_spec(self,pkg_name,spec):
         debug = ""
         if self.opts["spec"]:
-            debug = "--debug "
+            debug = "--debug --stacktrace "
 
         res, out = sexe("spack/bin/spack {0} spec '{1}{2}'".format(debug,pkg_name,spec), ret_output=True)
         for l in out.split("\n"):
@@ -868,7 +868,7 @@ class SpackEnv(UberEnv):
         # default case prints install status and 32 characters hash
         debug = ""
         if self.opts["spec"]:
-            debug = "--debug "
+            debug = "--debug --stacktrace "
 
         options = ""
         options = self.add_concretizer_opts(options)
@@ -902,7 +902,7 @@ class SpackEnv(UberEnv):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
         if self.opts["spec"]:
-            debug = "--debug "
+            debug = "--debug --stacktrace "
 
         if not self.use_install:
             install_cmd = "spack/bin/spack {0}".format(debug)
