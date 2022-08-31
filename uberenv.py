@@ -585,6 +585,33 @@ class SpackEnv(UberEnv):
 
         print("[spack spec: {0}]".format(self.opts["spec"]))
 
+        # List of concretizer options not in all versions of spack
+        # (to be checked if it exists after cloning spack)
+        self.fresh_exists = False
+        self.reuse_exists = False
+
+    def check_concretizer_opts(self):
+        spack_dir = self.dest_spack
+        cmd = pjoin(spack_dir,"bin","spack")
+        cmd += " help install"
+        print("[Checking for concretizer options...]")
+        res, out = sexe( cmd, ret_output = True)
+        if "--fresh" in out:
+            self.fresh_exists = True
+            print("[--fresh exists.]")
+        if "--reuse" in out:
+            self.reuse_exists = True
+            print("[--reuse exists.]")
+
+    def add_concretizer_opts(self, options):
+        # reuse is now default in spack, if on and exists use that
+        # otherwise use fresh if it exists
+        if self.opts["reuse"] and self.reuse_exists:
+            options += "--reuse "
+        elif self.fresh_exists:
+            options += "--fresh "
+        return options
+
     def print_spack_python_info(self):
         spack_dir = self.dest_spack
         cmd = pjoin(spack_dir,"bin","spack")
@@ -669,7 +696,7 @@ class SpackEnv(UberEnv):
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("spack/bin/spack find -p " + pkg_name + spec,ret_output = True)
+        res, out = sexe("spack/bin/spack find -p '{0}{1}'".format(pkg_name,spec), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -684,7 +711,7 @@ class SpackEnv(UberEnv):
         if self.opts["spec"]:
             debug = "--debug "
 
-        res, out = sexe("spack/bin/spack " + debug + " spec " + pkg_name + " " + spec, ret_output=True)
+        res, out = sexe("spack/bin/spack {0} spec '{1}{2}'".format(debug,pkg_name,spec), ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
@@ -759,12 +786,14 @@ class SpackEnv(UberEnv):
         open(spack_lib_config,"w").write(cfg_script)
 
     def patch(self):
-
         cfg_dir = self.spack_config_dir
         spack_dir = self.dest_spack
 
         # this is an opportunity to show spack python info post obtaining spack
         self.print_spack_python_info()
+
+        # Check which concretizer this version of Spack has
+        self.check_concretizer_opts()
 
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
@@ -842,10 +871,9 @@ class SpackEnv(UberEnv):
             debug = "--debug "
 
         options = ""
-        if self.opts["reuse"]:
-            options = "--reuse "
+        options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "spack/bin/spack {0} spec {1} {2}{3}".format(debug,options,self.pkg_name,self.opts["spec"])
+        spec_cmd = "spack/bin/spack {0} spec {1} '{2}{3}'".format(debug,options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -883,22 +911,21 @@ class SpackEnv(UberEnv):
             # build mode -- install path
             if self.build_mode == "install":
                 install_cmd += "install "
-                if self.opts["reuse"]:
-                    install_cmd += "--reuse "
+                install_cmd = self.add_concretizer_opts(install_cmd)
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
             # build mode - dev build path
             elif self.build_mode == "dev-build":
                 # dev build path
                 install_cmd += "dev-build "
-                if self.opts["reuse"]:
-                    install_cmd += "--reuse "
+                install_cmd = self.add_concretizer_opts(install_cmd)
                 install_cmd += "--quiet -d {0} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode -- original fake package path
             elif self.build_mode == "uberenv-pkg":
                 install_cmd += "install "
+                install_cmd = self.add_concretizer_opts(install_cmd)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             else:
@@ -907,7 +934,7 @@ class SpackEnv(UberEnv):
             if self.opts["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.opts["build_jobs"])
             # for all cases we use the pkg name and spec
-            install_cmd += self.pkg_name + self.opts["spec"]
+            install_cmd += "'{0}{1}'".format(self.pkg_name,self.opts["spec"])
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: failure of spack install/dev-build]")
@@ -1012,7 +1039,7 @@ class SpackEnv(UberEnv):
         mirror_cmd = "spack/bin/spack "
         if self.opts["ignore_ssl_errors"]:
             mirror_cmd += "-k "
-        mirror_cmd += "mirror create -d {0} --dependencies {1}{2}".format(mirror_path,
+        mirror_cmd += "mirror create -d {0} --dependencies '{1}{2}'".format(mirror_path,
                                                                     self.pkg_name,
                                                                     self.opts["spec"])
         return sexe(mirror_cmd, echo=True)
