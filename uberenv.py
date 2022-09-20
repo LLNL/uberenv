@@ -119,6 +119,12 @@ def parse_args():
                       default=None,
                       help="spack mirror directory")
 
+    # optional location of spack repository
+    parser.add_option("--spack-url",
+                      dest="spack_url",
+                      default=None,
+                      help="spack repository")
+
     # flag to create mirror
     parser.add_option("--create-mirror",
                       action="store_true",
@@ -689,7 +695,10 @@ class SpackEnv(UberEnv):
             clone_opts = ("-c http.sslVerify=false "
                           if self.opts["ignore_ssl_errors"] else "")
 
-            spack_url = self.project_opts.get("spack_url", "https://github.com/spack/spack.git")
+            if self.opts["spack_url"]:
+                spack_url = self.opts["spack_url"]
+            else:
+                spack_url = self.project_opts.get("spack_url", "https://github.com/spack/spack.git")
             spack_branch = self.project_opts.get("spack_branch", "develop")
 
             clone_cmd =  "git {0} clone --single-branch --depth=1 -b {1} {2} spack".format(clone_opts, spack_branch, spack_url)
