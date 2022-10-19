@@ -5,8 +5,8 @@ on:
     branches: [ main ]
 
 jobs:
-  build_basic:
-    name: Basic
+  build_uberenv_mode:
+    name: Uberenv Build Mode (Linux)
     runs-on: ubuntu-latest
     steps:
     - name: Install Deps
