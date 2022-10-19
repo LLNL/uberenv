@@ -5,8 +5,8 @@ on:
     branches: [ main ]
 
 jobs:
-  build_basic:
-    name: Basic
+  build_uberenv_mode:
+    name: Uberenv Build Mode (MacOS)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
