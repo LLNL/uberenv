@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2021, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2022, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
