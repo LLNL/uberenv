@@ -2,7 +2,7 @@ name: macos
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build_basic:
