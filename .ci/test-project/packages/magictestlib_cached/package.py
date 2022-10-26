@@ -38,6 +38,8 @@ class MagictestlibCached(CachedCMakePackage):
     url      = "http://example.com/"
     git      = "http://example.com/"
 
+    root_cmakelists_dir = "src"
+
     version('1.0.0', 'c8b277080a00041cfc4f64619e31f6d6',preferred=True)
 
     depends_on('zlib')
