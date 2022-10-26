@@ -57,10 +57,3 @@ jobs:
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=dev_build_config.json
           cat uberenv_libs/*.cmake
-
-
-
-
-
-
-
