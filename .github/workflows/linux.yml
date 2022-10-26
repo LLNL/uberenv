@@ -28,9 +28,39 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
-          cd  .ci/test-project
-          python3 ../../uberenv.py  --project-json=uberenv_config.json
+          cd .ci/test-project
+          python3 ../../uberenv.py --project-json=uberenv_config.json
           cat uberenv_libs/*.cmake
+  build_dev_build_full_mode:
+    name: Dev Build Full Mode (Linux)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Deps
+      run: |
+           sudo apt-get update
+           sudo apt-get install binutils \
+                                gcc \
+                                g++ \
+                                gfortran \
+                                python3 \
+                                perl \
+                                git \
+                                git-lfs \
+                                curl \
+                                wget \
+                                tar \
+                                unzip \
+                                build-essential
+    - uses: actions/checkout@v2
+    - name: Run Uberenv
+      run: |
+          cd .ci/test-project
+          python3 ../../uberenv.py --project-json=dev_build_config.json
+          cat uberenv_libs/*.cmake
+
+
+
+
 
 
 
