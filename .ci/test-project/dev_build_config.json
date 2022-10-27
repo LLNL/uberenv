@@ -1,7 +1,7 @@
 {
 "package_name" : "magictestlib_cached",
 "package_version" : "1.0.0",
-"package_source_dir" : ".",
+"package_source_dir" : ".ci/test-project/uberenv_libs/spack/var/spack/repos/builtin/packages/magictestlib_cached",
 "spack_build_mode" : "dev-build",
 "spack_configs_path": "spack_configs",
 "spack_packages_path": "packages",
