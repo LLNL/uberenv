@@ -1,5 +1,5 @@
 packages:
   cmake:
     externals:
-    - spec: cmake@3.14.5
+    - spec: cmake@3.20.4
       prefix: /usr
