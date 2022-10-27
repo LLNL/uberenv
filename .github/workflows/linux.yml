@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Deps
-      run: linux_install_deps.sh
+      run: |
+        cd .github/workflows
+        linux_install_deps.sh
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -22,7 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Deps
-      run: linux_install_deps.sh
+      run: |
+        cd .github/workflows
+        linux_install_deps.sh
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -33,7 +37,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Deps
-      run: linux_install_deps.sh
+      run: |
+        cd .github/workflows
+        linux_install_deps.sh
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -44,7 +50,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Deps
-      run: linux_install_deps.sh
+      run: |
+        cd .github/workflows
+        linux_install_deps.sh
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -55,7 +63,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Deps
-      run: linux_install_deps.sh
+      run: |
+        cd .github/workflows
+        linux_install_deps.sh
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
