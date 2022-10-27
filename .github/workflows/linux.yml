@@ -56,4 +56,28 @@ jobs:
       run: |
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=dev_build_config.json
-          cat uberenv_libs/*.cmake
+  build_install_full_mode:
+    name: Install Full Mode (Linux)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Deps
+      run: |
+           sudo apt-get update
+           sudo apt-get install binutils \
+                                gcc \
+                                g++ \
+                                gfortran \
+                                python3 \
+                                perl \
+                                git \
+                                git-lfs \
+                                curl \
+                                wget \
+                                tar \
+                                unzip \
+                                build-essential
+    - uses: actions/checkout@v2
+    - name: Run Uberenv
+      run: |
+          cd .ci/test-project
+          python3 ../../uberenv.py --project-json=install_config.json
