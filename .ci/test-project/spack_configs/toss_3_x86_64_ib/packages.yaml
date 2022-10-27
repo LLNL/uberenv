@@ -1,7 +1,6 @@
 packages:
   cmake:
+    buildable: false
     externals:
-    - spec: cmake@2.8.12.2
-      prefix: /usr
     - spec: cmake@3.14.5
-      prefix: /usr/tce
+      prefix: /usr/tce/packages/cmake/cmake-3.14.5
