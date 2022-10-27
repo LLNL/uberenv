@@ -903,6 +903,8 @@ class SpackEnv(UberEnv):
                 install_cmd = self.add_concretizer_opts(install_cmd)
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
+                if self.pkg_final_phase:
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode - dev build path
             elif self.build_mode == "dev-build":
                 # dev build path
