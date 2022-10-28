@@ -34,7 +34,7 @@ jobs:
     - name: Run Uberenv
       run: |
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs
+          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs/linux_ubuntu_20
   build_install_full_mode:
     name: Install Full Mode (Linux)
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
     - name: Run Uberenv
       run: |
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs/linux_ubuntu_20
   build_dev_build_initconfig_mode:
     name: Dev Build Initconfig Mode (Linux)
     runs-on: ubuntu-latest
@@ -60,7 +60,7 @@ jobs:
     - name: Run Uberenv
       run: |
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs --package-final-phase=initconfig
+          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs/linux_ubuntu_20 --package-final-phase=initconfig
   build_install_initconfig_mode:
     name: Install Initconfig Mode (Linux)
     runs-on: ubuntu-latest
@@ -73,4 +73,4 @@ jobs:
     - name: Run Uberenv
       run: |
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --package-final-phase=initconfig
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs/linux_ubuntu_20 --package-final-phase=initconfig
