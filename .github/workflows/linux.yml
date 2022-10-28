@@ -5,20 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  BASE_PACKAGES: binutils \
-                 gcc \
-                 g++ \
-                 gfortran \
-                 cmake \
-                 python3 \
-                 perl \
-                 git \
-                 git-lfs \
-                 curl \
-                 wget \
-                 tar \
-                 unzip \
-                 build-essential
+  BASE_PACKAGES: binutils gcc g++ gfortran cmake python3 perl git git-lfs curl wget tar unzip build-essential
 
 jobs:
   build_uberenv_mode:
