@@ -4,6 +4,22 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  BASE_PACKAGES: binutils \
+                 gcc \
+                 g++ \
+                 gfortran \
+                 cmake \
+                 python3 \
+                 perl \
+                 git \
+                 git-lfs \
+                 curl \
+                 wget \
+                 tar \
+                 unzip \
+                 build-essential
+
 jobs:
   build_uberenv_mode:
     name: Uberenv Build Mode (Linux)
@@ -12,20 +28,7 @@ jobs:
     - name: Install Deps
       run: |
           sudo apt-get update
-          sudo apt-get install binutils \
-                              gcc \
-                              g++ \
-                              gfortran \
-                              cmake \
-                              python3 \
-                              perl \
-                              git \
-                              git-lfs \
-                              curl \
-                              wget \
-                              tar \
-                              unzip \
-                              build-essential
+          sudo apt-get install $BASE_PACKAGES
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -39,20 +42,7 @@ jobs:
     - name: Install Deps
       run: |
           sudo apt-get update
-          sudo apt-get install binutils \
-                              gcc \
-                              g++ \
-                              gfortran \
-                              cmake \
-                              python3 \
-                              perl \
-                              git \
-                              git-lfs \
-                              curl \
-                              wget \
-                              tar \
-                              unzip \
-                              build-essential
+          sudo apt-get install $BASE_PACKAGES
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -65,20 +55,7 @@ jobs:
     - name: Install Deps
       run: |
           sudo apt-get update
-          sudo apt-get install binutils \
-                              gcc \
-                              g++ \
-                              gfortran \
-                              cmake \
-                              python3 \
-                              perl \
-                              git \
-                              git-lfs \
-                              curl \
-                              wget \
-                              tar \
-                              unzip \
-                              build-essential
+          sudo apt-get install $BASE_PACKAGES
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -91,20 +68,7 @@ jobs:
     - name: Install Deps
       run: |
           sudo apt-get update
-          sudo apt-get install binutils \
-                              gcc \
-                              g++ \
-                              gfortran \
-                              cmake \
-                              python3 \
-                              perl \
-                              git \
-                              git-lfs \
-                              curl \
-                              wget \
-                              tar \
-                              unzip \
-                              build-essential
+          sudo apt-get install $BASE_PACKAGES
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -117,20 +81,7 @@ jobs:
     - name: Install Deps
       run: |
           sudo apt-get update
-          sudo apt-get install binutils \
-                              gcc \
-                              g++ \
-                              gfortran \
-                              cmake \
-                              python3 \
-                              perl \
-                              git \
-                              git-lfs \
-                              curl \
-                              wget \
-                              tar \
-                              unzip \
-                              build-essential
+          sudo apt-get install $BASE_PACKAGES
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
