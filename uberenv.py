@@ -914,7 +914,7 @@ class SpackEnv(UberEnv):
                 install_cmd = self.add_concretizer_opts(install_cmd)
                 install_cmd += "--quiet -d {0} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
-                        install_cmd += "-u {0} ".format(self.pkg_final_phase)
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode -- original fake package path
             elif self.build_mode == "uberenv-pkg":
                 install_cmd += "install "
@@ -964,6 +964,7 @@ class SpackEnv(UberEnv):
         if self.build_mode == "install" or \
            self.build_mode == "uberenv-pkg" \
            or self.use_install:
+            # only create a symlink if you're completing all phases
             if self.pkg_final_phase == None or self.pkg_final_phase == "install":
                 # use spec_hash to locate b/c other helper won't work if complex
                 # deps are provided in the spec (e.g: @ver+variant ^package+variant)
