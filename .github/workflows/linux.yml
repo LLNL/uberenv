@@ -11,8 +11,21 @@ jobs:
     steps:
     - name: Install Deps
       run: |
-        cd .github/workflows
-        linux_install_deps.sh
+          sudo apt-get update
+          sudo apt-get install binutils \
+                              gcc \
+                              g++ \
+                              gfortran \
+                              cmake \
+                              python3 \
+                              perl \
+                              git \
+                              git-lfs \
+                              curl \
+                              wget \
+                              tar \
+                              unzip \
+                              build-essential
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -25,8 +38,21 @@ jobs:
     steps:
     - name: Install Deps
       run: |
-        cd .github/workflows
-        linux_install_deps.sh
+          sudo apt-get update
+          sudo apt-get install binutils \
+                              gcc \
+                              g++ \
+                              gfortran \
+                              cmake \
+                              python3 \
+                              perl \
+                              git \
+                              git-lfs \
+                              curl \
+                              wget \
+                              tar \
+                              unzip \
+                              build-essential
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -38,8 +64,21 @@ jobs:
     steps:
     - name: Install Deps
       run: |
-        cd .github/workflows
-        linux_install_deps.sh
+          sudo apt-get update
+          sudo apt-get install binutils \
+                              gcc \
+                              g++ \
+                              gfortran \
+                              cmake \
+                              python3 \
+                              perl \
+                              git \
+                              git-lfs \
+                              curl \
+                              wget \
+                              tar \
+                              unzip \
+                              build-essential
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -51,8 +90,21 @@ jobs:
     steps:
     - name: Install Deps
       run: |
-        cd .github/workflows
-        linux_install_deps.sh
+          sudo apt-get update
+          sudo apt-get install binutils \
+                              gcc \
+                              g++ \
+                              gfortran \
+                              cmake \
+                              python3 \
+                              perl \
+                              git \
+                              git-lfs \
+                              curl \
+                              wget \
+                              tar \
+                              unzip \
+                              build-essential
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
@@ -64,11 +116,23 @@ jobs:
     steps:
     - name: Install Deps
       run: |
-        cd .github/workflows
-        linux_install_deps.sh
+          sudo apt-get update
+          sudo apt-get install binutils \
+                              gcc \
+                              g++ \
+                              gfortran \
+                              cmake \
+                              python3 \
+                              perl \
+                              git \
+                              git-lfs \
+                              curl \
+                              wget \
+                              tar \
+                              unzip \
+                              build-essential
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --package-final-phase=initconfig
-
