@@ -31,12 +31,14 @@ def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):
     return path
 
 
-class MagictestlibCached(CachedCMakePackage):
+class MagictestlibCachedSrc(CachedCMakePackage):
     """MagictestlibCached"""
 
     homepage = "http://example.com/"
     url      = "http://example.com/"
     git      = "http://example.com/"
+
+    root_cmakelists_dir = "src"
 
     version('1.0.0', 'c8b277080a00041cfc4f64619e31f6d6',preferred=True)
 
@@ -44,7 +46,7 @@ class MagictestlibCached(CachedCMakePackage):
 
     def url_for_version(self, version):
         dummy_tar_path = os.path.abspath(os.path.join(os.path.split(__file__)[0]))
-        dummy_tar_path = os.path.join(dummy_tar_path, "magictestlib_cached.tar.gz")
+        dummy_tar_path = os.path.join(dummy_tar_path, "magictestlib_cached_src.tar.gz")
         url = "file://" + dummy_tar_path
         return url
 
