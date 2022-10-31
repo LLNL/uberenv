@@ -15,7 +15,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
    - dev-build stops at initconfig
    - install full
    - install stops at initconfig
-- Adds `--package_final_phase` option for install
+- Adds `--package_final_phase` option for install.
 - Allow projects to force specifying `--prefix` on command line via new project option:
   `force_commandline_prefix`.  This is useful when the default `uberenv_libs` can not exist
   inside of your project's source repository.
