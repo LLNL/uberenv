@@ -43,8 +43,7 @@ class MagictestlibCached(CachedCMakePackage):
     depends_on('hdf5~mpi')
 
     def url_for_version(self, version):
-        dummy_tar_path = os.path.abspath(os.path.join(os.path.split(__file__)[0]))
-        dummy_tar_path = os.path.join(dummy_tar_path, "magictestlib_cached.tar.gz")
+        dummy_tar_path = os.path.abspath(os.path.join(__file__, "../../magictestlib.tar.gz"))
         url = "file://" + dummy_tar_path
         return url
 

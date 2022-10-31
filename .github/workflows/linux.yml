@@ -33,6 +33,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
+          cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs/linux_ubuntu_20
   build_install_full_mode:
@@ -46,6 +47,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
+          cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs/linux_ubuntu_20
   build_dev_build_initconfig_mode:
@@ -59,6 +61,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
+          cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs/linux_ubuntu_20 --package-final-phase=initconfig
   build_install_initconfig_mode:
@@ -72,5 +75,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run Uberenv
       run: |
+          cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs/linux_ubuntu_20 --package-final-phase=initconfig

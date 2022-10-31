@@ -1,5 +1,5 @@
 {
-"package_name" : "magictestlib_cached_src",
+"package_name" : "magictestlib_cached",
 "package_version" : "1.0.0",
 "package_source_dir" : ".",
 "spack_build_mode" : "dev-build",
