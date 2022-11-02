@@ -9,13 +9,9 @@ jobs:
     name: Uberenv Build Mode (MacOS)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Run Uberenv
         run: |
           cd  .ci/test-project
           python3 ../../uberenv.py  --project-json=uberenv_config.json
           cat uberenv_libs/*.cmake
-
-
-
-
