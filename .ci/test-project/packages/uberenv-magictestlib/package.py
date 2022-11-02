@@ -62,7 +62,7 @@ class UberenvMagictestlib(Magictestlib):
     phases = ['hostconfig']
 
     def url_for_version(self, version):
-        dummy_tar_path = os.path.abspath(os.path.join(__file__, "../../magictestlib.tar.gz"))
+        dummy_tar_path = os.path.abspath(os.path.join(__file__, "../uberenv-magictestlib.tar.gz"))
         url = "file://" + dummy_tar_path
         return url
 
