@@ -10,7 +10,8 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 ## Unreleased
 
 ### Added
-- Adds `--package_final_phase` option for install.
+- Allow `--package_final_phase` command to be used for install build option, which controls
+  after which phase Spack should stop.
 - Allow projects to force specifying `--prefix` on command line via new project option:
   `force_commandline_prefix`.  This is useful when the default `uberenv_libs` can not exist
   inside of your project's source repository.

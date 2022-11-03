@@ -5,6 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
+  # Test uberenv-pkg Spack build mode in macos
   build_uberenv_mode:
     name: Uberenv Build Mode (MacOS)
     runs-on: macos-latest
