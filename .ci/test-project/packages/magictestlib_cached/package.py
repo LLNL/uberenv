@@ -42,51 +42,62 @@
 #
 ###############################################################################
 
-from spack import *
-
-import socket
+import glob
 import os
-
-from os.path import join as pjoin
+import shutil
+import socket
 from os import environ as env
 
-from .magictestlib import Magictestlib
+import llnl.util.tty as tty
 
-class UberenvMagictestlib(Magictestlib):
-    """Uberenv Test"""
+from spack import *
+
+
+class MagictestlibCached(CachedCMakePackage):
+    """MagictestlibCached"""
+
+    homepage = "http://example.com/"
+    url      = "http://example.com/"
+    git      = "http://example.com/"
+
     version('1.0.0', 'c8b277080a00041cfc4f64619e31f6d6',preferred=True)
 
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig']
+    depends_on('hdf5~mpi')
 
     def url_for_version(self, version):
-        dummy_tar_path = os.path.abspath(os.path.join(__file__, "../uberenv-magictestlib.tar.gz"))
+        dummy_tar_path = os.path.abspath(os.path.join(__file__, "../../magictestlib.tar.gz"))
         url = "file://" + dummy_tar_path
         return url
 
-from spack import *
+    def _get_sys_type(self, spec):
+        sys_type = spec.architecture
+        # if on llnl systems, we can use the SYS_TYPE
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        return sys_type
 
-import socket
-import os
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
+        if "SYS_TYPE" in env:
+            # Are we on a LLNL system then strip node number
+            hostname = hostname.rstrip('1234567890')
+        return "{0}-{1}-{2}@{3}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version
+        )
 
-from os.path import join as pjoin
-from os import environ as env
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
 
-from .magictestlib import Magictestlib
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
 
-class UberenvMagictestlib(Magictestlib):
-    """Uberenv Test"""
-    version('1.0.0', 'c8b277080a00041cfc4f64619e31f6d6',preferred=True)
+        entries.append(cmake_cache_path('HDF5_DIR', spec["hdf5"].prefix))
 
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig']
-
-    def url_for_version(self, version):
-        dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
-        dummy_tar_path = pjoin(dummy_tar_path,"uberenv-magictestlib.tar.gz")
-        url      = "file://" + dummy_tar_path
-        return url
+        return entries
