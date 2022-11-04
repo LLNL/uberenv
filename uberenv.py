@@ -242,8 +242,9 @@ def parse_args():
 
     # option to stop after spack download and setup
     parser.add_option("--skip-setup",
+                      action="store_true",
                       dest="skip_setup",
-                      default=None,
+                      default=False,
                       help="Takes pre-existing env directory and run install.")
 
 
@@ -1229,7 +1230,7 @@ def main():
     env.setup_paths_and_dirs()
 
     # Skip creating and setting up environment if env given 
-    if opts["skip_setup"] is None:
+    if not opts["skip_setup"]:
         # Clone the package manager
         env.clone_repo()
 
@@ -1243,8 +1244,10 @@ def main():
 
         # Allow to end uberenv after spack is ready
         if opts["setup_only"]:
+
             if not is_windows() and opts["upstream"] is not None:
                 env.use_spack_upstream()
+
             return 0
     else:
         os.chdir(env.dest_dir)
