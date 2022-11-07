@@ -169,6 +169,12 @@ def parse_args():
                            "(options: 'dev-build' 'uberenv-pkg' 'install' "
                            "[default: 'dev-build'] )\n")
 
+    # spack debug mode
+    parser.add_option("--spack-debug",
+                      dest="spack_debug",
+                      default=None,
+                      help="add debug option to spack spec/install commands")
+
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
                       dest="package_final_phase",
@@ -709,7 +715,11 @@ class SpackEnv(UberEnv):
 
     # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
-        res, out = sexe("spack/bin/spack spec '{0}{1}'".format(pkg_name,spec), ret_output=True)
+        debug = ""
+        if self.opts["spack_debug"]:
+            debug = "--debug --stacktrace "
+
+        res, out = sexe("spack/bin/spack {0} spec '{1}{2}'".format(debug,pkg_name,spec), ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
@@ -864,10 +874,14 @@ class SpackEnv(UberEnv):
     def show_info(self):
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
+        debug = ""
+        if self.opts["spack_debug"]:
+            debug = "--debug --stacktrace "
+
         options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "spack/bin/spack spec {0} '{1}{2}'".format(options,self.pkg_name,self.opts["spec"])
+        spec_cmd = "spack/bin/spack {0} spec {1} '{2}{3}'".format(debug,options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -895,8 +909,12 @@ class SpackEnv(UberEnv):
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
+        debug = ""
+        if self.opts["spack_debug"]:
+            debug = "--debug --stacktrace "
+
         if not self.use_install:
-            install_cmd = "spack/bin/spack "
+            install_cmd = "spack/bin/spack {0}".format(debug)
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             # build mode -- install path
