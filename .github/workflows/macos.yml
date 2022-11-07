@@ -2,20 +2,17 @@ name: macos
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
-  build_basic:
-    name: Basic
+  # Test uberenv-pkg Spack build mode in macos
+  build_uberenv_mode:
+    name: Uberenv Build Mode (MacOS)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Run Uberenv
         run: |
           cd  .ci/test-project
           python3 ../../uberenv.py  --project-json=uberenv_config.json
           cat uberenv_libs/*.cmake
-
-
-
-

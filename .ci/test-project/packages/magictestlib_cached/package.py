@@ -42,28 +42,62 @@
 #
 ###############################################################################
 
-# Triggers Conduit pipeline asking for uberenv update
-# UPDATE_UBERENV variable, when set, will tell conduit to use the value as
-# a reference to the uberenv env revision to checkout on github.
+import glob
+import os
+import shutil
+import socket
+from os import environ as env
 
-# Note: the following pipelines have been disabled because
-# - they need to be fixed
-# - they cause quota issues (conduit CI is quite space consuming)
-# - they may cause too much trafic in projects pipeline views
+import llnl.util.tty as tty
 
-#trigger-conduit:
-#  variables:
-#    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
-#  trigger:
-#    project: radiuss/conduit
-#    branch: feature/update-uberenv
-#    strategy: depend
+from spack import *
 
-trigger-serac:
-  variables:
-    UPDATE_UBERENV: $CI_COMMIT_REF_NAME
-    ALLOC_BANK: radiuss
-  trigger:
-    project: smith/serac
-    branch: develop
-    strategy: depend
+
+class MagictestlibCached(CachedCMakePackage):
+    """MagictestlibCached"""
+
+    homepage = "http://example.com/"
+    url      = "http://example.com/"
+    git      = "http://example.com/"
+
+    version('1.0.0', 'c8b277080a00041cfc4f64619e31f6d6',preferred=True)
+
+    depends_on('hdf5~mpi')
+
+    def url_for_version(self, version):
+        dummy_tar_path = os.path.abspath(os.path.join(__file__, "../../magictestlib.tar.gz"))
+        url = "file://" + dummy_tar_path
+        return url
+
+    def _get_sys_type(self, spec):
+        sys_type = spec.architecture
+        # if on llnl systems, we can use the SYS_TYPE
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        return sys_type
+
+    @property
+    def cache_name(self):
+        hostname = socket.gethostname()
+        if "SYS_TYPE" in env:
+            # Are we on a LLNL system then strip node number
+            hostname = hostname.rstrip('1234567890')
+        return "{0}-{1}-{2}@{3}.cmake".format(
+            hostname,
+            self._get_sys_type(self.spec),
+            self.spec.compiler.name,
+            self.spec.compiler.version
+        )
+
+    def initconfig_package_entries(self):
+        spec = self.spec
+        entries = []
+
+        # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
+        entries.append("#------------------{0}\n".format("-" * 60))
+
+        entries.append(cmake_cache_path('HDF5_DIR', spec["hdf5"].prefix))
+
+        return entries

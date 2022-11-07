@@ -1,7 +1,7 @@
 #!/bin/sh
 "exec" "python3" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -690,9 +690,11 @@ class SpackEnv(UberEnv):
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
         res, out = sexe("spack/bin/spack find -p /{0}".format(pkg_hash), ret_output = True)
         for l in out.split("\n"):
+            # TODO: at least print a warning when several choices exist. This will
+            # pick the first in the list.
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package named '{0}']".format(pkg_name))
+        print("[ERROR: failed to find package from hash named '{0}']".format(pkg_name))
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
@@ -702,7 +704,7 @@ class SpackEnv(UberEnv):
             # pick the first in the list.
             if l.startswith(pkg_name):
                    return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package named '{0}']".format(pkg_name))
+        print("[ERROR: failed to find package from spec named '{0}']".format(pkg_name))
         sys.exit(-1)
 
     # Extract the first line of the full spec
@@ -914,6 +916,8 @@ class SpackEnv(UberEnv):
                 install_cmd = self.add_concretizer_opts(install_cmd)
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
+                if self.pkg_final_phase:
+                    install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode - dev build path
             elif self.build_mode == "dev-build":
                 # dev build path
@@ -971,36 +975,38 @@ class SpackEnv(UberEnv):
         if self.build_mode == "install" or \
            self.build_mode == "uberenv-pkg" \
            or self.use_install:
-            # use spec_hash to locate b/c other helper won't work if complex
-            # deps are provided in the spec (e.g: @ver+variant ^package+variant)
-            pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
-            if self.pkg_name != pkg_path["name"]:
-                print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
-                return -1
-            else:
-                # Symlink host-config file
-                hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
-                if len(hc_glob) > 0:
-                    hc_path  = hc_glob[0]
-                    hc_fname = os.path.split(hc_path)[1]
-                    if os.path.islink(hc_fname):
-                        os.unlink(hc_fname)
-                    elif os.path.isfile(hc_fname):
-                        sexe("rm -f {0}".format(hc_fname))
-                    print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                    os.symlink(hc_path,hc_fname)
-                # if user opt'd for an install, we want to symlink the final
-                # install to an easy place:
-                # Symlink install directory
-                if self.build_mode == "install":
-                    pkg_lnk_dir = "{0}-install".format(self.pkg_name)
-                    if os.path.islink(pkg_lnk_dir):
-                        os.unlink(pkg_lnk_dir)
-                    print("")
-                    print("[symlinking install to {0}]".format(pjoin(self.dest_dir,pkg_lnk_dir)))
-                    os.symlink(pkg_path["path"],pabs(pkg_lnk_dir))
-                    print("")
-                    print("[install complete!]")
+            # only create a symlink if you're completing all phases
+            if self.pkg_final_phase == None or self.pkg_final_phase == "install":
+                # use spec_hash to locate b/c other helper won't work if complex
+                # deps are provided in the spec (e.g: @ver+variant ^package+variant)
+                pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
+                if self.pkg_name != pkg_path["name"]:
+                    print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
+                    return -1
+                else:
+                    # Symlink host-config file
+                    hc_glob = glob.glob(pjoin(pkg_path["path"],"*.cmake"))
+                    if len(hc_glob) > 0:
+                        hc_path  = hc_glob[0]
+                        hc_fname = os.path.split(hc_path)[1]
+                        if os.path.islink(hc_fname):
+                            os.unlink(hc_fname)
+                        elif os.path.isfile(hc_fname):
+                            sexe("rm -f {0}".format(hc_fname))
+                        print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                        os.symlink(hc_path,hc_fname)
+                    # if user opt'd for an install, we want to symlink the final
+                    # install to an easy place:
+                    # Symlink install directory
+                    if self.build_mode == "install":
+                        pkg_lnk_dir = "{0}-install".format(self.pkg_name)
+                        if os.path.islink(pkg_lnk_dir):
+                            os.unlink(pkg_lnk_dir)
+                        print("")
+                        print("[symlinking install to {0}]".format(pjoin(self.dest_dir,pkg_lnk_dir)))
+                        os.symlink(pkg_path["path"],pabs(pkg_lnk_dir))
+                        print("")
+                        print("[install complete!]")
         elif self.build_mode == "dev-build":
                 # we are in the "only dependencies" dev build case and the host-config
                 # file has to be copied from the do-be-deleted spack-build dir.
