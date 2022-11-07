@@ -909,6 +909,7 @@ class SpackEnv(UberEnv):
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
+        debug = ""
         if self.opts["spack_debug"]:
             debug = "--debug --stacktrace "
 
