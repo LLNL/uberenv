@@ -22,6 +22,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Adds support for `--upstream` with `--setup-only`.
 - Allow to prevent Uberenv from installing clingo setting `spack_setup_clingo`
   to `no` in `.uberenv_config.json`.
+- Adds the `--spack-debug` option to run spack spec/install commands in debug mode.
 
 ### Changed
 - All spack specs are now expressed inside single quotes to protect the parsing of complex flags.
