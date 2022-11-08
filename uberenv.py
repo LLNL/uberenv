@@ -251,7 +251,7 @@ def parse_args():
                       action="store_true",
                       dest="skip_setup",
                       default=False,
-                      help="Takes pre-existing env directory and run install.")
+                      help="Only install (using pre-existing environment).")
 
 
     ###############
