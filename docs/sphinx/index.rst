@@ -98,22 +98,24 @@ Build Configuration
 
 Uberenv has a few options that allow you to control how dependencies are built:
 
- ======================= ============================================== ================================================
-  Option                  Description                                    Default
- ======================= ============================================== ================================================
-  ``--prefix``            Destination directory                          ``uberenv_libs``
-  ``--spec``              Spack spec                                     linux: **%gcc**
-                                                                         osx: **%clang**
-  ``--spack-config-dir``  Folder with Spack settings files               See :ref:`spack_configs`
-  ``-k``                  Ignore SSL Errors                              **False**
-  ``--install``           Fully install target, not just dependencies    **False**
-  ``--run_tests``         Invoke tests during build and against install  **False**
-  ``--setup-only``        Only download and setup Spack                  **False**
-  ``--skip_setup``        Only install (using pre-existing environment)  **False**
-  ``--project-json``      File for project specific settings             See :ref:`project_configuration`
-  ``--triplet``           (vcpkg) Target architecture and linkage        ``VCPKG_DEFAULT_TRIPLET`` environment variable,
-                                                                         if present, ``x86-Windows`` otherwise
- ======================= ============================================== ================================================
+ ======================= ==================================================== =================================================
+  Option                  Description                                          Default
+ ======================= ==================================================== =================================================
+  ``--prefix``            Destination directory                                ``uberenv_libs``
+  ``--spec``              Spack spec                                           linux: **%gcc**
+                                                                               osx: **%clang**
+  ``--spack-config-dir``  Folder with Spack settings files                     See :ref:`spack_configs`
+  ``--spack-build-mode``  Mode used to build third party dependencies          ``dev-build``
+  ``--spack-debug``       Turn on spack debug mode for spec/install commands   **none** (False)
+  ``-k``                  Ignore SSL Errors                                    **False**
+  ``--install``           Fully install target, not just dependencies          **False**
+  ``--run_tests``         Invoke tests during build and against install        **False**
+  ``--setup-only``        Only download and setup Spack                        **False**
+  ``--skip_setup``        Only install (using pre-existing environment)        **False**
+  ``--project-json``      File for project specific settings                   See :ref:`project_configuration`
+  ``--triplet``           (vcpkg) Target architecture and linkage              ``VCPKG_DEFAULT_TRIPLET`` environment variable,
+                                                                               if present, ``x86-Windows`` otherwise
+ ======================= ==================================================== =================================================
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
 from github and https hosted source tarballs. When enabled, Uberenv clones Spack using:
