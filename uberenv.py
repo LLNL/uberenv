@@ -105,7 +105,7 @@ def parse_args():
                       default=None,
                       help="destination directory")
 
-    # what compiler to use
+    # what compiler to use and other package configurations
     parser.add_option("--spec",
                       dest="spec",
                       default=None,

@@ -85,3 +85,19 @@ jobs:
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --package-final-phase=initconfig
+  # Tests install Spack build mode with setup-only and skip-setup options
+  build_setup_options_mode:
+    name: Testing Setup-only and Skip-setup (Linux)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Deps
+      run: |
+          sudo apt-get update
+          sudo apt-get install $BASE_PACKAGES
+    - uses: actions/checkout@v3
+    - name: Run Uberenv
+      run: |
+          cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
+          cd .ci/test-project
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --setup-only
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --skip-setup
