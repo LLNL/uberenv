@@ -251,7 +251,7 @@ def parse_args():
                       action="store_true",
                       dest="skip_setup",
                       default=False,
-                      help="Only install (using pre-existing environment).")
+                      help="Only install (using pre-setup Spack).")
 
 
     ###############
