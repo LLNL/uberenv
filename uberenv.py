@@ -855,7 +855,9 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Failed to update spack configuration to use new concretizer]")
                 sys.exit(-1)
 
-
+        # allow deprecated packages to still build
+        cmd = "spack/bin/spack config add config:deprecated:true"
+        res = sexe(cmd, echo=True)
 
     def clean_build(self):
         # clean out any spack cached stuff (except build stages, downloads, &
