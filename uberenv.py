@@ -174,6 +174,11 @@ def parse_args():
                       dest="spack_debug",
                       default=None,
                       help="add debug option to spack spec/install commands")
+    # spack allow deprecated packages
+    parser.add_option("--spack-allow-deprecated",
+                      dest="spack_allow_deprecated",
+                      default=None,
+                      help="add --deprecated to spack install commands")
 
     # controls after which package phase spack should stop
     parser.add_option("--package-final-phase",
@@ -855,10 +860,6 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Failed to update spack configuration to use new concretizer]")
                 sys.exit(-1)
 
-        # allow deprecated packages to still build
-        cmd = "spack/bin/spack config add config:deprecated:true"
-        res = sexe(cmd, echo=True)
-
     def clean_build(self):
         # clean out any spack cached stuff (except build stages, downloads, &
         # spack's bootstrapping software)
@@ -923,6 +924,8 @@ class SpackEnv(UberEnv):
             if self.build_mode == "install":
                 install_cmd += "install "
                 install_cmd = self.add_concretizer_opts(install_cmd)
+                if self.opts["spack_allow_deprecated"]:
+                    install_cmd += "--deprecated "
                 if self.opts["run_tests"]:
                     install_cmd += "--test=root "
                 if self.pkg_final_phase:
@@ -932,12 +935,16 @@ class SpackEnv(UberEnv):
                 # dev build path
                 install_cmd += "dev-build "
                 install_cmd = self.add_concretizer_opts(install_cmd)
+                if self.opts["spack_allow_deprecated"]:
+                    install_cmd += "--deprecated "
                 install_cmd += "--quiet -d {0} ".format(self.pkg_src_dir)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
             # build mode -- original fake package path
             elif self.build_mode == "uberenv-pkg":
                 install_cmd += "install "
+                if self.opts["spack_allow_deprecated"]:
+                    install_cmd += "--deprecated "
                 install_cmd = self.add_concretizer_opts(install_cmd)
                 if self.pkg_final_phase:
                     install_cmd += "-u {0} ".format(self.pkg_final_phase)
