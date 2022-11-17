@@ -177,7 +177,8 @@ def parse_args():
     # spack allow deprecated packages
     parser.add_option("--spack-allow-deprecated",
                       dest="spack_allow_deprecated",
-                      default=None,
+                      action="store_true",
+                      default=False,
                       help="add --deprecated to spack install commands")
 
     # controls after which package phase spack should stop
