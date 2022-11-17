@@ -172,8 +172,10 @@ def parse_args():
     # spack debug mode
     parser.add_option("--spack-debug",
                       dest="spack_debug",
-                      default=None,
+                      action="store_true",
+                      default=False,
                       help="add debug option to spack spec/install commands")
+
     # spack allow deprecated packages
     parser.add_option("--spack-allow-deprecated",
                       dest="spack_allow_deprecated",
