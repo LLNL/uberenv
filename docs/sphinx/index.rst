@@ -111,7 +111,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--install``           Fully install target, not just dependencies          **False**
   ``--run_tests``         Invoke tests during build and against install        **False**
   ``--setup-only``        Only download and setup Spack                        **False**
-  ``--skip_setup``        Only install (using pre-setup Spack)                 **False**
+  ``--skip-setup``        Only install (using pre-setup Spack)                 **False**
   ``--project-json``      File for project specific settings                   See :ref:`project_configuration`
   ``--triplet``           (vcpkg) Target architecture and linkage              ``VCPKG_DEFAULT_TRIPLET`` environment variable,
                                                                                if present, ``x86-Windows`` otherwise
