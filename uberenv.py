@@ -109,7 +109,7 @@ def parse_args():
     parser.add_option("--spec",
                       dest="spec",
                       default=None,
-                      help="Standard spack spec, but package name is optional")
+                      help="standard spack spec")
 
     # for vcpkg, what architecture to target
     parser.add_option("--triplet",
