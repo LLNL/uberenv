@@ -102,7 +102,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   Option                  Description                                          Default
  ======================= ==================================================== =================================================
   ``--prefix``            Destination directory                                ``uberenv_libs``
-  ``--spec``              Spack spec                                           linux: **%gcc**
+  ``--spec``              Spack spec without preceding package name            linux: **%gcc**
                                                                                osx: **%clang**
   ``--spack-config-dir``  Folder with Spack settings files                     See :ref:`spack_configs`
   ``--spack-build-mode``  Mode used to build third party dependencies          ``dev-build``
@@ -110,6 +110,8 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``-k``                  Ignore SSL Errors                                    **False**
   ``--install``           Fully install target, not just dependencies          **False**
   ``--run_tests``         Invoke tests during build and against install        **False**
+  ``--setup-only``        Only download and setup Spack                        **False**
+  ``--skip-setup``        Only install (using pre-setup Spack)                 **False**
   ``--project-json``      File for project specific settings                   See :ref:`project_configuration`
   ``--triplet``           (vcpkg) Target architecture and linkage              ``VCPKG_DEFAULT_TRIPLET`` environment variable,
                                                                                if present, ``x86-Windows`` otherwise
@@ -197,6 +199,7 @@ Project settings are as follows:
   spack_url                **None**                   Download url for Spack                           ``https://github.com/spack/spack.git``
   spack_commit             **None**                   Spack commit to checkout                         **None**
   spack_activate           **None**                   Spack packages to activate                       **None**
+  spack_build_mode         ``--spack-build-mode``     Set mode used to build TPLs with Spack           ``dev-build``
   spack_configs_path       **None**                   Directory with Spack configs to be copied        ``spack_configs``
   spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
   spack_concretizer        **None**                   Spack concretizer to use ``original, clingo``    ``original``

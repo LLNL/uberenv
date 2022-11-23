@@ -105,11 +105,11 @@ def parse_args():
                       default=None,
                       help="destination directory")
 
-    # what compiler to use
+    # Spack spec without preceding package name
     parser.add_option("--spec",
                       dest="spec",
                       default=None,
-                      help="spack compiler spec")
+                      help="Spack spec without preceding package name")
 
     # for vcpkg, what architecture to target
     parser.add_option("--triplet",
@@ -253,6 +253,13 @@ def parse_args():
                       dest="setup_only",
                       default=False,
                       help="Only download and setup Spack. No further Spack command will be run.")
+
+    # option to skip spack download and setup
+    parser.add_option("--skip-setup",
+                      action="store_true",
+                      dest="skip_setup",
+                      default=False,
+                      help="Only install (using pre-setup Spack).")
 
 
     ###############
@@ -1252,24 +1259,29 @@ def main():
     # Setup the necessary paths and directories
     env.setup_paths_and_dirs()
 
-    # Clone the package manager
-    env.clone_repo()
+    # Skip creating and setting up environment if env given 
+    if not opts["skip_setup"]:
+        # Clone the package manager
+        env.clone_repo()
 
-    os.chdir(env.dest_dir)
+        os.chdir(env.dest_dir)
 
-    # Patch the package manager, as necessary
-    env.patch()
+        # Patch the package manager, as necessary
+        env.patch()
 
-    # Clean the build
-    env.clean_build()
+        # Clean the build
+        env.clean_build()
 
-    # Allow to end uberenv after spack is ready
-    if opts["setup_only"]:
+        # Allow to end uberenv after spack is ready
+        if opts["setup_only"]:
 
-        if not is_windows() and opts["upstream"] is not None:
-            env.use_spack_upstream()
+            if not is_windows() and opts["upstream"] is not None:
+                env.use_spack_upstream()
 
-        return 0
+            return 0
+    else:
+        os.chdir(env.dest_dir)
+
 
     # Show the spec for what will be built
     env.show_info()

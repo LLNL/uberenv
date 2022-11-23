@@ -10,6 +10,8 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 ## Unreleased
 
 ### Added
+- Adds `--skip-setup` option, which skips installing and setting up Spack and installs only
+  (using pre-setup Spack). Useful for air-gapped builds.
 - Allow `--package_final_phase` command to be used for install build option, which controls
   after which phase Spack should stop.
 - Allow projects to force specifying `--prefix` on command line via new project option:
