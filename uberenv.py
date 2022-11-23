@@ -105,11 +105,11 @@ def parse_args():
                       default=None,
                       help="destination directory")
 
-    # what compiler to use and other package configurations
+    # Spack spec without preceding package name
     parser.add_option("--spec",
                       dest="spec",
                       default=None,
-                      help="standard spack spec")
+                      help="Spack spec without preceding package name")
 
     # for vcpkg, what architecture to target
     parser.add_option("--triplet",

@@ -102,7 +102,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   Option                  Description                                          Default
  ======================= ==================================================== =================================================
   ``--prefix``            Destination directory                                ``uberenv_libs``
-  ``--spec``              Spack spec                                           linux: **%gcc**
+  ``--spec``              Spack spec without preceding package name            linux: **%gcc**
                                                                                osx: **%clang**
   ``--spack-config-dir``  Folder with Spack settings files                     See :ref:`spack_configs`
   ``--spack-build-mode``  Mode used to build third party dependencies          ``dev-build``
