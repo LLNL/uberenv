@@ -64,6 +64,7 @@ import glob
 import re
 
 from optparse import OptionParser
+from distutils.version import LooseVersion
 from functools import partial
 
 from os import environ as env
@@ -351,8 +352,15 @@ class UberEnv():
     ###########################
     # basic spack helpers
     ###########################
-    def spack_exe_path(self):
-        return pjoin(self.dest_dir,"spack/bin/spack")
+    def spack_exe_path(self, is_full_path = True):
+        path = "spack/bin/spack"
+        if is_full_path:
+            path = pjoin(self.dest_dir, path)
+        return path
+    
+    def spack_version(self):
+        res, out = sexe('{0} --version'.format(self.spack_exe_path()), ret_output=True)
+        return LooseVersion(out[:-1])
 
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
@@ -710,7 +718,7 @@ class SpackEnv(UberEnv):
                 sys.exit(-1)
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
-        res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(), pkg_hash), ret_output = True)
+        res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(False), pkg_hash), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -886,6 +894,9 @@ class SpackEnv(UberEnv):
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
+        # print version of spack
+        print("[spack version: {0}]".format(self.spack_version()))
+
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
         debug = ""
