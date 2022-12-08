@@ -64,7 +64,6 @@ import glob
 import re
 
 from optparse import OptionParser
-from distutils.version import LooseVersion
 from functools import partial
 
 from os import environ as env
@@ -355,10 +354,6 @@ class UberEnv():
     def spack_exe_path(self):
         return pjoin(self.dest_dir,"spack/bin/spack")
 
-    def spack_version(self):
-        res, out = sexe('{0} --version'.format(self.spack_exe_path()), ret_output=True)
-        return LooseVersion(out)
-
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
 
@@ -623,9 +618,7 @@ class SpackEnv(UberEnv):
         self.reuse_exists = False
 
     def check_concretizer_opts(self):
-        spack_dir = self.dest_spack
-        cmd = pjoin(spack_dir,"bin","spack")
-        cmd += " help install"
+        cmd = "{0} help install".format(self.spack_exe_path())
         print("[Checking for concretizer options...]")
         res, out = sexe( cmd, ret_output = True)
         if "--fresh" in out:
@@ -645,10 +638,7 @@ class SpackEnv(UberEnv):
         return options
 
     def print_spack_python_info(self):
-        spack_dir = self.dest_spack
-        cmd = pjoin(spack_dir,"bin","spack")
-        cmd += " python "
-        cmd += '-c "import sys; print(sys.executable);"'
+        cmd = "{0} python -c \"import sys; print(sys.executable);\"".format(self.spack_exe_path())
         res, out = sexe( cmd, ret_output = True)
         print("[spack python: {0}]".format(out.strip()))
 
@@ -720,12 +710,12 @@ class SpackEnv(UberEnv):
                 sys.exit(-1)
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
-        res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(),pkg_hash), ret_output = True)
+        res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(), pkg_hash), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name):
-                   return {"name": pkg_name, "path": l.split()[-1]}
+                return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: failed to find package from hash named '{0}']".format(pkg_name))
         sys.exit(-1)
 
@@ -735,7 +725,7 @@ class SpackEnv(UberEnv):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name):
-                   return {"name": pkg_name, "path": l.split()[-1]}
+                return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: failed to find package from spec named '{0}']".format(pkg_name))
         sys.exit(-1)
 
