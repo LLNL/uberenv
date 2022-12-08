@@ -352,11 +352,8 @@ class UberEnv():
     ###########################
     # basic spack helpers
     ###########################
-    def spack_exe_path(self, is_full_path = True):
-        path = "spack/bin/spack"
-        if is_full_path:
-            path = pjoin(self.dest_dir, path)
-        return path
+    def spack_exe_path(self):
+        return pjoin(self.dest_dir, "spack/bin/spack")
     
     def spack_version(self):
         res, out = sexe('{0} --version'.format(self.spack_exe_path()), ret_output=True)
@@ -718,13 +715,13 @@ class SpackEnv(UberEnv):
                 sys.exit(-1)
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
-        res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(False), pkg_hash), ret_output = True)
+        res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(), pkg_hash), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name):
                 return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package from hash named '{0}']".format(pkg_name))
+        print("[ERROR: failed to find package from hash named '{0}' with hash '{1}']".format(pkg_name, pkg_hash))
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
@@ -734,7 +731,7 @@ class SpackEnv(UberEnv):
             # pick the first in the list.
             if l.startswith(pkg_name):
                 return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package from spec named '{0}']".format(pkg_name))
+        print("[ERROR: failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
 
     # Extract the first line of the full spec
@@ -906,7 +903,7 @@ class SpackEnv(UberEnv):
         options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "{0} {1} spec {2} '{3}{4}'".format(self.spack_exe_path(),debug,options,self.pkg_name,self.opts["spec"])
+        spec_cmd = "{0} {1}spec {2} '{3}{4}'".format(self.spack_exe_path(),debug,options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -916,7 +913,7 @@ class SpackEnv(UberEnv):
             # Example of matching line: ("status"  "hash"  "package"...)
             # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  serac@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
             if re.match(r"^(\[\+\]| - )  [a-z0-9]{32}  " + re.escape(self.pkg_name), line):
-                self.spec_hash = line.split("  ")[1]
+                self.spec_hash = line.split("  ")[1].lstrip()
                 # if spec already installed
                 if line.startswith("[+]"):
                     pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name,self.spec_hash)
