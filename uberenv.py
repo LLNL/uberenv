@@ -64,6 +64,7 @@ import glob
 import re
 
 from optparse import OptionParser
+from distutils.version import LooseVersion
 from functools import partial
 
 from os import environ as env
@@ -347,6 +348,16 @@ class UberEnv():
         print("[uberenv command line options: ")
         pretty_print_dictionary(self.opts)
         print("]")
+    
+    ###########################
+    # basic spack helpers
+    ###########################
+    def spack_exe_path(self):
+        return pjoin(self.dest_dir, "spack/bin/spack")
+    
+    def spack_version(self):
+        res, out = sexe('{0} --version'.format(self.spack_exe_path()), ret_output=True)
+        return LooseVersion(out[:-1])
 
     def setup_paths_and_dirs(self):
         self.uberenv_path = uberenv_script_dir()
@@ -612,9 +623,7 @@ class SpackEnv(UberEnv):
         self.reuse_exists = False
 
     def check_concretizer_opts(self):
-        spack_dir = self.dest_spack
-        cmd = pjoin(spack_dir,"bin","spack")
-        cmd += " help install"
+        cmd = "{0} help install".format(self.spack_exe_path())
         print("[Checking for concretizer options...]")
         res, out = sexe( cmd, ret_output = True)
         if "--fresh" in out:
@@ -634,10 +643,7 @@ class SpackEnv(UberEnv):
         return options
 
     def print_spack_python_info(self):
-        spack_dir = self.dest_spack
-        cmd = pjoin(spack_dir,"bin","spack")
-        cmd += " python "
-        cmd += '-c "import sys; print(sys.executable);"'
+        cmd = "{0} python -c \"import sys; print(sys.executable);\"".format(self.spack_exe_path())
         res, out = sexe( cmd, ret_output = True)
         print("[spack python: {0}]".format(out.strip()))
 
@@ -709,23 +715,23 @@ class SpackEnv(UberEnv):
                 sys.exit(-1)
 
     def find_spack_pkg_path_from_hash(self, pkg_name, pkg_hash):
-        res, out = sexe("spack/bin/spack find -p /{0}".format(pkg_hash), ret_output = True)
+        res, out = sexe("{0} find -p /{1}".format(self.spack_exe_path(), pkg_hash), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name):
-                   return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package from hash named '{0}']".format(pkg_name))
+                return {"name": pkg_name, "path": l.split()[-1]}
+        print("[ERROR: failed to find package from hash named '{0}' with hash '{1}']".format(pkg_name, pkg_hash))
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("spack/bin/spack find -p '{0}{1}'".format(pkg_name,spec), ret_output = True)
+        res, out = sexe("{0} find -p '{1}{2}'".format(self.spack_exe_path(),pkg_name,spec), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name):
-                   return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package from spec named '{0}']".format(pkg_name))
+                return {"name": pkg_name, "path": l.split()[-1]}
+        print("[ERROR: failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
 
     # Extract the first line of the full spec
@@ -734,7 +740,7 @@ class SpackEnv(UberEnv):
         if self.opts["spack_debug"]:
             debug = "--debug --stacktrace "
 
-        res, out = sexe("spack/bin/spack {0} spec '{1}{2}'".format(debug,pkg_name,spec), ret_output=True)
+        res, out = sexe("{0} {1} spec '{2}{3}'".format(self.spack_exe_path(),debug,pkg_name,spec), ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
@@ -852,7 +858,7 @@ class SpackEnv(UberEnv):
                 sexe("cp {0} {1}/".format(packages_yaml, spack_etc_defaults_dir ), echo=True)
         else:
             # let spack try to auto find compilers
-            sexe("spack/bin/spack compiler find", echo=True)
+            sexe("{0} compiler find".format(self.spack_exe_path()), echo=True)
 
         # hot-copy our packages into spack
         if len(self.packages_paths) > 0:
@@ -864,7 +870,7 @@ class SpackEnv(UberEnv):
 
         # Update spack's config.yaml if clingo was requested
         if self.use_clingo:
-            concretizer_cmd = "spack/bin/spack config --scope defaults add config:concretizer:clingo"
+            concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_exe_path())
             res = sexe(concretizer_cmd, echo=True)
             if res != 0:
                 print("[ERROR: Failed to update spack configuration to use new concretizer]")
@@ -873,7 +879,7 @@ class SpackEnv(UberEnv):
     def clean_build(self):
         # clean out any spack cached stuff (except build stages, downloads, &
         # spack's bootstrapping software)
-        cln_cmd = "spack/bin/spack clean --misc-cache --failures --python-cache"
+        cln_cmd = "{0} clean --misc-cache --failures --python-cache".format(self.spack_exe_path())
         res = sexe(cln_cmd, echo=True)
 
         # check if we need to force uninstall of selected packages
@@ -881,10 +887,13 @@ class SpackEnv(UberEnv):
             if "spack_clean_packages" in self.project_opts:
                 for cln_pkg in self.project_opts["spack_clean_packages"]:
                     if self.find_spack_pkg_path(cln_pkg) is not None:
-                        unist_cmd = "spack/bin/spack uninstall -f -y --all --dependents " + cln_pkg
+                        unist_cmd = "{0} uninstall -f -y --all --dependents ".format(self.spack_exe_path()) + cln_pkg
                         res = sexe(unist_cmd, echo=True)
 
     def show_info(self):
+        # print version of spack
+        print("[spack version: {0}]".format(self.spack_version()))
+
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
         debug = ""
@@ -894,7 +903,7 @@ class SpackEnv(UberEnv):
         options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "spack/bin/spack {0} spec {1} '{2}{3}'".format(debug,options,self.pkg_name,self.opts["spec"])
+        spec_cmd = "{0} {1}spec {2} '{3}{4}'".format(self.spack_exe_path(),debug,options,self.pkg_name,self.opts["spec"])
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -904,7 +913,7 @@ class SpackEnv(UberEnv):
             # Example of matching line: ("status"  "hash"  "package"...)
             # [+]  hf3cubkgl74ryc3qwen73kl4yfh2ijgd  serac@develop%clang@10.0.0-apple~debug~devtools~glvis arch=darwin-mojave-x86_64
             if re.match(r"^(\[\+\]| - )  [a-z0-9]{32}  " + re.escape(self.pkg_name), line):
-                self.spec_hash = line.split("  ")[1]
+                self.spec_hash = line.split("  ")[1].lstrip()
                 # if spec already installed
                 if line.startswith("[+]"):
                     pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name,self.spec_hash)
@@ -927,7 +936,7 @@ class SpackEnv(UberEnv):
             debug = "--debug --stacktrace "
 
         if not self.use_install:
-            install_cmd = "spack/bin/spack {0}".format(debug)
+            install_cmd = "{0} {1}".format(self.spack_exe_path(), debug)
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             # build mode -- install path
@@ -985,7 +994,7 @@ class SpackEnv(UberEnv):
                     # Note: -f disables protection against same-named files
                     # blocking activation. We have to use this to avoid
                     # issues with python builtin vs external setuptools, etc
-                    activate_cmd = "spack/bin/spack activate -f " + pkg_name
+                    activate_cmd = "{0} activate -f ".format(self.spack_exe_path()) + pkg_name
                     res = sexe(activate_cmd, echo=True)
                     if res != 0:
                       return res
@@ -993,7 +1002,7 @@ class SpackEnv(UberEnv):
         # note: this assumes package extends python when +python
         # this may fail general cases
         if self.build_mode == "install" and "+python" in full_spec:
-            activate_cmd = "spack/bin/spack activate /" + self.spec_hash
+            activate_cmd = "{0} activate /{1}".format(self.spack_exe_path(), self.spec_hash)
             res = sexe(activate_cmd, echo=True)
             if res != 0:
               return res
@@ -1068,7 +1077,7 @@ class SpackEnv(UberEnv):
 
         mirror_path = self.get_mirror_path()
 
-        mirror_cmd = "spack/bin/spack "
+        mirror_cmd = "{0} ".format(self.spack_exe_path())
         if self.opts["ignore_ssl_errors"]:
             mirror_cmd += "-k "
         mirror_cmd += "mirror create -d {0} --dependencies '{1}{2}'".format(mirror_path,
@@ -1081,7 +1090,7 @@ class SpackEnv(UberEnv):
         Returns the path of a defaults scoped spack mirror with the
         given name, or None if no mirror exists.
         """
-        res, out = sexe("spack/bin/spack mirror list", ret_output=True)
+        res, out = sexe("{0} mirror list".format(self.spack_exe_path()), ret_output=True)
         mirror_path = None
         for mirror in out.split('\n'):
             if mirror:
@@ -1106,13 +1115,13 @@ class SpackEnv(UberEnv):
             # Note: In this case, spack says it removes the mirror, but we still
             # get errors when we try to add a new one, sounds like a bug
             #
-            sexe("spack/bin/spack mirror remove --scope=defaults {0} ".format(mirror_name),
+            sexe("{0} mirror remove --scope=defaults {1} ".format(self.spack_exe_path(), mirror_name),
                 echo=True)
             existing_mirror_path = None
         if not existing_mirror_path:
             # Add if not already there
-            sexe("spack/bin/spack mirror add --scope=defaults {0} {1}".format(
-                    mirror_name, mirror_path), echo=True)
+            sexe("{0} mirror add --scope=defaults {1} {2}".format(
+                    self.spack_exe_path(), mirror_name, mirror_path), echo=True)
             print("[using mirror {0}]".format(mirror_path))
 
     def find_spack_upstream(self, upstream_name):
@@ -1122,7 +1131,7 @@ class SpackEnv(UberEnv):
         """
         upstream_path = None
 
-        res, out = sexe('spack/bin/spack config get upstreams', ret_output=True)
+        res, out = sexe('{0} config get upstreams'.format(self.spack_exe_path()), ret_output=True)
         if (not out) and ("upstreams:" in out):
             out = out.replace(' ', '')
             out = out.replace('install_tree:', '')
