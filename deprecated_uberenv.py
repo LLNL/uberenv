@@ -1043,22 +1043,22 @@ class SpackEnv(UberEnv):
                         print("")
                         print("[install complete!]")
         elif self.build_mode == "dev-build":
-                # we are in the "only dependencies" dev build case and the host-config
-                # file has to be copied from the do-be-deleted spack-build dir.
-                build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
-                build_dir  = pjoin(build_base,"spack-build")
-                pattern = "*{0}.cmake".format(self.pkg_name)
-                build_dir = pjoin(self.pkg_src_dir,"spack-build")
-                hc_glob = glob.glob(pjoin(build_dir,pattern))
-                if len(hc_glob) > 0:
-                    hc_path  = hc_glob[0]
-                    hc_fname = os.path.split(hc_path)[1]
-                    if os.path.islink(hc_fname):
-                        os.unlink(hc_fname)
-                    print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                    sexe("cp {0} {1}".format(hc_path,hc_fname))
-                    print("[removing project build directory {0}]".format(pjoin(build_dir)))
-                    sexe("rm -rf {0}".format(build_dir))
+            # we are in the "only dependencies" dev build case and the host-config
+            # file has to be copied from the do-be-deleted spack-build dir.
+            build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
+            build_dir  = pjoin(build_base,"spack-build")
+            pattern = "*{0}.cmake".format(self.pkg_name)
+            build_dir = pjoin(self.pkg_src_dir,"spack-build")
+            hc_glob = glob.glob(pjoin(build_dir,pattern))
+            if len(hc_glob) > 0:
+                hc_path  = hc_glob[0]
+                hc_fname = os.path.split(hc_path)[1]
+                if os.path.islink(hc_fname):
+                    os.unlink(hc_fname)
+                print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                sexe("cp {0} {1}".format(hc_path,hc_fname))
+                print("[removing project build directory {0}]".format(pjoin(build_dir)))
+                sexe("rm -rf {0}".format(build_dir))
         else:
             print("[ERROR: Unsupported build mode {0}]".format(self.build_mode))
             return -1
