@@ -143,12 +143,12 @@ def parse_args():
                       default=False,
                       help="Use spack v0.17+ --reuse functionality for spec, install and dev-build.")
 
-    # this option allows a user to explicitly to select a
-    # group of spack settings files (compilers.yaml , packages.yaml)
+    # this option allows a user to explicitly to select
+    # group of spack settings files (spack.yaml)
     parser.add_option("--spack-config-dir",
                       dest="spack_config_dir",
                       default=None,
-                      help="dir with spack settings files (compilers.yaml, packages.yaml, etc)")
+                      help="dir with spack settings files (spack.yaml")
 
     # this option allows a user to set the directory for their vcpkg ports on Windows
     parser.add_option("--vcpkg-ports-path",
@@ -852,7 +852,7 @@ class SpackEnv(UberEnv):
             self.spack_env)
         if self.spack_config_dir is not None:
             spack_config_yaml = os.path.join(self.spack_config_dir, "spack.yaml")
-            spack_create_cmd += spack_config_yaml
+            spack_create_cmd += " " + spack_config_yaml
         sexe(spack_create_cmd, echo=True)
         
         # Add spack package
