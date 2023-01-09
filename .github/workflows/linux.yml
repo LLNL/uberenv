@@ -39,7 +39,7 @@ jobs:
       run: |
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs
+          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_config
           ./uberenv_libs/spack/opt/spack/linux-*/gcc-*/magictestlib_cached-1.0.0-*/bin/uberenv_conduit_hello
   # Tests install Spack build mode
   build_install_full_mode:
@@ -55,7 +55,7 @@ jobs:
       run: |
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_config
           ./uberenv_libs/magictestlib_cached-install/bin/uberenv_conduit_hello
   # Tests dev-build Spack build mode stopping at initconfig phase
   build_dev_build_initconfig_mode:
@@ -71,7 +71,7 @@ jobs:
       run: |
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_configs --package-final-phase=initconfig
+          python3 ../../uberenv.py --project-json=dev_build_config.json --spack-config-dir=spack_config --package-final-phase=initconfig
   # Tests install Spack build mode stopping at initconfig phase
   build_install_initconfig_mode:
     name: Install Initconfig Mode (Linux)
@@ -86,7 +86,7 @@ jobs:
       run: |
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --package-final-phase=initconfig
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_config --package-final-phase=initconfig
   # Tests install Spack build mode with setup-only and skip-setup options
   build_setup_options_mode:
     name: Testing Setup-only and Skip-setup (Linux)
@@ -101,6 +101,6 @@ jobs:
       run: |
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --setup-only
-          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_configs --skip-setup
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_config --setup-only
+          python3 ../../uberenv.py --project-json=install_config.json --spack-config-dir=spack_config --skip-setup
           ./uberenv_libs/magictestlib_cached-install/bin/uberenv_conduit_hello
