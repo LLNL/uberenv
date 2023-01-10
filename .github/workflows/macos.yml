@@ -14,5 +14,5 @@ jobs:
       - name: Run Uberenv
         run: |
           cd  .ci/test-project
-          python3 ../../uberenv.py  --project-json=uberenv_config.json
+          python3 ../../uberenv.py  --project-json=uberenv_config.json --spack-config-dir=spack_config
           cat uberenv_libs/*.cmake

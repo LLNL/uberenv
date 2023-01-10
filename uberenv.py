@@ -268,12 +268,6 @@ def parse_args():
                       default="spack_env",
                       help="Spack environment directory. Will create directory automatically if it doesn't exist.")
 
-    # spack package repo location 
-    parser.add_option("--spack-package-repo-dir",
-                      dest="spack_package_repo_dir",
-                      default=None,
-                      help="Spack package repository directory.")
-
     ###############
     # parse args
     ###############
@@ -727,9 +721,6 @@ class SpackEnv(UberEnv):
             # default to packages living next to uberenv script if it exists
             self.append_path_to_packages_paths(pjoin(self.uberenv_path,"packages"), errorOnNonexistant=False)
 
-        # Set package repo dir to previous
-        self.spack_package_repo_dir = self.opts["spack_package_repo_dir"]
-
         print("[installing to: {0}]".format(self.dest_dir))
 
         self.dest_spack = pjoin(self.dest_dir,"spack")
@@ -879,11 +870,6 @@ class SpackEnv(UberEnv):
             spack_config_yaml = os.path.join(self.spack_config_dir, "spack.yaml")
             spack_create_cmd += " " + spack_config_yaml
         sexe(spack_create_cmd, echo=True)
-
-        # Let spack add package repo to config
-        print("[add spack package repo]")
-        spack_repo_cmd = "{0} repo add {1}".format(self.spack_env_exe(), self.spack_package_repo_dir)
-        sexe(spack_repo_cmd, echo=False)
 
         # Add spack package
         print("[adding spack package]")
