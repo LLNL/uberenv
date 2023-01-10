@@ -711,7 +711,6 @@ class SpackEnv(UberEnv):
                 self.spack_config_dir = pabs(pjoin(spack_config_path,uberenv_plat))
 
         self.spack_env = self.opts["spack_env"]
-        self.spack_package_repo_dir = self.opts["spack_package_repo_dir"]
 
         # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
@@ -727,6 +726,9 @@ class SpackEnv(UberEnv):
         else:
             # default to packages living next to uberenv script if it exists
             self.append_path_to_packages_paths(pjoin(self.uberenv_path,"packages"), errorOnNonexistant=False)
+
+        # Set package repo dir to previous
+        self.spack_package_repo_dir = self.opts["spack_package_repo_dir"]
 
         print("[installing to: {0}]".format(self.dest_dir))
 
@@ -853,6 +855,22 @@ class SpackEnv(UberEnv):
         self.disable_spack_config_scopes(spack_dir)
         spack_etc_defaults_dir = pjoin(spack_dir,"etc","spack","defaults")
 
+        # hot-copy our packages into spack
+        if len(self.packages_paths) > 0:
+            dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
+            for _base_path in self.packages_paths:
+                _src_glob = pjoin(_base_path, "*")
+                print("[copying patched packages from {0}]".format(_src_glob))
+                sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
+
+        # Update spack's config.yaml if clingo was requested
+        if self.use_clingo:
+            concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_exe())
+            res = sexe(concretizer_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to update spack configuration to use new concretizer]")
+                sys.exit(-1)
+
         # Create spack environment
         print("[creating spack env]")
         spack_create_cmd = "{0} env create -d {1}".format(self.spack_exe(),
@@ -885,22 +903,6 @@ class SpackEnv(UberEnv):
         spack_concretize_cmd = "{0} concretize ".format(self.spack_env_exe())
         spack_concretize_cmd = self.add_concretizer_opts(spack_concretize_cmd)
         sexe(spack_concretize_cmd, echo=True)
-
-        # hot-copy our packages into spack
-        if len(self.packages_paths) > 0:
-            dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
-            for _base_path in self.packages_paths:
-                _src_glob = pjoin(_base_path, "*")
-                print("[copying patched packages from {0}]".format(_src_glob))
-                sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
-
-        # Update spack's config.yaml if clingo was requested
-        if self.use_clingo:
-            concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_exe())
-            res = sexe(concretizer_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Failed to update spack configuration to use new concretizer]")
-                sys.exit(-1)
 
     def clean_build(self):
         # clean out any spack cached stuff (except build stages, downloads, &
