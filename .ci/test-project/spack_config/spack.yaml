@@ -1,5 +1,4 @@
 spack:
-  view: false
   packages:
     cmake:
       externals:

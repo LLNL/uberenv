@@ -268,6 +268,12 @@ def parse_args():
                       default="spack_env",
                       help="Spack environment directory. Will create directory automatically if it doesn't exist.")
 
+    # spack package repo location 
+    parser.add_option("--spack-package-repo-dir",
+                      dest="spack_package_repo_dir",
+                      default=None,
+                      help="Spack package repository directory.")
+
     ###############
     # parse args
     ###############
@@ -705,6 +711,7 @@ class SpackEnv(UberEnv):
                 self.spack_config_dir = pabs(pjoin(spack_config_path,uberenv_plat))
 
         self.spack_env = self.opts["spack_env"]
+        self.spack_package_repo_dir = self.opts["spack_package_repo_dir"]
 
         # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
@@ -854,7 +861,12 @@ class SpackEnv(UberEnv):
             spack_config_yaml = os.path.join(self.spack_config_dir, "spack.yaml")
             spack_create_cmd += " " + spack_config_yaml
         sexe(spack_create_cmd, echo=True)
-        
+
+        # Let spack add package repo to config
+        print("[add spack package repo]")
+        spack_repo_cmd = "{0} repo add {1}".format(self.spack_env_exe(), self.spack_package_repo_dir)
+        sexe(spack_repo_cmd, echo=False)
+
         # Add spack package
         print("[adding spack package]")
         spack_add_cmd = "{0} add {1}".format(self.spack_env_exe(),
