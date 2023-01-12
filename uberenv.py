@@ -694,7 +694,6 @@ class SpackEnv(UberEnv):
         if self.opts["spack_env_file"] is None:
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
-            print("chapman39 sys type? {0}".format(os.environ["SYS_TYPE"]))
             if uberenv_plat is None:
                 print("[ERROR: could not detect platform therefore no spack environment file was given]")
                 sys.exit(1)

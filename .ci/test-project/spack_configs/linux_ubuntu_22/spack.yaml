@@ -16,17 +16,3 @@ spack:
       - spec: zlib@1.2.7
         prefix: /usr
       buildable: false
-  compilers::
-  - compiler:
-      spec: gcc@4.9.3
-      paths:
-        cc: /usr/tce/bin/gcc
-        cxx: /usr/tce/bin/g++
-        f77: /usr/tce/bin/gfortran
-        fc: /usr/tce/bin/gfortran
-      flags: {}
-      operating_system: rhel7
-      target: x86_64
-      modules: []
-      environment: {}
-      extra_rpaths: []
