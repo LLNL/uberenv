@@ -692,7 +692,7 @@ class SpackEnv(UberEnv):
 
         # Setup path of Spack environment configuration file if not specified on command line
         # Check under spack_config_path -> detected platform -> spack.yaml/ .lock
-        if self.spack_env_file is None:
+        if self.opts["spack_env_file"] is None:
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
             if uberenv_plat is None:
