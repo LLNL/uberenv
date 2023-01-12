@@ -274,18 +274,6 @@ def parse_args():
     # we want a dict b/c the values could
     # be passed without using optparse
     opts = vars(opts)
-    if opts["spack_config_dir"] is not None:
-        opts["spack_config_dir"] = pabs(opts["spack_config_dir"])
-        if not os.path.isdir(opts["spack_config_dir"]):
-            print("[ERROR: invalid spack config dir: {0} ]".format(opts["spack_config_dir"]))
-            sys.exit(-1)
-    
-    # Set spack_env to absolute path and check validity
-    if opts["spack_env"] is not None:
-        opts["spack_env"] = pabs(opts["spack_env"])
-        if os.path.exists(opts["spack_env"]) and not os.path.isdir(opts["spack_env"]):
-            print("[ERROR: invalid spack env directory: {0} ]".format(opts["spack_env"]))
-            sys.exit(-1)
 
     # if rel path is given for the mirror, we need to evaluate here -- before any
     # chdirs to avoid confusion related to what it is relative to.
@@ -695,8 +683,12 @@ class SpackEnv(UberEnv):
                     print("[ERROR: Given path in 'spack_configs_path' does not exist: {0}]".format(spack_configs_path))
                     sys.exit(1)
 
-        self.spack_env = self.opts["spack_env"]
-        self.spack_env_file = self.opts["spack_env_file"]
+        # Set spack_env to absolute path and (if exists) check validity
+        if opts["spack_env"] is not None:
+            self.spack_env = pabs(opts["spack_env"])
+            if os.path.exists(self.spack_env) and not os.path.isdir(self.spack_env):
+                print("[ERROR: invalid spack env directory: {0} ]".format(self.spack_env))
+                sys.exit(-1)
 
         # Setup path of Spack environment configuration file if not specified on command line
         # Check under spack_config_path -> detected platform -> spack.yaml/ .lock
@@ -718,6 +710,8 @@ class SpackEnv(UberEnv):
             else:
                 print("[ERROR: could not find spack env file path spack environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
                 sys.exit(1)
+        else:
+            self.spack_env_file = pabs(self.opts["spack_env_file"])
         
         print("[spack environment init file: {0}]".format(self.spack_env_file))
 
