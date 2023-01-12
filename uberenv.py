@@ -404,14 +404,13 @@ class UberEnv():
         return setting_value
 
     def detect_platform(self):
-        # find supported sets of compilers.yaml, packages,yaml
-        res = None
+        # find supported spack.yaml
         if is_darwin():
-            res = "darwin"
+            return "darwin"
         elif "SYS_TYPE" in os.environ.keys():
-            sys_type = os.environ["SYS_TYPE"].lower()
-            res = sys_type
-        return res
+            return os.environ["SYS_TYPE"].lower()
+        else:
+            return None
 
 
 class VcpkgEnv(UberEnv):
@@ -695,6 +694,7 @@ class SpackEnv(UberEnv):
         if self.opts["spack_env_file"] is None:
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
+            print("chapman39 sys type? {0}".format(os.environ["SYS_TYPE"]))
             if uberenv_plat is None:
                 print("[ERROR: could not detect platform therefore no spack environment file was given]")
                 sys.exit(1)
