@@ -320,7 +320,7 @@ def find_project_config(opts):
                 return project_json_file
             else:
                 lookup_path = pabs(os.path.join(lookup_path, os.pardir))
-    print("ERROR: No configuration json file found")
+    print("ERROR: No uberenv configuration json file found")
     sys.exit(-1)
 
 
@@ -695,7 +695,7 @@ class SpackEnv(UberEnv):
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
             if uberenv_plat is None:
-                print("[ERROR: could not detect platform therefore no spack environment file was given]")
+                print("[ERROR: could not detect platform. (Supply Spack environment file in command line with --spack-env-file]")
                 sys.exit(1)
 
             # Check if a path to an init file is located
@@ -707,7 +707,7 @@ class SpackEnv(UberEnv):
             elif os.path.exists(spack_env_lock):
                 self.spack_env_file = spack_env_lock
             else:
-                print("[ERROR: could not find spack env file path spack environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
+                print("[ERROR: could not find spack env file path Spack environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
                 sys.exit(1)
         else:
             self.spack_env_file = pabs(self.opts["spack_env_file"])
