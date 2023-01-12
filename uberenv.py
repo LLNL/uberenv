@@ -684,8 +684,8 @@ class SpackEnv(UberEnv):
                     sys.exit(1)
 
         # Set spack_env to absolute path and (if exists) check validity
-        if opts["spack_env"] is not None:
-            self.spack_env = pabs(opts["spack_env"])
+        if self.opts["spack_env"] is not None:
+            self.spack_env = pabs(self.opts["spack_env"])
             if os.path.exists(self.spack_env) and not os.path.isdir(self.spack_env):
                 print("[ERROR: invalid spack env directory: {0} ]".format(self.spack_env))
                 sys.exit(-1)
