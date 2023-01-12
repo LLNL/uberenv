@@ -104,7 +104,8 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--prefix``            Destination directory                                ``uberenv_libs``
   ``--spec``              Spack spec without preceding package name            linux: **%gcc**
                                                                                osx: **%clang**
-  ``--spack-config-dir``  Folder with Spack settings files                     See :ref:`spack_configs`
+  ``--spack-env``         The created Spack environment directory              ``spack_env``
+  ``--spack-env-file``    Path to Spack environment config(e.g. spack.yaml)    See :ref:`spack_configs`
   ``--spack-build-mode``  Mode used to build third party dependencies          ``dev-build``
   ``--spack-debug``       Turn on spack debug mode for spec/install commands   **none** (False)
   ``-k``                  Ignore SSL Errors                                    **False**
@@ -161,13 +162,8 @@ Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs
 * ``{platform}`` must match the platform determined by uberenv (`darwin` on OSX).
 * ``{spack_configs_path}`` can be specified in the json config file.
 
-You may instead use the **--spack-config-dir** option to enforce the use of a specific directory. As long as it provides Uberenv with the yaml files to use with Spack.
-See the `Spack Compiler Configuration <http://spack.readthedocs.io/en/latest/getting_started.html#manual-compiler-configuration>`_ and
-`Spack System Packages <http://spack.readthedocs.io/en/latest/getting_started.html#system-packages>`_ documentation for details.
-
-.. note::
-    The bootstrapping process ignores ``~/.spack/compilers.yaml`` to avoid conflicts
-    and surprises from a user's specific Spack settings on HPC platforms.
+You may instead use the **--spack-env-file** option to enforce the use of a specific directory. As long as it provides Uberenv with the yaml files to use with Spack.
+See the `Environments (spack.yaml) <https://spack.readthedocs.io/en/latest/environments.html>`_ documentation for details.
 
 When run, ``uberenv.py`` checkouts a specific version of Spack from github as ``spack`` in the
 destination directory. It then uses Spack to build and install the target packages' dependencies into
