@@ -746,7 +746,7 @@ class SpackEnv(UberEnv):
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
-            if l.startswith(pkg_name):
+            if l.startswith(pkg_name) and len(l.split()) > 1:
                 return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: failed to find package from hash named '{0}' with hash '{1}']".format(pkg_name, pkg_hash))
         sys.exit(-1)
@@ -756,7 +756,7 @@ class SpackEnv(UberEnv):
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
-            if l.startswith(pkg_name):
+            if l.startswith(pkg_name) and len(l.split()) > 1:
                 return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
