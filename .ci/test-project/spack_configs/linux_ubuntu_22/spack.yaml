@@ -1,4 +1,4 @@
-# Spack env file for ubuntu 20
+# Spack env file for ubuntu 22
 spack:
   packages:
     cmake:
