@@ -162,7 +162,7 @@ Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs
 * ``{platform}`` must match the platform determined by uberenv (`darwin` on OSX).
 * ``{spack_configs_path}`` can be specified in the json config file.
 
-You may instead use the **--spack-env-file** option to enforce the use of a specific directory. As long as it provides Uberenv with the yaml files to use with Spack.
+You may instead use the **--spack-env-file** option to enforce the use of a specific directory, as long as it provides Uberenv with the yaml files to use with Spack.
 See the `Environments (spack.yaml) <https://spack.readthedocs.io/en/latest/environments.html>`_ documentation for details.
 
 When run, ``uberenv.py`` checkouts a specific version of Spack from github as ``spack`` in the
