@@ -65,28 +65,3 @@ class UberenvMagictestlib(Magictestlib):
         dummy_tar_path = os.path.abspath(os.path.join(__file__, "../uberenv-magictestlib.tar.gz"))
         url = "file://" + dummy_tar_path
         return url
-
-from spack import *
-
-import socket
-import os
-
-from os.path import join as pjoin
-from os import environ as env
-
-from .magictestlib import Magictestlib
-
-class UberenvMagictestlib(Magictestlib):
-    """Uberenv Test"""
-    version('1.0.0', 'c8b277080a00041cfc4f64619e31f6d6',preferred=True)
-
-    ###################################
-    # build phases used by this package
-    ###################################
-    phases = ['hostconfig']
-
-    def url_for_version(self, version):
-        dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
-        dummy_tar_path = pjoin(dummy_tar_path,"uberenv-magictestlib.tar.gz")
-        url      = "file://" + dummy_tar_path
-        return url
