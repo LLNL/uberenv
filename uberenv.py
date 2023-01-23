@@ -978,33 +978,6 @@ class SpackEnv(UberEnv):
                 print("[ERROR: failure of spack install]")
                 return res
         
-        full_spec = self.read_spack_full_spec(self.pkg_name,self.opts["spec"])
-        if "spack_activate" in self.project_opts:
-            print("[activating dependent packages]")
-            pkg_names = self.project_opts["spack_activate"].keys()
-            for pkg_name in pkg_names:
-                pkg_spec_requirements = self.project_opts["spack_activate"][pkg_name]
-                activate=True
-                for req in pkg_spec_requirements:
-                    if req not in full_spec:
-                        activate=False
-                        break
-                if activate:
-                    # Note: -f disables protection against same-named files
-                    # blocking activation. We have to use this to avoid
-                    # issues with python builtin vs external setuptools, etc
-                    activate_cmd = "{0} activate -f ".format(self.spack_exe()) + pkg_name
-                    res = sexe(activate_cmd, echo=True)
-                    if res != 0:
-                      return res
-            print("[done activating dependent packages]")
-        # note: this assumes package extends python when +python
-        # this may fail general cases
-        if self.build_mode == "install" and "+python" in full_spec:
-            activate_cmd = "{0} activate /{1}".format(self.spack_exe(), self.spec_hash)
-            res = sexe(activate_cmd, echo=True)
-            if res != 0:
-              return res
         # when using install or uberenv-pkg mode, create a symlink to the host config 
         if self.build_mode == "install" or \
            self.build_mode == "uberenv-pkg" \
