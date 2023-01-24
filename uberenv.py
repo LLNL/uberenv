@@ -870,6 +870,7 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Failed to update spack configuration to use new concretizer]")
                 sys.exit(-1)
 
+    def create_spack_env(self):
         # Create spack environment
         print("[creating spack env]")
         spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
@@ -880,7 +881,7 @@ class SpackEnv(UberEnv):
         print("[adding spack package]")
         spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
             self.pkg_name_with_spec)
-        sexe(spack_add_cmd, echo=False)
+        sexe(spack_add_cmd, echo=True)
 
         # For dev-build, call develop
         if self.build_mode == "dev-build":
@@ -922,7 +923,8 @@ class SpackEnv(UberEnv):
         options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "{0} {1}spec {2} {3}".format(self.spack_exe(),debug,options,self.pkg_name_with_spec)
+        #spec_cmd = "{0} {1}spec {2} {3}".format(self.spack_exe(),debug,options,self.pkg_name_with_spec)
+        spec_cmd = "{0} {1}spec {2}".format(self.spack_exe(), debug, options)
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -1263,6 +1265,9 @@ def main():
     else:
         os.chdir(env.dest_dir)
 
+
+    if not is_windows():
+        env.create_spack_env()
 
     # Show the spec for what will be built
     env.show_info()
