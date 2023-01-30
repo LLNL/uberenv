@@ -45,10 +45,16 @@
 ###############################################################################
 
 """
- file: uberenv.py
+ file: deprecated_uberenv.py
 
  description: automates using a package manager to install a project.
  Uses spack on Unix-based systems and Vcpkg on Windows-based systems.
+
+ note: This file is deprecated. It uses spack activate and spack deactivate,
+ which are no longer supported, having been deprecated in Spack v0.18 and
+ completely removed in v0.19. This file is meant allow use of the original
+ Uberenv to allow time to switch to the new Uberenv featuring Spack
+ Environments.
 
 """
 
