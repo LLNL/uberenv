@@ -255,17 +255,17 @@ def parse_args():
                       default=False,
                       help="Only install (using pre-setup Spack).")
 
-    # spack environment directory
+    # Spack Environment directory
     parser.add_option("--spack-env",
                       dest="spack_env",
                       default="spack_env",
-                      help="The created Spack environment directory. Will create directory automatically if it doesn't exist.")
+                      help="The created Spack Environment directory. Will create directory automatically if it doesn't exist.")
 
-    # spack environment file
+    # Spack Environment file
     parser.add_option("--spack-env-file",
                       dest="spack_env_file",
                       default=None,
-                      help="Path to Spack environment configuration file (e.g. spack.yaml or spack.lock)")
+                      help="Path to Spack Environment File (e.g. spack.yaml or spack.lock)")
 
     ###############
     # parse args
@@ -320,7 +320,7 @@ def find_project_config(opts):
                 return project_json_file
             else:
                 lookup_path = pabs(os.path.join(lookup_path, os.pardir))
-    print("ERROR: No uberenv configuration json file found")
+    print("ERROR: No Uberenv configuration json file found")
     sys.exit(-1)
 
 
@@ -357,7 +357,7 @@ class UberEnv():
             if self.project_opts["force_commandline_prefix"]:
                 # project has specified prefix must be on command line
                 print("[ERROR: --prefix flag for library destination is required]")
-                sys.exit(1)
+                sys.exit(-1)
             # otherwise set default
             self.opts["prefix"] = "uberenv_libs"
 
@@ -453,7 +453,7 @@ class VcpkgEnv(UberEnv):
 
         if not os.path.isdir(self.vcpkg_ports_path):
             print("[ERROR: {0}: {1}]".format(_errmsg, self.vcpkg_ports_path))
-            sys.exit(1)
+            sys.exit(-1)
 
         # setup path for vcpkg repo
         print("[installing to: {0}]".format(self.dest_dir))
@@ -656,7 +656,7 @@ class SpackEnv(UberEnv):
         if not os.path.exists(path):
             if errorOnNonexistant:
                 print("[ERROR: Given path in 'spack_packages_path' does not exist: {0}]".format(path))
-                sys.exit(1)
+                sys.exit(-1)
             else:
                 return
         self.packages_paths.append(path)
@@ -678,23 +678,23 @@ class SpackEnv(UberEnv):
                 spack_configs_path = pabs(new_path)
                 if not os.path.isdir(spack_configs_path):
                     print("[ERROR: Given path in 'spack_configs_path' does not exist: {0}]".format(spack_configs_path))
-                    sys.exit(1)
+                    sys.exit(-1)
 
         # Set spack_env to absolute path and (if exists) check validity
         if self.opts["spack_env"] is not None:
             self.spack_env = pabs(self.opts["spack_env"])
             if os.path.exists(self.spack_env) and not os.path.isdir(self.spack_env):
-                print("[ERROR: invalid spack env directory: {0} ]".format(self.spack_env))
+                print("[ERROR: Invalid Spack Environments directory. File given: {0} ]".format(self.spack_env))
                 sys.exit(-1)
 
-        # Setup path of Spack environment configuration file if not specified on command line
+        # Setup path of Spack Environment File if not specified on command line
         # Check under spack_config_path -> detected platform -> spack.yaml/ .lock
         if self.opts["spack_env_file"] is None:
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
             if uberenv_plat is None:
-                print("[ERROR: could not detect platform. (Supply Spack environment file in command line with --spack-env-file]")
-                sys.exit(1)
+                print("[ERROR: Could not detect platform. Supply Spack Environment File in command line with --spack-env-file=/path/to/spack.yaml")
+                sys.exit(-1)
 
             # Check if a path to an init file is located
             self.spack_env_file = pabs(pjoin(spack_configs_path, uberenv_plat))
@@ -705,12 +705,12 @@ class SpackEnv(UberEnv):
             elif os.path.exists(spack_env_lock):
                 self.spack_env_file = spack_env_lock
             else:
-                print("[ERROR: could not find spack env file path Spack environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
-                sys.exit(1)
+                print("[ERROR: Could not find Spack Environment File (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
+                sys.exit(-1)
         else:
             self.spack_env_file = pabs(self.opts["spack_env_file"])
         
-        print("[spack environment init file: {0}]".format(self.spack_env_file))
+        print("[Spack Environment File: {0}]".format(self.spack_env_file))
 
         # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
@@ -746,7 +746,7 @@ class SpackEnv(UberEnv):
             # pick the first in the list.
             if l.startswith(pkg_name) and len(l.split()) > 1:
                 return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package from hash named '{0}' with hash '{1}']".format(pkg_name, pkg_hash))
+        print("[ERROR: Failed to find package from hash named '{0}' with hash '{1}']".format(pkg_name, pkg_hash))
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
@@ -756,7 +756,7 @@ class SpackEnv(UberEnv):
             # pick the first in the list.
             if l.startswith(pkg_name) and len(l.split()) > 1:
                 return {"name": pkg_name, "path": l.split()[-1]}
-        print("[ERROR: failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
+        print("[ERROR: Failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
 
     # Extract the first line of the full spec
@@ -869,7 +869,7 @@ class SpackEnv(UberEnv):
                 sys.exit(-1)
 
     def create_spack_env(self):
-        # Create spack environment
+        # Create Spack Environment
         print("[creating spack env]")
         spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
             self.spack_env, self.spack_env_file)
@@ -974,7 +974,7 @@ class SpackEnv(UberEnv):
             install_cmd += self.pkg_name_with_spec
             res = sexe(install_cmd, echo=True)
             if res != 0:
-                print("[ERROR: failure of spack install]")
+                print("[ERROR: Failure of spack install]")
                 return res
         
         # when using install or uberenv-pkg mode, create a symlink to the host config 
@@ -1157,7 +1157,7 @@ class SpackEnv(UberEnv):
                 print("  Try running the following command to upgrade pip:")
                 print("     python3 -m pip install --user --upgrade pip")
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!]")
-                sys.exit(1)
+                sys.exit(-1)
             py_interp = sys.executable
             clingo_pkg = "clingo"
             uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
@@ -1165,13 +1165,13 @@ class SpackEnv(UberEnv):
             # pip will still return 0 in the case of a "trivial" uninstall
             res = sexe(uninstall_cmd, echo=True)
             if res != 0:
-                print("[ERROR: clingo uninstall failed with returncode {0}]".format(res))
-                sys.exit(1)
+                print("[ERROR: Clingo uninstall failed with returncode {0}]".format(res))
+                sys.exit(-1)
             install_cmd = "{0} -m pip install --user {1}".format(py_interp, clingo_pkg)
             res = sexe(install_cmd, echo=True)
             if res != 0:
-                print("[ERROR: clingo install failed with returncode {0}]".format(res))
-                sys.exit(1)
+                print("[ERROR: Clingo install failed with returncode {0}]".format(res))
+                sys.exit(-1)
 
 
 def find_osx_sdks():
