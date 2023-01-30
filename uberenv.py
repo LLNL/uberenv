@@ -668,8 +668,6 @@ class SpackEnv(UberEnv):
 
         UberEnv.setup_paths_and_dirs(self)
 
-        # Find Spack yaml configs path (compilers.yaml, packages.yaml, etc.)
-
         # Next to uberenv.py (backwards compatility)
         spack_configs_path = pabs(pjoin(self.uberenv_path,"spack_config"))
 
@@ -923,7 +921,6 @@ class SpackEnv(UberEnv):
         options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        #spec_cmd = "{0} {1}spec {2} {3}".format(self.spack_exe(),debug,options,self.pkg_name_with_spec)
         spec_cmd = "{0} {1}spec {2}".format(self.spack_exe(), debug, options)
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
@@ -1242,32 +1239,32 @@ def main():
     # Setup the necessary paths and directories
     env.setup_paths_and_dirs()
 
-    # Skip creating and setting up environment if env given 
+    # Go to package manager's destination
+    os.chdir(env.dest_dir)
+
+    # Setup package manager
     if not opts["skip_setup"]:
         # Clone the package manager
         env.clone_repo()
 
-        os.chdir(env.dest_dir)
-
         # Patch the package manager, as necessary
         env.patch()
 
-        # Clean the build
-        env.clean_build()
-
-        # Allow to end uberenv after spack is ready
+        # Allow to end uberenv after Spack is ready
         if opts["setup_only"]:
 
+            # Use Spack upstream
             if not is_windows() and opts["upstream"] is not None:
                 env.use_spack_upstream()
 
             return 0
-    else:
-        os.chdir(env.dest_dir)
 
-
+    # Create Spack Environment
     if not is_windows():
         env.create_spack_env()
+
+    # Clean the build
+    env.clean_build()
 
     # Show the spec for what will be built
     env.show_info()

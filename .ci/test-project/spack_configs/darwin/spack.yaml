@@ -1,4 +1,5 @@
 # Spack env file for mac
+# Allow Spack to find and use compilers
 spack:
   packages:
     cmake:
