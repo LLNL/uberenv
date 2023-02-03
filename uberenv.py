@@ -1250,6 +1250,9 @@ def main():
         # Patch the package manager, as necessary
         env.patch()
 
+        # Clean the build
+        env.clean_build()
+
         # Allow to end uberenv after Spack is ready
         if opts["setup_only"]:
 
@@ -1262,9 +1265,6 @@ def main():
     # Create Spack Environment
     if not is_windows():
         env.create_spack_env()
-
-    # Clean the build
-    env.clean_build()
 
     # Show the spec for what will be built
     env.show_info()
