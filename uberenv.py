@@ -897,7 +897,7 @@ class SpackEnv(UberEnv):
     def clean_build(self):
         # clean out any spack cached stuff (except build stages, downloads, &
         # spack's bootstrapping software)
-        cln_cmd = "{0} clean --misc-cache --failures --python-cache".format(self.spack_exe())
+        cln_cmd = "{0} clean --misc-cache --failures --python-cache".format(self.spack_exe(use_spack_env=False))
         res = sexe(cln_cmd, echo=True)
 
         # check if we need to force uninstall of selected packages
