@@ -19,6 +19,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install $BASE_PACKAGES
+          cmake --version
     - uses: actions/checkout@v3
     - name: Run Uberenv
       run: |
@@ -34,6 +35,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install $BASE_PACKAGES
+          cmake --version
     - uses: actions/checkout@v3
     - name: Run Uberenv
       run: |
@@ -50,6 +52,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install $BASE_PACKAGES
+          cmake --version
     - uses: actions/checkout@v3
     - name: Run Uberenv
       run: |
@@ -65,6 +68,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install $BASE_PACKAGES
+          cmake --version
     - uses: actions/checkout@v3
     - name: Run Uberenv
       run: |
@@ -80,6 +84,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install $BASE_PACKAGES
+          cmake --version
     - uses: actions/checkout@v3
     - name: Run Uberenv
       run: |
@@ -94,6 +99,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install $BASE_PACKAGES
+          cmake --version
     - uses: actions/checkout@v3
     - name: Run Uberenv
       run: |
