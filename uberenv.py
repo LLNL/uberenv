@@ -255,11 +255,11 @@ def parse_args():
                       default=False,
                       help="Only install (using pre-setup Spack).")
 
-    # Spack Environment directory
+    # Spack Environment name
     parser.add_option("--spack-env-name",
                       dest="spack_env_name",
                       default="spack_env",
-                      help="The created Spack Environment directory. Will create directory automatically if it doesn't exist.")
+                      help="The name of the created Spack Environment.")
 
     # Spack Environment file
     parser.add_option("--spack-env-file",
