@@ -617,7 +617,7 @@ class SpackEnv(UberEnv):
     def spack_exe(self, use_spack_env = True):
         exe = pjoin(self.dest_dir, "spack/bin/spack")
         if use_spack_env:
-            return "{0} -e {1}".format(exe, self.spack_env_name)
+            return "{0} -D {1}".format(exe, self.spack_env_directory)
         else:
             return exe
     
@@ -681,9 +681,10 @@ class SpackEnv(UberEnv):
                     sys.exit(-1)
 
         # Set spack_env_name to absolute path and (if exists) check validity
-        self.spack_env_name = pabs(os.path.join(self.dest_dir, self.opts["spack_env_name"]))
-        if os.path.exists(self.spack_env_name) and not os.path.isdir(self.spack_env_name):
-            print("[ERROR: Invalid Spack Environments directory. File given: {0} ]".format(self.spack_env_name))
+        self.spack_env_name = self.opts["spack_env_name"]
+        self.spack_env_directory = pabs(os.path.join(self.dest_dir, self.spack_env_name))
+        if os.path.exists(self.spack_env_directory) and not os.path.isdir(self.spack_env_directory):
+            print("[ERROR: Invalid Spack Environments directory. File given: {0} ]".format(self.spack_env_directory))
             sys.exit(-1)
 
         # Setup path of Spack Environment File if not specified on command line
@@ -871,7 +872,7 @@ class SpackEnv(UberEnv):
         # Create Spack Environment
         print("[creating spack env]")
         spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
-            self.spack_env_name, self.spack_env_file)
+            self.spack_env_directory, self.spack_env_file)
         sexe(spack_create_cmd, echo=True)
 
         # Add spack package
