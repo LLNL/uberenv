@@ -3,5 +3,4 @@
 s_env.sh
 _docs_html
 .ci/test-project/uberenv_libs
-.ci/test-project/spack_env
 spack-build-*
