@@ -118,6 +118,8 @@ Uberenv has a few options that allow you to control how dependencies are built:
                                                                                if present, ``x86-Windows`` otherwise
  ======================= ==================================================== =================================================
 
+The ``--spack-env-name`` will be created in path specified by ``--prefix``.
+
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
 from github and https hosted source tarballs. When enabled, Uberenv clones Spack using:
 

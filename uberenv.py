@@ -259,7 +259,7 @@ def parse_args():
     parser.add_option("--spack-env-name",
                       dest="spack_env_name",
                       default="spack_env",
-                      help="The name of the created Spack Environment.")
+                      help="The name of the Spack Environment, which will be created in destination directory.")
 
     # Spack Environment file
     parser.add_option("--spack-env-file",
@@ -681,11 +681,10 @@ class SpackEnv(UberEnv):
                     sys.exit(-1)
 
         # Set spack_env_name to absolute path and (if exists) check validity
-        if self.opts["spack_env_name"] is not None:
-            self.spack_env_name = pabs(self.opts["spack_env_name"])
-            if os.path.exists(self.spack_env_name) and not os.path.isdir(self.spack_env_name):
-                print("[ERROR: Invalid Spack Environments directory. File given: {0} ]".format(self.spack_env_name))
-                sys.exit(-1)
+        self.spack_env_name = pabs(os.path.join(self.dest_dir, self.opts["spack_env_name"]))
+        if os.path.exists(self.spack_env_name) and not os.path.isdir(self.spack_env_name):
+            print("[ERROR: Invalid Spack Environments directory. File given: {0} ]".format(self.spack_env_name))
+            sys.exit(-1)
 
         # Setup path of Spack Environment File if not specified on command line
         # Check under spack_config_path -> detected platform -> spack.yaml/ .lock
