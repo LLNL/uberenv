@@ -259,7 +259,7 @@ def parse_args():
     parser.add_option("--spack-env-name",
                       dest="spack_env_name",
                       default="spack_env",
-                      help="The name of the Spack Environment, which will be created in destination directory.")
+                      help="The name of the Spack Environment, which will be created in prefix directory.")
 
     # Spack Environment file
     parser.add_option("--spack-env-file",
