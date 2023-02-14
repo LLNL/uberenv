@@ -265,7 +265,7 @@ def parse_args():
     parser.add_option("--spack-env-file",
                       dest="spack_env_file",
                       default=None,
-                      help="Path to Spack Environment File (e.g. spack.yaml or spack.lock)")
+                      help="Path to Spack Environment file (e.g. spack.yaml or spack.lock)")
 
     ###############
     # parse args
@@ -687,13 +687,13 @@ class SpackEnv(UberEnv):
             print("[ERROR: Invalid Spack Environments directory. File given: {0} ]".format(self.spack_env_directory))
             sys.exit(-1)
 
-        # Setup path of Spack Environment File if not specified on command line
+        # Setup path of Spack Environment file if not specified on command line
         # Check under spack_config_path -> detected platform -> spack.yaml/ .lock
         if self.opts["spack_env_file"] is None:
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
             if uberenv_plat is None:
-                print("[ERROR: Could not detect platform. Supply Spack Environment File in command line with --spack-env-file=/path/to/spack.yaml")
+                print("[ERROR: Could not detect platform. Supply Spack Environment file in command line with --spack-env-file=/path/to/spack.yaml")
                 sys.exit(-1)
 
             # Check if a path to an init file is located
@@ -705,12 +705,12 @@ class SpackEnv(UberEnv):
             elif os.path.exists(spack_env_lock):
                 self.spack_env_file = spack_env_lock
             else:
-                print("[ERROR: Could not find Spack Environment File (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
+                print("[ERROR: Could not find Spack Environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
                 sys.exit(-1)
         else:
             self.spack_env_file = pabs(self.opts["spack_env_file"])
         
-        print("[Spack Environment File: {0}]".format(self.spack_env_file))
+        print("[Spack Environment file: {0}]".format(self.spack_env_file))
 
         # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
@@ -1031,7 +1031,7 @@ class SpackEnv(UberEnv):
                 print("[removing project build directory {0}]".format(pjoin(build_dir)))
                 sexe("rm -rf {0}".format(build_dir))
         else:
-            print("[ERROR: unsupported build mode: {0}]".format(self.build_mode))
+            print("[ERROR: Unsupported build mode: {0}]".format(self.build_mode))
             return -1
 
     def get_mirror_path(self):
