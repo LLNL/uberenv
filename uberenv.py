@@ -887,6 +887,7 @@ class SpackEnv(UberEnv):
                 self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec)
             sexe(spack_develop_cmd, echo=True)
 
+    def concretize_spack_env(self):
         # Spack concretize
         print("[concretizing spack env]")
         spack_concretize_cmd = "{0} concretize ".format(self.spack_exe())
@@ -1050,9 +1051,8 @@ class SpackEnv(UberEnv):
         mirror_cmd = "{0} ".format(self.spack_exe())
         if self.opts["ignore_ssl_errors"]:
             mirror_cmd += "-k "
-        mirror_cmd += "mirror create -d {0} --dependencies '{1}{2}'".format(mirror_path,
-                                                                    self.pkg_name,
-                                                                    self.opts["spec"])
+        mirror_cmd += "mirror create -d {0} --dependencies {1}".format(
+            mirror_path, self.pkg_name_with_spec)
         return sexe(mirror_cmd, echo=True)
 
     def find_spack_mirror(self, mirror_name):
@@ -1265,13 +1265,9 @@ def main():
     if not is_windows():
         env.create_spack_env()
 
-    # Show the spec for what will be built
-    env.show_info()
-
-
     ###########################################################
-    # we now have an instance of our package manager configured
-    # how we need it to build our tpls. At this point there are
+    # We now have an instance of our package manager configured,
+    # now we need it to build our TPLs. At this point, there are
     # two possible next steps:
     #
     # *) create a mirror of the packages
@@ -1282,15 +1278,23 @@ def main():
     if opts["create_mirror"]:
         return env.create_mirror()
     else:
+        # Add mirror
         if opts["mirror"] is not None:
             env.use_mirror()
 
+        # Use Spack upstream
         if not is_windows() and opts["upstream"] is not None:
             env.use_spack_upstream()
 
-        res = env.install()
+        # Concretize the spack environment
+        if not is_windows():
+            env.concretize_spack_env()
 
-        return res
+        # Show the spec for what will be built
+        env.show_info()
+
+        # Install
+        return env.install()
 
 if __name__ == "__main__":
     sys.exit(main())
