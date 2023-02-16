@@ -850,6 +850,7 @@ class SpackEnv(UberEnv):
 
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes(spack_dir)
+
         # hot-copy our packages into spack
         if len(self.packages_paths) > 0:
             dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
