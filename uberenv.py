@@ -663,8 +663,7 @@ class SpackEnv(UberEnv):
 
 
     def setup_paths_and_dirs(self):
-        # get the current working path, and the glob used to identify the
-        # package files we want to hot-copy to spack
+        # get the current working path
 
         UberEnv.setup_paths_and_dirs(self)
 
@@ -680,7 +679,7 @@ class SpackEnv(UberEnv):
                     print("[ERROR: Given path in 'spack_configs_path' does not exist: {0}]".format(spack_configs_path))
                     sys.exit(-1)
 
-        # Set spack_env_name to absolute path and (if exists) check validity
+        # Set spack_env_directory to absolute path and (if exists) check validity
         self.spack_env_name = self.opts["spack_env_name"]
         self.spack_env_directory = pabs(os.path.join(self.dest_dir, self.spack_env_name))
         if os.path.exists(self.spack_env_directory) and not os.path.isdir(self.spack_env_directory):
@@ -854,7 +853,7 @@ class SpackEnv(UberEnv):
             concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_exe(use_spack_env=False))
             res = sexe(concretizer_cmd, echo=True)
             if res != 0:
-                print("[ERROR: Failed to update spack configuration to use new concretizer]")
+                print("[ERROR: Failed to update Spack configuration to use new concretizer]")
                 sys.exit(-1)
 
     def create_spack_env(self):
@@ -864,23 +863,19 @@ class SpackEnv(UberEnv):
             self.spack_env_directory, self.spack_env_file)
         sexe(spack_create_cmd, echo=True)
 
-        # For each package path (depending if there is a repo.yaml), add spack
-        # repository or hot-copy packages into spack's builtin packages location
+        # For each package path (if there is a repo.yaml), add Spack repository to environment
         if len(self.packages_paths) > 0:
             dest_spack_pkgs = pjoin(self.dest_spack,"var","spack","repos","builtin","packages")
             for _base_path in self.packages_paths:
                 spack_pkg_repo      = os.path.join(_base_path, "../")
                 spack_pkg_repo_yaml = os.path.join(_base_path, "../repo.yaml")
                 if os.path.isfile(os.path.join(spack_pkg_repo_yaml)):
-                    # Add spack repo
                     print("[adding spack repo {0}]".format(spack_pkg_repo))
                     spack_repo_add_cmd = "{0} repo add {1}".format(self.spack_exe(), spack_pkg_repo)
                     sexe(spack_repo_add_cmd, echo=True)
                 else:
-                    # hot-copy our packages into spack
-                    _src_glob = pjoin(_base_path, "*")
-                    print("[copying patched packages from {0}]".format(_src_glob))
-                    sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
+                    print("[ERROR: No Spack repo.yaml detected in {0}]".format(spack_pkg_repo))
+                    sys.exit(-1)
 
         # Add spack package
         print("[adding spack package]")
