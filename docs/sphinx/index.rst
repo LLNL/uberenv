@@ -216,9 +216,9 @@ Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv 
 
 .. note::
     Uberenv no longer copies all directories that exist under ``spack_packages_path`` to the cloned
-    Spack. A ``repo.yaml`` is required in the previous directory of each packages path instead. (For
-    example, if ``spack_packages_path = [/first/path/to/packages, /another/path/to/packages]``,
-    both ``/first/path/to/repo.yaml`` and ``/another/path/to/repo.yaml`` are required.) See
+    Spack. A ``repo.yaml`` is now required in the previous directory of each packages path instead.
+    Inside ``repo.yaml``, you only need a namespace, which can simply be the name of the package
+    you're installing. See
     `Spack's documentation <https://spack.readthedocs.io/en/latest/repositories.html#namespaces>`_.
 
 .. note::
