@@ -812,10 +812,10 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Git failed to pull]")
                 sys.exit(-1)
 
-    def disable_spack_config_scopes(self,spack_dir):
+    def disable_spack_config_scopes(self):
         # disables all config scopes except "defaults", which we will
         # force our settings into
-        spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
+        spack_lib_config = pjoin(self.dest_spack,"lib","spack","spack","config.py")
         print("[disabling config scope (except defaults) in: {0}]".format(spack_lib_config))
         cfg_script = open(spack_lib_config).read()
         #
@@ -840,8 +840,6 @@ class SpackEnv(UberEnv):
         open(spack_lib_config,"w").write(cfg_script)
 
     def patch(self):
-        spack_dir = self.dest_spack
-
         # this is an opportunity to show spack python info post obtaining spack
         self.print_spack_python_info()
 
@@ -849,15 +847,7 @@ class SpackEnv(UberEnv):
         self.check_concretizer_opts()
 
         # force spack to use only "defaults" config scope
-        self.disable_spack_config_scopes(spack_dir)
-
-        # hot-copy our packages into spack
-        if len(self.packages_paths) > 0:
-            dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
-            for _base_path in self.packages_paths:
-                _src_glob = pjoin(_base_path, "*")
-                print("[copying patched packages from {0}]".format(_src_glob))
-                sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
+        self.disable_spack_config_scopes()
 
         # Update spack's config.yaml if clingo was requested
         if self.use_clingo:
@@ -873,6 +863,24 @@ class SpackEnv(UberEnv):
         spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
             self.spack_env_directory, self.spack_env_file)
         sexe(spack_create_cmd, echo=True)
+
+        # For each package path (depending if there is a repo.yaml), add spack
+        # repository or hot-copy packages into spack's builtin packages location
+        if len(self.packages_paths) > 0:
+            dest_spack_pkgs = pjoin(self.dest_spack,"var","spack","repos","builtin","packages")
+            for _base_path in self.packages_paths:
+                spack_pkg_repo      = os.path.join(_base_path, "../")
+                spack_pkg_repo_yaml = os.path.join(_base_path, "../repo.yaml")
+                if os.path.isfile(os.path.join(spack_pkg_repo_yaml)):
+                    # Add spack repo
+                    print("[adding spack repo {0}]".format(spack_pkg_repo))
+                    spack_repo_add_cmd = "{0} repo add {1}".format(self.spack_exe(), spack_pkg_repo)
+                    sexe(spack_repo_add_cmd, echo=True)
+                else:
+                    # hot-copy our packages into spack
+                    _src_glob = pjoin(_base_path, "*")
+                    print("[copying patched packages from {0}]".format(_src_glob))
+                    sexe("cp -Rf {0} {1}".format(_src_glob, dest_spack_pkgs))
 
         # Add spack package
         print("[adding spack package]")
@@ -1261,7 +1269,7 @@ def main():
 
             return 0
 
-    # Create Spack Environment
+    # Create Spack Environment and setup Spack package repos
     if not is_windows():
         env.create_spack_env()
 
