@@ -214,12 +214,12 @@ When used as a submodule ``.uberenv_config.json`` should define both ``spack_con
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories.
 Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv repo does not provide them.
 
-Uberenv forcefully copies all directories that exist under `spack_packages_path` to the cloned Spack in order that they are given.
-This allows you to easily version control any Spack package overrides necessary.
-
 .. note::
-    If you want, you may provide `spack_packages_path` with a list of directories that will be copied in order on top of each other.
-    For example, `spack_packages_path: ["first/path", "overwriting/path"]`.
+    Uberenv no longer copies all directories that exist under ``spack_packages_path`` to the cloned
+    Spack. A ``repo.yaml`` is required in the previous directory of each packages path instead. (For
+    example, if ``spack_packages_path = [/first/path/to/packages, /another/path/to/packages]``,
+    both ``/first/path/to/repo.yaml`` and ``/another/path/to/repo.yaml`` are required.) See
+    `Spack's documentation <https://spack.readthedocs.io/en/latest/repositories.html#namespaces>`_.
 
 .. note::
     For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project,
