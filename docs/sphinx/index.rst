@@ -104,7 +104,8 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--prefix``            Destination directory                                ``uberenv_libs``
   ``--spec``              Spack spec without preceding package name            linux: **%gcc**
                                                                                osx: **%clang**
-  ``--spack-config-dir``  Folder with Spack settings files                     See :ref:`spack_configs`
+  ``--spack-env-name``    The name of the created Spack Environment            ``spack_env``
+  ``--spack-env-file``    Path to Spack Environment config (e.g. spack.yaml)   See :ref:`spack_configs`
   ``--spack-build-mode``  Mode used to build third party dependencies          ``dev-build``
   ``--spack-debug``       Turn on spack debug mode for spec/install commands   **none** (False)
   ``-k``                  Ignore SSL Errors                                    **False**
@@ -116,6 +117,8 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--triplet``           (vcpkg) Target architecture and linkage              ``VCPKG_DEFAULT_TRIPLET`` environment variable,
                                                                                if present, ``x86-Windows`` otherwise
  ======================= ==================================================== =================================================
+
+The ``--spack-env-name`` will be created in path specified by ``--prefix``.
 
 The ``-k`` option exists for sites where SSL certificate interception undermines fetching
 from github and https hosted source tarballs. When enabled, Uberenv clones Spack using:
@@ -161,13 +164,8 @@ Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs
 * ``{platform}`` must match the platform determined by uberenv (`darwin` on OSX).
 * ``{spack_configs_path}`` can be specified in the json config file.
 
-You may instead use the **--spack-config-dir** option to enforce the use of a specific directory. As long as it provides Uberenv with the yaml files to use with Spack.
-See the `Spack Compiler Configuration <http://spack.readthedocs.io/en/latest/getting_started.html#manual-compiler-configuration>`_ and
-`Spack System Packages <http://spack.readthedocs.io/en/latest/getting_started.html#system-packages>`_ documentation for details.
-
-.. note::
-    The bootstrapping process ignores ``~/.spack/compilers.yaml`` to avoid conflicts
-    and surprises from a user's specific Spack settings on HPC platforms.
+You may instead use the **--spack-env-file** option to enforce the use of a specific Spack Environments File.
+See the `Spack Environments (spack.yaml) <https://spack.readthedocs.io/en/latest/environments.html>`_ documentation for details.
 
 When run, ``uberenv.py`` checkouts a specific version of Spack from github as ``spack`` in the
 destination directory. It then uses Spack to build and install the target packages' dependencies into
@@ -216,12 +214,12 @@ When used as a submodule ``.uberenv_config.json`` should define both ``spack_con
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories.
 Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv repo does not provide them.
 
-Uberenv forcefully copies all directories that exist under `spack_packages_path` to the cloned Spack in order that they are given.
-This allows you to easily version control any Spack package overrides necessary.
-
 .. note::
-    If you want, you may provide `spack_packages_path` with a list of directories that will be copied in order on top of each other.
-    For example, `spack_packages_path: ["first/path", "overwriting/path"]`.
+    Uberenv no longer copies all directories that exist under ``spack_packages_path`` to the cloned
+    Spack. A ``repo.yaml`` is now required in the previous directory of each packages path instead.
+    Inside ``repo.yaml``, you only need a namespace, which can simply be the name of the package
+    you're installing. See
+    `Spack's documentation <https://spack.readthedocs.io/en/latest/repositories.html#namespaces>`_.
 
 .. note::
     For an example of how to craft a ``project.json`` / ``.uberenv_config.json`` file a target project,
