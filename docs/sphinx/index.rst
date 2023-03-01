@@ -176,7 +176,8 @@ copied to destination directory. This file specifies the compiler settings and p
 .. note::
     Instead of two yaml files (``package.yaml`` and ``compilers.yaml``), Ubernev uses a single ``spack.yaml``, which is
     simply the combination of the original two under ``spack:``.
-    .. code::
+
+    .. code-block:: yaml
         spack:
             # contents of package.yaml
             # contents of compilers.yaml
