@@ -178,6 +178,7 @@ copied to destination directory. This file specifies the compiler settings and p
     simply the combination of the original two under ``spack:``.
 
     .. code-block:: yaml
+
         spack:
             # contents of package.yaml
             # contents of compilers.yaml
