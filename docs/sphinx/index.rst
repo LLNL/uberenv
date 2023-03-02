@@ -160,11 +160,11 @@ For details on Spack's spec syntax, see the `Spack Specs & dependencies <https:/
 Spack Configurations
 --------------------
 
-Uberenv looks for the configuration yaml file (spack.yaml) under ``scripts/uberenv/spack_configs/{platform}`` or under
-``{spack_config_paths}/{platform}``, where: ``{platform}`` must match the platform determined by uberenv (`darwin` on
+Uberenv looks for the ``spack.yaml`` configuration file, also known as an Environment file, under ``scripts/uberenv/spack_configs/{platform}`` or
+``{spack_config_paths}/{platform}``, where: ``{platform}`` must match the platform determined by Uberenv (``SYS_TYPE`` on LC and ``darwin`` on
 OSX). ``{spack_configs_path}`` can be specified in the json config file.
 
-You may instead use the ``--spack-env-file`` option to enforce the use of a specific Spack Environments File. This file
+You may instead use the ``--spack-env-file`` option to enforce the use of a specific Spack Environments file. This file
 does not need to be called ``spack.yaml`` if you wish to call it some thing else, like according to its platform for
 example. See the `Spack Environments (spack.yaml) <https://spack.readthedocs.io/en/latest/environments.html>`_
 documentation for details.
