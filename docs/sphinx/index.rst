@@ -160,17 +160,29 @@ For details on Spack's spec syntax, see the `Spack Specs & dependencies <https:/
 Spack Configurations
 --------------------
 
-Uberenv looks for configuration yaml files under ``scripts/uberenv/spack_configs/{platform}`` or under ``{spack_config_paths}/{platform}``, where:
-* ``{platform}`` must match the platform determined by uberenv (`darwin` on OSX).
-* ``{spack_configs_path}`` can be specified in the json config file.
+Uberenv looks for the ``spack.yaml`` configuration file, also known as an Environment file, under ``scripts/uberenv/spack_configs/{platform}`` or
+``{spack_config_paths}/{platform}``, where: ``{platform}`` must match the platform determined by Uberenv (``SYS_TYPE`` on LC and ``darwin`` on
+OSX). ``{spack_configs_path}`` can be specified in the json config file.
 
-You may instead use the **--spack-env-file** option to enforce the use of a specific Spack Environments File.
-See the `Spack Environments (spack.yaml) <https://spack.readthedocs.io/en/latest/environments.html>`_ documentation for details.
+You may instead use the ``--spack-env-file`` option to enforce the use of a specific Spack Environments file. This file
+does not need to be called ``spack.yaml`` if you wish to call it some thing else, like according to its platform for
+example. See the `Spack Environments (spack.yaml) <https://spack.readthedocs.io/en/latest/environments.html>`_
+documentation for details.
 
-When run, ``uberenv.py`` checkouts a specific version of Spack from github as ``spack`` in the
+When run, ``uberenv.py`` check outs a specific version of Spack from github as ``spack`` in the
 destination directory. It then uses Spack to build and install the target packages' dependencies into
 ``spack/opt/spack/``. Finally, the target package generates a host-config file ``{hostname}.cmake``, which is
 copied to destination directory. This file specifies the compiler settings and paths to all of the dependencies.
+
+.. note::
+    Instead of two yaml files (``packages.yaml`` and ``compilers.yaml``), Ubernev uses a single ``spack.yaml``, which is
+    simply the combination of the original two under ``spack:``.
+
+    .. code-block:: yaml
+
+        spack:
+            # contents of packages.yaml
+            # contents of compilers.yaml
 
 .. _project_configuration:
 
