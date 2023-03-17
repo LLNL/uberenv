@@ -255,6 +255,13 @@ def parse_args():
                       default=False,
                       help="Only install (using pre-setup Spack).")
 
+    # Spack Environment Setup
+    parser.add_option("--spack-setup-environment",
+                      action="store_true",
+                      dest="spack_setup_environment",
+                      default=False,
+                      help="Setup Spack's environment by searching for pre-installed packages and compilers")
+
     # Spack Environment name
     parser.add_option("--spack-env-name",
                       dest="spack_env_name",
@@ -556,8 +563,9 @@ class SpackEnv(UberEnv):
         UberEnv.__init__(self,opts,extra_opts)
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
-        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase",True)
-        self.build_mode = self.set_from_args_or_json("spack_build_mode",True)
+        self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
+        self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
+        self.spack_not_buildable_packages = self.set_from_json("spack_not_buildable_packages", True)
         # default spack build mode is dev-build
         if self.build_mode is None:
             self.build_mode = "dev-build"
@@ -862,6 +870,29 @@ class SpackEnv(UberEnv):
         spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
             self.spack_env_directory, self.spack_env_file)
         sexe(spack_create_cmd, echo=True)
+        
+        # Find pre-installed compilers and packages and stop uberenv.py
+        if self.opts["spack_setup_environment"]:
+            print("[finding compilers]")
+            spack_compiler_find_cmd = "{0} compiler find".format(self.spack_exe())
+            res_compiler = sexe(spack_compiler_find_cmd, echo=True)
+            if res_compiler != 0:
+                print("[failed to setup environment]")
+                sys.exit(-1)
+
+            if not self.spack_not_buildable_packages is None:
+                print("[finding packages]")
+                spack_external_find_cmd = "{0} external find --not-buildable {1}".format(self.spack_exe(),
+                    self.spack_not_buildable_packages)
+                res_external = sexe(spack_external_find_cmd, echo=True)
+                if res_external != 0:
+                    print("[failed to setup environment]")
+                    sys.exit(-1)
+            else:
+                print("[no packages listed in 'spack_not_buildable_packages', skipping external find]")
+
+            print("[setup environment]")
+            sys.exit(0)
 
         # For each package path (if there is a repo.yaml), add Spack repository to environment
         if len(self.packages_paths) > 0:
