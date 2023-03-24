@@ -284,6 +284,17 @@ def parse_args():
             opts["mirror"] = pabs(opts["mirror"])
     return opts, extras
 
+def have_internet(host="llnl.gov", port=80, timeout=3):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(3)
+        s.connect((host, port))
+        return True
+    except socket.error as ex:
+        print(ex)
+        return False
+    finally:
+        s.close()
 
 def pretty_print_dictionary(dictionary):
     for key, value in dictionary.items():
@@ -1144,6 +1155,10 @@ class SpackEnv(UberEnv):
         Attempts to install the clingo answer set programming library
         if it is not already available as a Python module
         """
+        if not have_internet():
+            print("[WARNING: No internet detected. Skipping setting up clingo.")
+            return
+
         try:
             import clingo
         except ImportError:
