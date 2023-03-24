@@ -290,8 +290,7 @@ def have_internet(host="llnl.gov", port=80, timeout=3):
         s.settimeout(3)
         s.connect((host, port))
         return True
-    except socket.error as ex:
-        print(ex)
+    except:
         return False
     finally:
         s.close()
