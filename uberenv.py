@@ -1,7 +1,7 @@
 #!/bin/sh
 "exec" "python3" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2023, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -284,6 +284,16 @@ def parse_args():
             opts["mirror"] = pabs(opts["mirror"])
     return opts, extras
 
+def have_internet(host="llnl.gov", port=80, timeout=3):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(3)
+        s.connect((host, port))
+        return True
+    except:
+        return False
+    finally:
+        s.close()
 
 def pretty_print_dictionary(dictionary):
     for key, value in dictionary.items():
@@ -1144,6 +1154,10 @@ class SpackEnv(UberEnv):
         Attempts to install the clingo answer set programming library
         if it is not already available as a Python module
         """
+        if not have_internet():
+            print("[WARNING: No internet detected. Skipping setting up clingo.]")
+            return
+
         try:
             import clingo
         except ImportError:
