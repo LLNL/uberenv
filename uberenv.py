@@ -1155,7 +1155,7 @@ class SpackEnv(UberEnv):
         if it is not already available as a Python module
         """
         if not have_internet():
-            print("[WARNING: No internet detected. Skipping setting up clingo.")
+            print("[WARNING: No internet detected. Skipping setting up clingo.]")
             return
 
         try:
