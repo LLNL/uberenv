@@ -984,7 +984,6 @@ class SpackEnv(UberEnv):
             if self.opts["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.opts["build_jobs"])
             
-            install_cmd += self.pkg_name_with_spec
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: Failure of spack install]")
