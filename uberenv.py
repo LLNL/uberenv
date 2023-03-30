@@ -776,7 +776,7 @@ class SpackEnv(UberEnv):
 
     # Extract the first line of the full spec
     def read_spack_full_spec(self,pkg_name,spec):
-        res, out = sexe("{0} {1}spec {2}".format(self.spack_exe(),debug,self.pkg_name_with_spec), ret_output=True)
+        res, out = sexe("{0} spec {2}".format(self.spack_exe(), self.pkg_name_with_spec), ret_output=True)
         for l in out.split("\n"):
             if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
                 return l.strip()
@@ -930,10 +930,9 @@ class SpackEnv(UberEnv):
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
 
-        options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "{0} {1}spec {2}".format(self.spack_exe(), debug, options)
+        spec_cmd = "{0} {1}spec {2}".format(self.spack_exe(), options)
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
