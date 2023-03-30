@@ -933,7 +933,7 @@ class SpackEnv(UberEnv):
         options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "{0} {1}spec {2}".format(self.spack_exe(), options)
+        spec_cmd = "{0} spec {1}".format(self.spack_exe(), options)
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
