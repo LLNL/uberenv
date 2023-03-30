@@ -930,6 +930,7 @@ class SpackEnv(UberEnv):
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
 
+        options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
         spec_cmd = "{0} {1}spec {2}".format(self.spack_exe(), options)
