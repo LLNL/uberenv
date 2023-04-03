@@ -107,7 +107,7 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--spack-env-name``    The name of the created Spack Environment            ``spack_env``
   ``--spack-env-file``    Path to Spack Environment config (e.g. spack.yaml)   See :ref:`spack_configs`
   ``--spack-build-mode``  Mode used to build third party dependencies          ``dev-build``
-  ``--spack-debug``       Turn on Spack debug mode for all commands            **none** (False)
+  ``--spack-debug``       Enable Spack debug mode for all commands            **none** (False)
   ``-k``                  Ignore SSL Errors                                    **False**
   ``--install``           Fully install target, not just dependencies          **False**
   ``--run_tests``         Invoke tests during build and against install        **False**
