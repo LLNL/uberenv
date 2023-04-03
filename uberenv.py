@@ -774,13 +774,6 @@ class SpackEnv(UberEnv):
         print("[ERROR: Failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
 
-    # Extract the first line of the full spec
-    def read_spack_full_spec(self,pkg_name,spec):
-        res, out = sexe("{0} spec {2}".format(self.spack_exe(), self.pkg_name_with_spec), ret_output=True)
-        for l in out.split("\n"):
-            if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
-                return l.strip()
-
     def clone_repo(self):
         if not os.path.isdir(self.dest_spack):
 
