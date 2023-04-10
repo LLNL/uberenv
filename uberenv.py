@@ -1,7 +1,7 @@
 #!/bin/sh
 "exec" "python3" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2023, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -168,7 +168,7 @@ def parse_args():
                       dest="spack_debug",
                       action="store_true",
                       default=False,
-                      help="add debug option to spack spec/install commands")
+                      help="add debug option to all spack commands")
 
     # spack allow deprecated packages
     parser.add_option("--spack-allow-deprecated",
@@ -291,6 +291,16 @@ def parse_args():
             opts["mirror"] = pabs(opts["mirror"])
     return opts, extras
 
+def have_internet(host="llnl.gov", port=80, timeout=3):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(3)
+        s.connect((host, port))
+        return True
+    except:
+        return False
+    finally:
+        s.close()
 
 def pretty_print_dictionary(dictionary):
     for key, value in dictionary.items():
@@ -624,10 +634,16 @@ class SpackEnv(UberEnv):
     # Spack executable (will include environment -e option by default)
     def spack_exe(self, use_spack_env = True):
         exe = pjoin(self.dest_dir, "spack/bin/spack")
+        
+        # Add debug flags
+        if self.opts["spack_debug"]:
+            exe = "{0} --debug --stacktrace".format(exe)
+
+        # Run Spack with environment directory
         if use_spack_env:
-            return "{0} -D {1}".format(exe, self.spack_env_directory)
-        else:
-            return exe
+            exe = "{0} -D {1}".format(exe, self.spack_env_directory)
+        
+        return exe
     
     # Returns version of Spack being used
     def spack_version(self):
@@ -765,17 +781,6 @@ class SpackEnv(UberEnv):
                 return {"name": pkg_name, "path": l.split()[-1]}
         print("[ERROR: Failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
-
-    # Extract the first line of the full spec
-    def read_spack_full_spec(self,pkg_name,spec):
-        debug = ""
-        if self.opts["spack_debug"]:
-            debug = "--debug --stacktrace "
-
-        res, out = sexe("{0} {1}spec {2}".format(self.spack_exe(),debug,self.pkg_name_with_spec), ret_output=True)
-        for l in out.split("\n"):
-            if l.startswith(pkg_name) and l.count("@") > 0 and l.count("arch=") > 0:
-                return l.strip()
 
     def clone_repo(self):
         if not os.path.isdir(self.dest_spack):
@@ -948,14 +953,11 @@ class SpackEnv(UberEnv):
 
         # print concretized spec with install info
         # default case prints install status and 32 characters hash
-        debug = ""
-        if self.opts["spack_debug"]:
-            debug = "--debug --stacktrace "
 
         options = ""
         options = self.add_concretizer_opts(options)
         options += "--install-status --very-long"
-        spec_cmd = "{0} {1}spec {2}".format(self.spack_exe(), debug, options)
+        spec_cmd = "{0} spec {1}".format(self.spack_exe(), options)
 
         res, out = sexe(spec_cmd, ret_output=True, echo=True)
         print(out)
@@ -988,8 +990,6 @@ class SpackEnv(UberEnv):
             install_cmd = self.spack_exe() + " "
 
             # spack flags
-            if self.opts["spack_debug"]:
-                install_cmd += "--debug --stacktrace "
             if self.opts["ignore_ssl_errors"]:
                 install_cmd += "-k "
             
@@ -1005,7 +1005,6 @@ class SpackEnv(UberEnv):
             if self.opts["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.opts["build_jobs"])
             
-            install_cmd += self.pkg_name_with_spec
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: Failure of spack install]")
@@ -1175,6 +1174,10 @@ class SpackEnv(UberEnv):
         Attempts to install the clingo answer set programming library
         if it is not already available as a Python module
         """
+        if not have_internet():
+            print("[WARNING: No internet detected. Skipping setting up clingo.]")
+            return
+
         try:
             import clingo
         except ImportError:
