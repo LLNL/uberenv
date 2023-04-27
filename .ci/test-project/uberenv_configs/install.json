@@ -5,7 +5,6 @@
 "spack_build_mode" : "install",
 "spack_configs_path": "spack_configs",
 "spack_packages_path": "packages",
-"spack_not_buildable_packages": "cmake pkg-config zlib",
 "spack_url": "https://github.com/spack/spack",
 "spack_branch": "develop"
 }

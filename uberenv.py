@@ -571,11 +571,15 @@ class SpackEnv(UberEnv):
 
     def __init__(self, opts, extra_opts):
         UberEnv.__init__(self,opts,extra_opts)
+        
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
-        self.spack_not_buildable_packages = self.set_from_json("spack_not_buildable_packages", True)
+        self.spack_setup_environment = self.set_from_args_or_json("spack_setup_environment", True)
+        self.spack_externals = self.set_from_json("spack_externals", True)
+        self.spack_compiler_paths = self.set_from_json("spack_compiler_paths", True)
+
         # default spack build mode is dev-build
         if self.build_mode is None:
             self.build_mode = "dev-build"
@@ -585,6 +589,8 @@ class SpackEnv(UberEnv):
         # if we are using fake package mode, adjust the pkg name
         if self.build_mode == "uberenv-pkg":
             self.pkg_name =  "uberenv-" + self.pkg_name
+        if self.spack_setup_environment is None:
+            self.spack_setup_environment = False
 
         print("[uberenv spack build mode: {0}]".format(self.build_mode))
         self.packages_paths = []
@@ -715,25 +721,28 @@ class SpackEnv(UberEnv):
         if self.opts["spack_env_file"] is None:
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
-            if uberenv_plat is None:
-                print("[ERROR: Could not detect platform. Supply Spack Environment file in command line with --spack-env-file=/path/to/spack.yaml")
-                sys.exit(-1)
-
-            # Check if a path to an init file is located
-            self.spack_env_file = pabs(pjoin(spack_configs_path, uberenv_plat))
-            spack_env_yaml = pjoin(self.spack_env_file, "spack.yaml")
-            spack_env_lock = pjoin(self.spack_env_file, "spack.lock")
-            if os.path.exists(spack_env_yaml):
-                self.spack_env_file = spack_env_yaml
-            elif os.path.exists(spack_env_lock):
-                self.spack_env_file = spack_env_lock
+            if not uberenv_plat is None:
+                # Check if a path to an init file is located
+                self.spack_env_file = pabs(pjoin(spack_configs_path, uberenv_plat))
+                spack_env_yaml = pjoin(self.spack_env_file, "spack.yaml")
+                spack_env_lock = pjoin(self.spack_env_file, "spack.lock")
+                if os.path.exists(spack_env_yaml):
+                    self.spack_env_file = spack_env_yaml
+                elif os.path.exists(spack_env_lock):
+                    self.spack_env_file = spack_env_lock
+                else:
+                    print("[WARNING: Could not find Spack Environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
+                    self.spack_env_file = None
             else:
-                print("[ERROR: Could not find Spack Environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
-                sys.exit(-1)
+                print("[WARNING: Could not detect platform. Supply Spack Environment file using the command line argument: --spack-env-file=/path/to/spack.yaml")
         else:
             self.spack_env_file = pabs(self.opts["spack_env_file"])
         
-        print("[Spack Environment file: {0}]".format(self.spack_env_file))
+        if self.spack_env_file is None:
+            print("[No Spack Environment file found, so Uberenv will generate one. If you do not want this behavior, then supply a Spack Environment file using the command line argument: --spack-env-file=/path/to/spack.yaml]")
+            self.spack_setup_environment = True
+        else:
+            print("[Spack Environment file: {0}]".format(self.spack_env_file))
 
         # Find project level packages to override spack's internal packages
         if "spack_packages_path" in self.project_opts.keys():
@@ -872,36 +881,48 @@ class SpackEnv(UberEnv):
     def create_spack_env(self):
         # Create Spack Environment
         print("[creating spack env]")
+        if self.spack_env_file is None:
+            self.spack_env_file = ""
         spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
             self.spack_env_directory, self.spack_env_file)
         sexe(spack_create_cmd, echo=True)
         
         # Find pre-installed compilers and packages and stop uberenv.py
-        if self.opts["spack_setup_environment"]:
+        if self.spack_setup_environment:
+            # Finding compilers
             print("[finding compilers]")
-            spack_compiler_find_cmd = "{0} compiler find".format(self.spack_exe())
+            if self.spack_compiler_paths is None:
+                spack_compiler_find_cmd = "{0} compiler find".format(self.spack_exe())
+            else:
+                spack_compiler_find_cmd = "{0} compiler find {1}".format(self.spack_exe(), self.spack_compiler_paths)
             res_compiler = sexe(spack_compiler_find_cmd, echo=True)
             if res_compiler != 0:
                 print("[failed to setup environment]")
                 sys.exit(-1)
 
-            if not self.spack_not_buildable_packages is None:
-                print("[finding packages]")
-                spack_external_find_cmd = "{0} external find --not-buildable {1}".format(self.spack_exe(),
-                    self.spack_not_buildable_packages)
-                res_external = sexe(spack_external_find_cmd, echo=True)
-                if res_external != 0:
-                    print("[failed to setup environment]")
-                    sys.exit(-1)
+            # Finding externals
+            spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
+            if self.spack_externals is None:
+                print("[finding all packages Spack knows about]")
+                spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
             else:
-                print("[no packages listed in 'spack_not_buildable_packages', skipping external find]")
+                print("[finding packages from list]")
+                spack_external_find_cmd = "{0} {1}".format(spack_external_find_cmd, self.spack_externals)
+            res_external = sexe(spack_external_find_cmd, echo=True)
+            if res_external != 0:
+                print("[failed to setup environment]")
+                sys.exit(-1)
+
+            # Copy spack.yaml to where you called package source dir
+            generated_spack_yaml = pjoin(self.spack_env_directory, "spack.yaml")
+            copied_spack_yaml = pjoin(pabs(self.pkg_src_dir), "spack.yaml")
+            print("[copying spack yaml file to {0}]".format(copied_spack_yaml))
+            sexe("cp {0} {1}".format(generated_spack_yaml, copied_spack_yaml))
 
             print("[setup environment]")
-            sys.exit(0)
 
         # For each package path (if there is a repo.yaml), add Spack repository to environment
         if len(self.packages_paths) > 0:
-            dest_spack_pkgs = pjoin(self.dest_spack,"var","spack","repos","builtin","packages")
             for _base_path in self.packages_paths:
                 spack_pkg_repo      = os.path.join(_base_path, "../")
                 spack_pkg_repo_yaml = os.path.join(_base_path, "../repo.yaml")
