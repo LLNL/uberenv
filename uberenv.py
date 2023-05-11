@@ -965,6 +965,8 @@ class SpackEnv(UberEnv):
             # install flags
             install_cmd += "install "
             install_cmd = self.add_concretizer_opts(install_cmd)
+            if self.build_mode == "dev-build":
+                install_cmd += "--keep-stage "
             if self.opts["spack_allow_deprecated"]:
                 install_cmd += "--deprecated "
             if self.pkg_final_phase:
