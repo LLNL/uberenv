@@ -698,9 +698,9 @@ class SpackEnv(UberEnv):
         # Set spack_env_directory to absolute path and (if exists) check validity
         self.spack_env_name = self.opts["spack_env_name"]
         self.spack_env_directory = pabs(os.path.join(self.dest_dir, self.spack_env_name))
-        if os.path.exists(self.spack_env_directory) and not os.path.isdir(self.spack_env_directory):
-            print("[ERROR: Invalid Spack Environments directory. File given: {0} ]".format(self.spack_env_directory))
-            sys.exit(-1)
+        if os.path.exists(self.spack_env_directory):
+            print("Removing old Spack Environment Directory: {0}".format(self.spack_env_directory))
+            shutil.rmtree(self.spack_env_directory)
 
         # Setup path of Spack Environment file if not specified on command line
         # Check under spack_config_path -> detected platform -> spack.yaml/ .lock
@@ -866,7 +866,10 @@ class SpackEnv(UberEnv):
         print("[creating spack env]")
         spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
             self.spack_env_directory, self.spack_env_file)
-        sexe(spack_create_cmd, echo=True)
+        res = sexe(spack_create_cmd, echo=True)
+        if res != 0:
+            print("[ERROR: Failed to create Spack Environment]")
+            sys.exit(-1)
 
         # For each package path (if there is a repo.yaml), add Spack repository to environment
         if len(self.packages_paths) > 0:
