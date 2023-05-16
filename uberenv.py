@@ -752,8 +752,6 @@ class SpackEnv(UberEnv):
                 else:
                     print("[WARNING: Could not find Spack Environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
                     self.spack_env_file = None
-            else:
-                print("[WARNING: Could not detect platform. Supply Spack Environment file using the command line argument: --spack-env-file=/path/to/spack.yaml")
         else:
             self.spack_env_file = pabs(self.args["spack_env_file"])
         
