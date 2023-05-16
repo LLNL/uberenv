@@ -101,3 +101,18 @@ jobs:
           python3 ../../uberenv.py --project-json=uberenv_configs/install.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml --setup-only
           python3 ../../uberenv.py --project-json=uberenv_configs/install.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml --skip-setup
           ./uberenv_libs/magictestlib_cached-install/bin/uberenv_conduit_hello
+  # Tests external/ compiler find
+  test_setup_env:
+    name: Testing Setup Environment (Linux)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Deps
+      run: |
+          sudo apt-get update
+          sudo apt-get install $BASE_PACKAGES
+    - uses: actions/checkout@v3
+    - name: Run Uberenv
+      run: |
+          cd .ci/test-project
+          python3 ../../uberenv.py --spack-setup-environment --project-json=uberenv_configs/install.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml --package-final-phase=initconfig
+          cat ../../spack.yaml
