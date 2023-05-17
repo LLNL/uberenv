@@ -115,4 +115,5 @@ jobs:
       run: |
           cd .ci/test-project
           python3 ../../uberenv.py --spack-setup-environment --project-json=uberenv_configs/install.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml --package-final-phase=initconfig
-          cat ../../spack.yaml
+          echo "Generated spack.yaml:"
+          cat ./uberenv_libs/spack.yaml

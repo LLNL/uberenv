@@ -1,0 +1,33 @@
+# Spack env file for toss4
+spack:
+  packages:
+    cmake:
+      externals:
+      - spec: cmake@3.19.2
+        prefix: /usr/tce
+      buildable: false
+    pkg-config:
+      externals:
+      - spec: pkg-config@1.4.2
+        prefix: /usr
+      buildable: false
+    zlib:
+      externals:
+      - spec: zlib@1.2.11
+        prefix: /usr
+      buildable: false
+  compilers::
+  - compiler:
+      environment: {}
+      extra_rpaths: []
+      flags: {}
+      modules:
+      - gcc/10.3.1
+      operating_system: rhel8
+      paths:
+        cc: /usr/tce/packages/gcc/gcc-10.3.1/bin/gcc
+        cxx: /usr/tce/packages/gcc/gcc-10.3.1/bin/g++
+        f77: /usr/tce/packages/gcc/gcc-10.3.1/bin/gfortran
+        fc: /usr/tce/packages/gcc/gcc-10.3.1/bin/gfortran
+      spec: gcc@10.3.1
+      target: x86_64
