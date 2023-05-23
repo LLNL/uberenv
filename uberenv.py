@@ -246,7 +246,7 @@ def parse_args():
                       action="store_true",
                       dest="setup_only",
                       default=False,
-                      help="Only download and setup Spack. No further Spack command will be run.")
+                      help="Only download and setup the package manager. No further Spack command will be run. Will not create Spack Environment.")
 
     # option to skip spack download and setup
     parser.add_argument("--skip-setup",
