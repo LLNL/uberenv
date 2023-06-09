@@ -98,30 +98,30 @@ Build Configuration
 
 Uberenv has a few options that allow you to control how dependencies are built:
 
- ========================== ============================================= =================================================
-  Option                     Description                                   Default
- ========================== ============================================= =================================================
-  ``--prefix``               Destination directory                         ``uberenv_libs``
-  ``--spec``                 Spack spec without preceding package name     linux: **%gcc**
-                                                                           osx: **%clang**
-  ``--spack-env-name``       The name of the created Spack Environment     ``spack_env``
-  ``--spack-env-file``       Path to Spack Environment config              See :ref:`spack_configs`
-                             (e.g. spack.yaml)
-  ``--spack-build-mode``     Mode used to build third party dependencies   ``dev-build``
-  ``--spack-debug``          Enable Spack debug mode for all commands      **none** (False)
-  ``-k``                     Ignore SSL Errors                             **False**
-  ``--install``              Fully install target, not just dependencies   **False**
-  ``--run_tests``            Invoke tests during build and against install **False**
-  ``--setup-only``           Only download and setup Spack                 **False**
-  ``--skip-setup``           Only install (using pre-setup Spack)          **False**
-  ``--spack-externals``      Space delimited string of packages for        **none**
-                             Spack to search for externals
-  ``--spack-compiler-paths`` Space delimited string of paths for           **none**
-                             Spack to search for compilers
-  ``--project-json``         File for project specific settings            See :ref:`project_configuration`
-  ``--triplet``              (vcpkg) Target architecture and linkage       ``VCPKG_DEFAULT_TRIPLET`` environment variable,
-                                                                           if present, ``x86-Windows`` otherwise
- ========================== ============================================= =================================================
+ =========================== ============================================== =================================================
+  Option                      Description                                    Default
+ =========================== ============================================== =================================================
+  ``--prefix``                Destination directory                          ``uberenv_libs``
+  ``--spec``                  Spack spec without preceding package name      linux: **%gcc**
+                                                                             osx: **%clang**
+  ``--spack-env-name``        The name of the created Spack Environment       ``spack_env``
+  ``--spack-env-file``        Path to Spack Environment config               See :ref:`spack_configs`
+                              (e.g. spack.yaml)
+  ``--spack-build-mode``      Mode used to build third party dependencies    ``dev-build``
+  ``--spack-debug``           Enable Spack debug mode for all commands       **none** (False)
+  ``-k``                      Ignore SSL Errors                              **False**
+  ``--install``               Fully install target, not just dependencies    **False**
+  ``--run_tests``             Invoke tests during build and against install  **False**
+  ``--setup-only``            Only download and setup Spack                  **False**
+  ``--skip-setup``            Only install (using pre-setup Spack)           **False**
+  ``--spack-externals``       Space delimited string of packages for         **none**
+                              Spack to search for externals
+  ``--spack-compiler-paths``  Space delimited string of paths for            **none**
+                              Spack to search for compilers
+  ``--project-json``          File for project specific settings             See :ref:`project_configuration`
+  ``--triplet``               (vcpkg) Target architecture and linkage        ``VCPKG_DEFAULT_TRIPLET`` environment variable,
+                                                                             if present, ``x86-Windows`` otherwise
+ =========================== ============================================== =================================================
 
 The ``--spack-env-name`` will be created in path specified by ``--prefix``.
 
