@@ -255,26 +255,19 @@ def parse_args():
                       default=False,
                       help="Only install (using pre-setup Spack).")
 
-    # Spack Environment Setup
-    parser.add_argument("--spack-setup-environment",
-                      action="store_true",
-                      dest="spack_setup_environment",
-                      default=False,
-                      help="Setup Spack's environment by searching for pre-installed packages and compilers")
-
     # Spack externals list
     parser.add_argument("--spack-externals",
                       dest="spack_externals",
                       default=None,
                       nargs="+",
-                      help="Space delimited string of packages for Spack to search for externals (if spack_setup_environment is True)")
+                      help="Space delimited string of packages for Spack to search for externals (if no spack_env_file is found)")
 
     # Spack compiler paths list
     parser.add_argument("--spack-compiler-paths",
                       dest="spack_compiler_paths",
                       default=None,
                       nargs="+",
-                      help="Space delimited string of paths for Spack to search for compilers (if spack_setup_environment is True)")
+                      help="Space delimited string of paths for Spack to search for compilers (if no spack_env_file is found)")
 
     # Spack Environment name
     parser.add_argument("--spack-env-name",
@@ -590,7 +583,6 @@ class SpackEnv(UberEnv):
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
-        self.spack_setup_environment = self.set_from_args_or_json("spack_setup_environment", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
 
@@ -608,8 +600,9 @@ class SpackEnv(UberEnv):
             self.spack_externals = " ".join(self.spack_externals)
         if type(self.spack_compiler_paths) is list:
             self.spack_compiler_paths = " ".join(self.spack_compiler_paths)
-        if self.spack_setup_environment is None:
-            self.spack_setup_environment = False
+        
+        # Whether or not to generate a spack.yaml
+        self.spack_setup_environment = False
 
         print("[uberenv spack build mode: {0}]".format(self.build_mode))
         self.packages_paths = []
@@ -737,7 +730,8 @@ class SpackEnv(UberEnv):
 
         # Setup path of Spack Environment file if not specified on command line
         # Check under spack_config_path -> detected platform -> spack.yaml/ .lock
-        if self.args["spack_env_file"] is None:
+        self.spack_env_file = self.args["spack_env_file"]
+        if self.spack_env_file is None:
             # Check if platform is detected
             uberenv_plat = self.detect_platform()
             if not uberenv_plat is None:
@@ -752,13 +746,13 @@ class SpackEnv(UberEnv):
                 else:
                     print("[WARNING: Could not find Spack Environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
                     self.spack_env_file = None
-        else:
-            self.spack_env_file = pabs(self.args["spack_env_file"])
-        
+
+        # If you still could not find a spack.yaml, create one later on
         if self.spack_env_file is None:
             print("[No Spack Environment file found, so Uberenv will generate one. If you do not want this behavior, then supply a Spack Environment file using the command line argument: --spack-env-file=/path/to/spack.yaml]")
             self.spack_setup_environment = True
         else:
+            self.spack_env_file = pabs(self.spack_env_file)
             print("[Spack Environment file: {0}]".format(self.spack_env_file))
 
         # Find project level packages to override spack's internal packages
