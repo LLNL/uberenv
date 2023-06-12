@@ -114,6 +114,6 @@ jobs:
     - name: Run Uberenv
       run: |
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=uberenv_configs/install.json --spec="magictestlib_cached@1.0.0%gcc ^hdf5@1.14.0"
+          python3 ../../uberenv.py --project-json=uberenv_configs/install.json --spec="%gcc ^hdf5@1.14.0"
           ./uberenv_libs/magictestlib_cached-install/bin/uberenv_conduit_hello
           cat ./uberenv_libs/spack.yaml
