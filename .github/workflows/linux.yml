@@ -39,7 +39,7 @@ jobs:
       run: |
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=uberenv_configs/dev-build.json
+          python3 ../../uberenv.py --project-json=uberenv_configs/dev-build.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml
           ./uberenv_libs/spack/opt/spack/linux-*/gcc-*/magictestlib_cached-1.0.0-*/bin/uberenv_conduit_hello
   # Tests install Spack build mode
   build_install_full_mode:
@@ -70,7 +70,7 @@ jobs:
       run: |
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
-          python3 ../../uberenv.py --project-json=uberenv_configs/dev-build.json --package-final-phase=initconfig
+          python3 ../../uberenv.py --project-json=uberenv_configs/dev-build.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml --package-final-phase=initconfig
   # Tests install Spack build mode stopping at initconfig phase
   build_install_initconfig_mode:
     name: Install Initconfig Mode (Linux)
@@ -101,3 +101,19 @@ jobs:
           python3 ../../uberenv.py --project-json=uberenv_configs/install.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml --setup-only
           python3 ../../uberenv.py --project-json=uberenv_configs/install.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml --skip-setup
           ./uberenv_libs/magictestlib_cached-install/bin/uberenv_conduit_hello
+  # Tests install Spack build mode and generating a spack.yaml
+  build_spack_yaml:
+    name: Generate spack.yaml (Linux)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Deps
+      run: |
+          sudo apt-get update
+          sudo apt-get install $BASE_PACKAGES
+    - uses: actions/checkout@v3
+    - name: Run Uberenv
+      run: |
+          cd .ci/test-project
+          python3 ../../uberenv.py --project-json=uberenv_configs/install.json
+          ./uberenv_libs/magictestlib_cached-install/bin/uberenv_conduit_hello
+          cat ../../spack.yaml
