@@ -116,4 +116,4 @@ jobs:
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=uberenv_configs/install.json
           ./uberenv_libs/magictestlib_cached-install/bin/uberenv_conduit_hello
-          cat ../../spack.yaml
+          cat spack.yaml
