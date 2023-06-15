@@ -203,9 +203,9 @@ Project Configuration
 Project level configuration options can also be addressed using a json file and some settings can be overridden on command line.  This json file
 is found in the in the following order:
 
-1. `--project.json=[path/to/project.json]` command line option
-2. `project.json` that lives in the same directory as `uberenv.py`
-3. `.uberenv_config.json` found recursively in a parent directory (typically at the root of your project)
+1. ``--project-json=[path/to/project.json]`` command line option
+2. ``project.json`` that lives in the same directory as ``uberenv.py``
+3. ``.uberenv_config.json`` found recursively in a parent directory (typically at the root of your project)
 
 Project settings are as follows:
 
