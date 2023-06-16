@@ -6,6 +6,8 @@ spack:
       - spec: cmake@3.25.2
         prefix: /usr
       buildable: false
+    hdf5:
+      require: "@1.14.0"
     pkg-config:
       externals:
       - spec: pkg-config@0.27.1

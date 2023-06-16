@@ -98,25 +98,30 @@ Build Configuration
 
 Uberenv has a few options that allow you to control how dependencies are built:
 
- ======================= ==================================================== =================================================
-  Option                  Description                                          Default
- ======================= ==================================================== =================================================
-  ``--prefix``            Destination directory                                ``uberenv_libs``
-  ``--spec``              Spack spec without preceding package name            linux: **%gcc**
-                                                                               osx: **%clang**
-  ``--spack-env-name``    The name of the created Spack Environment            ``spack_env``
-  ``--spack-env-file``    Path to Spack Environment config (e.g. spack.yaml)   See :ref:`spack_configs`
-  ``--spack-build-mode``  Mode used to build third party dependencies          ``dev-build``
-  ``--spack-debug``       Enable Spack debug mode for all commands             **none** (False)
-  ``-k``                  Ignore SSL Errors                                    **False**
-  ``--install``           Fully install target, not just dependencies          **False**
-  ``--run_tests``         Invoke tests during build and against install        **False**
-  ``--setup-only``        Only download and setup Spack                        **False**
-  ``--skip-setup``        Only install (using pre-setup Spack)                 **False**
-  ``--project-json``      File for project specific settings                   See :ref:`project_configuration`
-  ``--triplet``           (vcpkg) Target architecture and linkage              ``VCPKG_DEFAULT_TRIPLET`` environment variable,
-                                                                               if present, ``x86-Windows`` otherwise
- ======================= ==================================================== =================================================
+ =========================== ============================================== =================================================
+  Option                      Description                                    Default
+ =========================== ============================================== =================================================
+  ``--prefix``                Destination directory                          ``uberenv_libs``
+  ``--spec``                  Spack spec without preceding package name      linux: **%gcc**
+                                                                             osx: **%clang**
+  ``--spack-env-name``        The name of the created Spack Environment       ``spack_env``
+  ``--spack-env-file``        Path to Spack Environment config               See :ref:`spack_configs`
+                              (e.g. spack.yaml)
+  ``--spack-build-mode``      Mode used to build third party dependencies    ``dev-build``
+  ``--spack-debug``           Enable Spack debug mode for all commands       **none** (False)
+  ``-k``                      Ignore SSL Errors                              **False**
+  ``--install``               Fully install target, not just dependencies    **False**
+  ``--run_tests``             Invoke tests during build and against install  **False**
+  ``--setup-only``            Only download and setup Spack                  **False**
+  ``--skip-setup``            Only install (using pre-setup Spack)           **False**
+  ``--spack-externals``       Space delimited string of packages for         **none**
+                              Spack to search for externals
+  ``--spack-compiler-paths``  Space delimited string of paths for            **none**
+                              Spack to search for compilers
+  ``--project-json``          File for project specific settings             See :ref:`project_configuration`
+  ``--triplet``               (vcpkg) Target architecture and linkage        ``VCPKG_DEFAULT_TRIPLET`` environment variable,
+                                                                             if present, ``x86-Windows`` otherwise
+ =========================== ============================================== =================================================
 
 The ``--spack-env-name`` will be created in path specified by ``--prefix``.
 
@@ -164,10 +169,16 @@ Uberenv looks for the ``spack.yaml`` configuration file, also known as an Enviro
 ``{spack_config_paths}/{platform}``, where: ``{platform}`` must match the platform determined by Uberenv (``SYS_TYPE`` on LC and ``darwin`` on
 OSX). ``{spack_configs_path}`` can be specified in the json config file.
 
-You may instead use the ``--spack-env-file`` option to enforce the use of a specific Spack Environments file. This file
-does not need to be called ``spack.yaml`` if you wish to call it some thing else, like according to its platform for
+You may instead use the ``--spack-env-file`` option to enforce the use of a specific Spack Environment file. This file
+does not need to be called ``spack.yaml`` if you wish to call it something else, like according to its platform for
 example. See the `Spack Environments (spack.yaml) <https://spack.readthedocs.io/en/latest/environments.html>`_
 documentation for details.
+
+If an Environment file cannot be found, Uberenv will generate one and copy it to ``{package_source_dir}/spack.yaml``.
+Spack will find packages and compilers on its own based on ``--spack-externals`` and ``--spack-compiler-paths``. If
+these options are not specified either on the command line or project json, Spack will find all compilers and packages
+it can. To prevent Uberenv from creating an Environment file in future builds, specify your ``--spack-environment-file``
+to the one generated.
 
 When run, ``uberenv.py`` check outs a specific version of Spack from github as ``spack`` in the
 destination directory. It then uses Spack to build and install the target packages' dependencies into
@@ -192,9 +203,9 @@ Project Configuration
 Project level configuration options can also be addressed using a json file and some settings can be overridden on command line.  This json file
 is found in the in the following order:
 
-1. `--project.json=[path/to/project.json]` command line option
-2. `project.json` that lives in the same directory as `uberenv.py`
-3. `.uberenv_config.json` found recursively in a parent directory (typically at the root of your project)
+1. ``--project-json=[path/to/project.json]`` command line option
+2. ``project.json`` that lives in the same directory as ``uberenv.py``
+3. ``.uberenv_config.json`` found recursively in a parent directory (typically at the root of your project)
 
 Project settings are as follows:
 
@@ -214,6 +225,10 @@ Project settings are as follows:
   spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
   spack_concretizer        **None**                   Spack concretizer to use ``original, clingo``    ``original``
   spack_setup_clingo       **None**                   Do not install clingo if set to ``false``        ``true``
+  spack_externals          ``--spack-externals``      Space delimited string of packages for Spack to  **None**
+                                                      search for externals
+  spack_compiler_paths     ``--spack-compiler-paths`` Space delimited string of paths for Spack to     **None**
+                                                      search for compilers
   vcpkg_url                **None**                   Download url for Vcpkg                           ``https://github.com/microsoft/vcpkg``
   vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
   vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
