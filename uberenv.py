@@ -1065,7 +1065,7 @@ class SpackEnv(UberEnv):
                     if len(hc_glob) > 0:
                         hc_path  = hc_glob[0]
                         hc_fname = os.path.split(hc_path)[1]
-                        hc_symlink_path = pjoin(self.dest_dir,hc_fname);
+                        hc_symlink_path = pjoin(self.dest_dir,hc_fname)
                         if os.path.islink(hc_symlink_path):
                             os.unlink(hc_symlink_path)
                         elif os.path.isfile(hc_symlink_path):
