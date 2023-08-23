@@ -1065,12 +1065,13 @@ class SpackEnv(UberEnv):
                     if len(hc_glob) > 0:
                         hc_path  = hc_glob[0]
                         hc_fname = os.path.split(hc_path)[1]
-                        if os.path.islink(hc_fname):
-                            os.unlink(hc_fname)
-                        elif os.path.isfile(hc_fname):
-                            sexe("rm -f {0}".format(hc_fname))
-                        print("[symlinking host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                        os.symlink(hc_path,hc_fname)
+                        hc_symlink_path = pjoin(self.dest_dir,hc_fname)
+                        if os.path.islink(hc_symlink_path):
+                            os.unlink(hc_symlink_path)
+                        elif os.path.isfile(hc_symlink_path):
+                            sexe("rm -f {0}".format(hc_symlink_path))
+                        print("[symlinking host config file {0} to {1}]".format(hc_path,hc_symlink_path))
+                        os.symlink(hc_path,hc_symlink_path)
                     # if user opt'd for an install, we want to symlink the final
                     # install to an easy place:
                     # Symlink install directory
