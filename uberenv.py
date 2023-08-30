@@ -262,6 +262,13 @@ def parse_args():
                       nargs="+",
                       help="Space delimited string of packages for Spack to search for externals (if no spack_env_file is found)")
 
+    # Spack externals exclude list
+    parser.add_argument("--spack-externals-exclude",
+                      dest="spack_externals_exclude",
+                      default=None,
+                      nargs="+",
+                      help="Space delimited string of packages for Spack to exclude when searching for externals (if no spack_env_file is found)")
+
     # Spack compiler paths list
     parser.add_argument("--spack-compiler-paths",
                       dest="spack_compiler_paths",
@@ -584,6 +591,7 @@ class SpackEnv(UberEnv):
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
+        self.spack_externals_exclude = self.set_from_args_or_json("spack_externals_exclude", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
 
         # default spack build mode is dev-build
@@ -900,7 +908,7 @@ class SpackEnv(UberEnv):
         if res != 0:
             print("[ERROR: Failed to create Spack Environment]")
             sys.exit(-1)
-        
+
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:
             # Finding compilers
@@ -916,6 +924,8 @@ class SpackEnv(UberEnv):
 
             # Finding externals
             spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
+            if not self.spack_externals_exclude is None:
+                spack_external_find_cmd = "{0} --exclude {1}".format(spack_external_find_cmd, self.spack_externals)
             if self.spack_externals is None:
                 print("[finding all packages Spack knows about]")
                 spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
@@ -932,8 +942,11 @@ class SpackEnv(UberEnv):
             copied_spack_yaml = pjoin(pabs(self.pkg_src_dir), "spack.yaml")
             print("[copying spack yaml file to {0}]".format(copied_spack_yaml))
             sexe("cp {0} {1}".format(generated_spack_yaml, copied_spack_yaml))
-
             print("[setup environment]")
+
+        # if the existing spack.yaml does not have a view entry,
+        # add a "view" folder at the root of the env
+        self.setup_spack_env_view()
 
         # For each package path (if there is a repo.yaml), add Spack repository to environment
         if len(self.packages_paths) > 0:
@@ -960,6 +973,34 @@ class SpackEnv(UberEnv):
             spack_develop_cmd = "{0} develop --no-clone --path={1} {2}".format(
                 self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec)
             sexe(spack_develop_cmd, echo=True)
+
+    def setup_spack_env_view(self):
+        # Note: there is no way to do this via spack command line, we have to
+        # hack yaml
+        spack_yaml_file =pjoin(self.spack_env_directory, "spack.yaml")
+        spack_yaml_txt = open(spack_yaml_file).readlines()
+        found_view = False
+        view_indent = ""
+        res_lines = []
+        for l in spack_yaml_txt:
+            if l.strip().startswith("view:"):
+                if not l.strip().count("true"):
+                    found_view = True
+                    res_lines.append(l)
+                else:
+                    view_indent = l[0:l.find("view")]
+            else:
+                res_lines.append(l)
+        if not found_view:
+            print("[adding spack view section to env yaml file {0}]".format(spack_yaml_file))
+            ofile = open(spack_yaml_file,"w")
+            for l in res_lines:
+                ofile.write(l)
+            ofile.write("{0}view:\n".format(view_indent))
+            ofile.write("{0}{0}default:\n".format(view_indent))
+            ofile.write("{0}{0}{0}root: view\n".format(view_indent))
+            ofile.write("{0}{0}{0}projections:\n".format(view_indent))
+            ofile.write("{0}{0}{0}{0}all: ".format(view_indent) + "'{name}-{version}'\n")
 
     def concretize_spack_env(self):
         # Spack concretize
