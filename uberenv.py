@@ -1127,4 +1127,290 @@ class SpackEnv(UberEnv):
                         print("[install complete!]")
         elif self.build_mode == "dev-build":
             # we are in the "only dependencies" dev build case and the host-config
-            # file has to be copied from the do-be-deleted \x73\x70\x61\x63\x6B\x2D\x62\x75\x69\x6C\x64\x20\x64\x69\x72\x2E\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x62\x75\x69\x6C\x64\x5F\x62\x61\x73\x65\x20\x3D\x20\x70\x6A\x6F\x69\x6E\x28\x73\x65\x6C\x66\x2E\x64\x65\x73\x74\x5F\x64\x69\x72\x2C\x22\x7B\x30\x7D\x2D\x62\x75\x69\x6C\x64\x22\x2E\x66\x6F\x72\x6D\x61\x74\x28\x73\x65\x6C\x66\x2E\x70\x6B\x67\x5F\x6E\x61\x6D\x65\x29\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x62\x75\x69\x6C\x64\x5F\x64\x69\x72\x20\x20\x3D\x20\x70\x6A\x6F\x69\x6E\x28\x62\x75\x69\x6C\x64\x5F\x62\x61\x73\x65\x2C\x22\x73\x70\x61\x63\x6B\x2D\x62\x75\x69\x6C\x64\x22\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x70\x61\x74\x74\x65\x72\x6E\x20\x3D\x20\x22\x2A\x7B\x30\x7D\x2E\x63\x6D\x61\x6B\x65\x22\x2E\x66\x6F\x72\x6D\x61\x74\x28\x73\x65\x6C\x66\x2E\x70\x6B\x67\x5F\x6E\x61\x6D\x65\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x62\x75\x69\x6C\x64\x5F\x64\x69\x72\x20\x3D\x20\x70\x6A\x6F\x69\x6E\x28\x73\x65\x6C\x66\x2E\x70\x6B\x67\x5F\x73\x72\x63\x5F\x64\x69\x72\x2C\x22\x73\x70\x61\x63\x6B\x2D\x62\x75\x69\x6C\x64\x22\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x68\x63\x5F\x67\x6C\x6F\x62\x20\x3D\x20\x67\x6C\x6F\x62\x2E\x67\x6C\x6F\x62\x28\x70\x6A\x6F\x69\x6E\x28\x62\x75\x69\x6C\x64\x5F\x64\x69\x72\x2C\x70\x61\x74\x74\x65\x72\x6E\x29\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6C\x65\x6E\x28\x68\x63\x5F\x67\x6C\x6F\x62\x29\x20\x3E\x20\x30\x3A\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x68\x63\x5F\x70\x61\x74\x68\x20\x20\x3D\x20\x68\x63\x5F\x67\x6C\x6F\x62\x5B\x30\x5D\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x68\x63\x5F\x66\x6E\x61\x6D\x65\x20\x3D\x20\x6F\x73\x2E\x70\x61\x74\x68\x2E\x73\x70\x6C\x69\x74\x28\x68\x63\x5F\x70\x61\x74\x68\x29\x5B\x31\x5D\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x69\x66\x20\x6F\x73\x2E\x70\x61\x74\x68\x2E\x69\x73\x6C\x69\x6E\x6B\x28\x68\x63\x5F\x66\x6E\x61\x6D\x65\x29\x3A\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x6F\x73\x2E\x75\x6E\x6C\x69\x6E\x6B\x28\x68\x63\x5F\x66\x6E\x61\x6D\x65\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x70\x72\x69\x6E\x74\x28\x22\x5B\x63\x6F\x70\x79\x69\x6E\x67\x20\x68\x6F\x73\x74\x20\x63\x6F\x6E\x66\x69\x67\x20\x66\x69\x6C\x65\x20\x74\x6F\x20\x7B\x30\x7D\x5D\x22\x2E\x66\x6F\x72\x6D\x61\x74\x28\x70\x6A\x6F\x69\x6E\x28\x73\x65\x6C\x66\x2E\x64\x65\x73\x74\x5F\x64\x69\x72\x2C\x68\x63\x5F\x66\x6E\x61\x6D\x65\x29\x29\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x78\x65\x28\x22\x63\x70\x20\x7B\x30\x7D\x20\x7B\x31\x7D\x22\x2E\x66\x6F\x72\x6D\x61\x74\x28\x68\x63\x5F\x70\x61\x74\x68\x2C\x68\x63\x5F\x66\x6E\x61\x6D\x65\x29\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x70\x72\x69\x6E\x74\x28\x22\x5B\x72\x65\x6D\x6F\x76\x69\x6E\x67\x20\x70\x72\x6F\x6A\x65\x63\x74\x20\x62\x75\x69\x6C\x64\x20\x64\x69\x72\x65\x63\x74\x6F\x72\x79\x20\x7B\x30\x7D\x5D\x22\x2E\x66\x6F\x72\x6D\x61\x74\x28\x70\x6A\x6F\x69\x6E\x28\x62\x75\x69\x6C\x64\x5F\x64\x69\x72\x29\x29\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x73\x65\x78\x65\x28\x22\x72\x6D\x20\x2D\x72\x66\x20\x7B\x30\x7D\x22\x2E\x66\x6F\x72\x6D\x61\x74\x28\x62\x75\x69\x6C\x64\x5F\x64\x69\x72\x29\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x65\x6C\x73\x65\x3A\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x70\x72\x69\x6E\x74\x28\x22\x5B\x45\x52\x52\x4F\x52\x3A\x20\x55\x6E\x73\x75\x70\x70\x6F\x72\x74\x65\x64\x20\x62\x75\x69\x6C\x64\x20\x6D\x6F\x64\x65\x3A\x20\x7B\x30\x7D\x5D\x22\x2E\x66\x6F\x72\x6D\x61\x74\x28\x73\x65\x6C\x66\x2E\x62\x75\x69\x6C\x64\x5F\x6D\x6F\x64\x65\x29\x29\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x72\x65\x74\x75\x72\x6E\x20\x2D\x31\x0A\x0A\x20\x20\x20\x20\x64\x65\x66\x20\x67\x65\x74\x5F\x6D\x69\x72\x72\x6F\x72\x5F\x70\x61\x74\x68\x28\x73\x65\x6C\x66\x29\x3A\x0A\x20\x20\x20\x20\x20\x20\x20\x20\x6D\x69\x72\x72\x6F\x72\x5F\x70\x61\x74\x68\x20\x3D\x20\x73\x65\x6C\x66\x2E\x61\x72\x67\x73\x5B\x22\x6D\x6 
+            # file has to be copied from the do-be-deleted spack-build dir.
+            build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
+            build_dir  = pjoin(build_base,"spack-build")
+            pattern = "*{0}.cmake".format(self.pkg_name)
+            build_dir = pjoin(self.pkg_src_dir,"spack-build")
+            hc_glob = glob.glob(pjoin(build_dir,pattern))
+            if len(hc_glob) > 0:
+                hc_path  = hc_glob[0]
+                hc_fname = os.path.split(hc_path)[1]
+                if os.path.islink(hc_fname):
+                    os.unlink(hc_fname)
+                print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
+                sexe("cp {0} {1}".format(hc_path,hc_fname))
+                print("[removing project build directory {0}]".format(pjoin(build_dir)))
+                sexe("rm -rf {0}".format(build_dir))
+        else:
+            print("[ERROR: Unsupported build mode: {0}]".format(self.build_mode))
+            return -1
+
+    def get_mirror_path(self):
+        mirror_path = self.args["mirror"]
+        if not mirror_path:
+            print("[--create-mirror requires a mirror directory]")
+            sys.exit(-1)
+        return mirror_path
+
+    def create_mirror(self):
+        """
+        Creates a spack mirror for pkg_name at mirror_path.
+        """
+
+        mirror_path = self.get_mirror_path()
+
+        mirror_cmd = "{0} ".format(self.spack_exe())
+        if self.args["ignore_ssl_errors"]:
+            mirror_cmd += "-k "
+        mirror_cmd += "mirror create -d {0} --dependencies {1}".format(
+            mirror_path, self.pkg_name_with_spec)
+        return sexe(mirror_cmd, echo=True)
+
+    def find_spack_mirror(self, mirror_name):
+        """
+        Returns the path of a defaults scoped spack mirror with the
+        given name, or None if no mirror exists.
+        """
+        res, out = sexe("{0} mirror list".format(self.spack_exe()), ret_output=True)
+        mirror_path = None
+        for mirror in out.split('\n'):
+            if mirror:
+                parts = mirror.split()
+                if parts[0] == mirror_name:
+                    mirror_path = parts[1]
+        return mirror_path
+
+    def use_mirror(self):
+        """
+        Configures spack to use mirror at a given path.
+        """
+        mirror_name = self.pkg_name
+        mirror_path = self.get_mirror_path()
+        existing_mirror_path = self.find_spack_mirror(mirror_name)
+
+        if existing_mirror_path and mirror_path != existing_mirror_path:
+            # Existing mirror has different URL, error out
+            print("[removing existing spack mirror `{0}` @ {1}]".format(mirror_name,
+                                                                        existing_mirror_path))
+            #
+            # Note: In this case, spack says it removes the mirror, but we still
+            # get errors when we try to add a new one, sounds like a bug
+            #
+            sexe("{0} mirror remove --scope=defaults {1} ".format(self.spack_exe(), mirror_name),
+                echo=True)
+            existing_mirror_path = None
+        if not existing_mirror_path:
+            # Add if not already there
+            sexe("{0} mirror add --scope=defaults {1} {2}".format(
+                    self.spack_exe(), mirror_name, mirror_path), echo=True)
+            print("[using mirror {0}]".format(mirror_path))
+
+    def find_spack_upstream(self, upstream_name):
+        """
+        Returns the path of a defaults scoped spack upstream with the
+        given name, or None if no upstream exists.
+        """
+        upstream_path = None
+
+        res, out = sexe('{0} config get upstreams'.format(self.spack_exe()), ret_output=True)
+        if (not out) and ("upstreams:" in out):
+            out = out.replace(' ', '')
+            out = out.replace('install_tree:', '')
+            out = out.replace(':', '')
+            out = out.splitlines()
+            out = out[1:]
+            upstreams = dict(zip(out[::2], out[1::2]))
+
+            for name in upstreams.keys():
+                if name == upstream_name:
+                    upstream_path = upstreams[name]
+
+        return upstream_path
+
+    def use_spack_upstream(self):
+        """
+        Configures spack to use upstream at a given path.
+        """
+        upstream_path = self.args["upstream"]
+        if not upstream_path:
+            print("[--create-upstream requires a upstream directory]")
+            sys.exit(-1)
+        upstream_path = pabs(upstream_path)
+        upstream_name = self.pkg_name
+        existing_upstream_path = self.find_spack_upstream(upstream_name)
+        if (not existing_upstream_path) or (upstream_path != pabs(existing_upstream_path)):
+            # Existing upstream has different URL, error out
+            print("[removing existing spack upstream configuration file]")
+            sexe("rm spack/etc/spack/defaults/upstreams.yaml")
+            with open('spack/etc/spack/defaults/upstreams.yaml','w+') as upstreams_cfg_file:
+                upstreams_cfg_file.write("upstreams:\n")
+                upstreams_cfg_file.write("  {0}:\n".format(upstream_name))
+                upstreams_cfg_file.write("    install_tree: {0}\n".format(upstream_path))
+
+    def setup_clingo(self):
+        """
+        Attempts to install the clingo answer set programming library
+        if it is not already available as a Python module
+        """
+        if not have_internet():
+            print("[WARNING: No internet detected. Skipping setting up clingo.]")
+            return
+
+        try:
+            import clingo
+        except ImportError:
+            import pip
+            pip_ver = pip.__version__
+            # Requirement comes from https://github.com/pypa/manylinux
+            # JBE: I think the string comparison is somewhat correct here, if not we'll
+            # need to install setuptools for 'packaging.version'
+            if pip_ver < "19.3":
+                print("[!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("  ERROR: pip version {0} is too old to install clingo".format(pip_ver))
+                print("  pip 19.3 is required for PEP 599 support")
+                print("  Try running the following command to upgrade pip:")
+                print("     python3 -m pip install --user --upgrade pip")
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!]")
+                sys.exit(-1)
+            py_interp = sys.executable
+            clingo_pkg = "clingo"
+            uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
+            # Uninstall it first in case the available version failed due to differing arch
+            # pip will still return 0 in the case of a "trivial" uninstall
+            res = sexe(uninstall_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Clingo uninstall failed with returncode {0}]".format(res))
+                sys.exit(-1)
+            install_cmd = "{0} -m pip install --user {1}".format(py_interp, clingo_pkg)
+            res = sexe(install_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Clingo install failed with returncode {0}]".format(res))
+                sys.exit(-1)
+
+
+def find_osx_sdks():
+    """
+    Finds installed osx sdks, returns dict mapping version to file system path
+    """
+    res = {}
+    sdks = glob.glob("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX*.sdk")
+    for sdk in sdks:
+        sdk_base = os.path.split(sdk)[1]
+        ver = sdk_base[len("MacOSX"):sdk_base.rfind(".")]
+        res[ver] = sdk
+    return res
+
+def setup_osx_sdk_env_vars():
+    """
+    Finds installed osx sdks, returns dict mapping version to file system path
+    """
+    # find current osx version (10.11.6)
+    dep_tgt = platform.mac_ver()[0]
+    # sdk file names use short version (ex: 10.11)
+    dep_tgt_short = dep_tgt[:dep_tgt.rfind(".")]
+    # find installed sdks, ideally we want the sdk that matches the current os
+    sdk_root = None
+    sdks = find_osx_sdks()
+    if dep_tgt_short in sdks.keys():
+        # matches our osx, use this one
+        sdk_root = sdks[dep_tgt_short]
+    elif len(sdks) > 0:
+        # for now, choose first one:
+        dep_tgt  = sdks.keys()[0]
+        sdk_root = sdks[dep_tgt]
+    else:
+        # no valid sdks, error out
+        print("[ERROR: Could not find OSX SDK @ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/]")
+        sys.exit(-1)
+
+    env["MACOSX_DEPLOYMENT_TARGET"] = dep_tgt
+    env["SDKROOT"] = sdk_root
+    print("[setting MACOSX_DEPLOYMENT_TARGET to {0}]".format(env["MACOSX_DEPLOYMENT_TARGET"]))
+    print("[setting SDKROOT to {0}]".format(env[ "SDKROOT"]))
+
+
+def print_uberenv_python_info():
+    print("[uberenv python: {0}]".format(sys.executable))
+
+
+def main():
+    """
+    Clones and runs a package manager to setup third_party libs.
+    Also creates a host-config.cmake file that can be used by our project.
+    """
+
+    print_uberenv_python_info()
+
+    # parse args from command line
+    args, extra_args = parse_args()
+
+    # project options
+    args["project_json"] = find_project_config(args)
+
+    # Initialize the environment -- use vcpkg on windows, spack otherwise
+    env = SpackEnv(args, extra_args) if not is_windows() else VcpkgEnv(args, extra_args)
+
+    # Setup the necessary paths and directories
+    env.setup_paths_and_dirs()
+
+    # Go to package manager's destination
+    os.chdir(env.dest_dir)
+
+    # Setup package manager
+    if not args["skip_setup"]:
+        # Clone the package manager
+        env.clone_repo()
+
+        # Patch the package manager, as necessary
+        env.patch()
+
+        # Clean the build
+        env.clean_build()
+
+        # Allow to end uberenv after Spack is ready
+        if args["setup_only"]:
+
+            # Use Spack upstream
+            if not is_windows() and args["upstream"] is not None:
+                env.use_spack_upstream()
+
+            return 0
+
+    # Create Spack Environment and setup Spack package repos
+    if not is_windows():
+        env.create_spack_env()
+
+    ###########################################################
+    # We now have an instance of our package manager configured,
+    # now we need it to build our TPLs. At this point, there are
+    # two possible next steps:
+    #
+    # *) create a mirror of the packages
+    #   OR
+    # *) build
+    #
+    ###########################################################
+    if args["create_mirror"]:
+        return env.create_mirror()
+    else:
+        # Add mirror
+        if args["mirror"] is not None:
+            env.use_mirror()
+
+        # Use Spack upstream
+        if not is_windows() and args["upstream"] is not None:
+            env.use_spack_upstream()
+
+        # Concretize the spack environment
+        if not is_windows():
+            env.concretize_spack_env()
+
+        # Show the spec for what will be built
+        env.show_info()
+
+        # Install
+        return env.install()
+
+if __name__ == "__main__":
+    sys.exit(main())
