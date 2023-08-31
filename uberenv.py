@@ -925,7 +925,7 @@ class SpackEnv(UberEnv):
             # Finding externals
             spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
             if not self.spack_externals_exclude is None:
-                spack_external_find_cmd = "{0} --exclude {1}".format(spack_external_find_cmd, self.spack_externals_exclude)
+                spack_external_find_cmd = '{0} --exclude "{1}"'.format(spack_external_find_cmd, self.spack_externals_exclude)
             if self.spack_externals is None:
                 print("[finding all packages Spack knows about]")
                 spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
