@@ -255,6 +255,13 @@ def parse_args():
                       default=False,
                       help="Only install (using pre-setup Spack).")
 
+    # Spack skip externals 
+    parser.add_argument("--spack-skip-externals",
+                      dest="spack_skip_externals",
+                      default=None,
+                      nargs="+",
+                      help="Skip spack finding any externals")
+
     # Spack externals list
     parser.add_argument("--spack-externals",
                       dest="spack_externals",
@@ -590,6 +597,7 @@ class SpackEnv(UberEnv):
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
+        self.spack_skip_externals = self.set_from_args_or_json("spack_skip_externals", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
         self.spack_externals_exclude = self.set_from_args_or_json("spack_externals_exclude", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
@@ -922,20 +930,21 @@ class SpackEnv(UberEnv):
                 print("[failed to setup environment]")
                 sys.exit(-1)
 
-            # Finding externals
-            spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
-            if not self.spack_externals_exclude is None:
-                spack_external_find_cmd = '{0} --exclude "{1}"'.format(spack_external_find_cmd, self.spack_externals_exclude)
-            if self.spack_externals is None:
-                print("[finding all packages Spack knows about]")
-                spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
-            else:
-                print("[finding packages from list]")
-                spack_external_find_cmd = "{0} {1}".format(spack_external_find_cmd, self.spack_externals)
-            res_external = sexe(spack_external_find_cmd, echo=True)
-            if res_external != 0:
-                print("[failed to setup environment]")
-                sys.exit(-1)
+            if self.spack_skip_externals is None:
+                # Finding externals
+                spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
+                if not self.spack_externals_exclude is None:
+                    spack_external_find_cmd = '{0} --exclude "{1}"'.format(spack_external_find_cmd, self.spack_externals_exclude)
+                if self.spack_externals is None:
+                    print("[finding all packages Spack knows about]")
+                    spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
+                else:
+                    print("[finding packages from list]")
+                    spack_external_find_cmd = "{0} {1}".format(spack_external_find_cmd, self.spack_externals)
+                res_external = sexe(spack_external_find_cmd, echo=True)
+                if res_external != 0:
+                    print("[failed to setup environment]")
+                    sys.exit(-1)
 
             # Copy spack.yaml to where you called package source dir
             generated_spack_yaml = pjoin(self.spack_env_directory, "spack.yaml")
