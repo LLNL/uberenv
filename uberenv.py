@@ -804,7 +804,9 @@ class SpackEnv(UberEnv):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name) and len(l.split()) > 1:
-                return {"name": pkg_name, "path": l.split()[-1]}
+                pkg_path = l.split()[-1]
+                if os.path.exists(pkg_path):
+                    return {"name": pkg_name, "path": pkg_path}
         print("[ERROR: Failed to find package from hash named '{0}' with hash '{1}']".format(pkg_name, pkg_hash))
         sys.exit(-1)
 
@@ -814,7 +816,9 @@ class SpackEnv(UberEnv):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name) and len(l.split()) > 1:
-                return {"name": pkg_name, "path": l.split()[-1]}
+                pkg_path = l.split()[-1]
+                if os.path.exists(pkg_path):
+                    return {"name": pkg_name, "path": pkg_path}
         print("[ERROR: Failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
 
@@ -1096,18 +1100,18 @@ class SpackEnv(UberEnv):
             if res != 0:
                 print("[ERROR: Failure of spack install]")
                 return res
-        
         # when using install or uberenv-pkg mode, create a symlink to the host config 
         if self.build_mode == "install" or \
-           self.build_mode == "uberenv-pkg" \
-           or self.use_install:
+           self.build_mode == "uberenv-pkg" or \
+           self.use_install:
             # only create a symlink if you're completing all phases
             if self.pkg_final_phase == None or self.pkg_final_phase == "install":
                 # use spec_hash to locate b/c other helper won't work if complex
                 # deps are provided in the spec (e.g: @ver+variant ^package+variant)
                 pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
-                if self.pkg_name != pkg_path["name"]:
+                if self.pkg_name != pkg_path["name"] or not os.path.exists(pkg_path["path"]):
                     print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
+                    print("[package info: {0}]".format(str(pkg_path)))
                     return -1
                 else:
                     # Symlink host-config file
