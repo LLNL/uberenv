@@ -811,7 +811,8 @@ class SpackEnv(UberEnv):
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("{0} find -p {1}".format(self.spack_exe(),self.pkg_name_with_spec), ret_output = True)
+        requested_pkg_name_with_spec = "'{0}{1}'".format(pkg_name,spec)
+        res, out = sexe("{0} find -p {1}".format(self.spack_exe(), requested_pkg_name_with_spec), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
@@ -1126,6 +1127,11 @@ class SpackEnv(UberEnv):
                             sexe("rm -f {0}".format(hc_symlink_path))
                         print("[symlinking host config file {0} to {1}]".format(hc_path,hc_symlink_path))
                         os.symlink(hc_path,hc_symlink_path)
+                        # NOTE: you may want this for dev build as well
+                        hc_patch_path = os.path.basename(hc_fname) + "-patch.cmake"
+                        hc_patch_path = pjoin(self.dest_dir,hc_patch_path)
+                        if self.patch_host_config_for_python(hc_symlink_path,hc_patch_path) == -1:
+                            return -1
                     # if user opt'd for an install, we want to symlink the final
                     # install to an easy place:
                     # Symlink install directory
@@ -1158,6 +1164,56 @@ class SpackEnv(UberEnv):
         else:
             print("[ERROR: Unsupported build mode: {0}]".format(self.build_mode))
             return -1
+
+    def patch_host_config_for_python(self, host_config_file_src, host_config_file_patched):
+        "Fix host config entry to point spacks python view"
+        #
+        # NOTE:
+        #
+        # This isn't pretty, this logic exists here to solve a chicken vs egg issue with how
+        # spack views are setup.
+        #
+        # We need to use the final python view layout created by spack if we want
+        # our dependent modules to work outside of spack without env var gymnastics.
+        #
+        # This method replaces the PYTHON_EXECUTABLE cmake cache entry with
+        # a new one that points to the spack view python path.
+        #
+        print("[patching python path in host config file {0} to create {1}]".format(host_config_file_src,host_config_file_patched))
+        #
+        # TODO: Lean how to ask spack about the view path
+        #
+        # NOTE: This file system query logic assumes the "spack_env/view" dir layout
+        hc_lines = open(host_config_file_src).readlines()
+        # first check if we have any work to do
+        has_python_entry = False
+        for l in hc_lines:
+            if l.count("PYTHON_EXECUTABLE") > 0:
+                has_python_entry =True
+        if has_python_entry:
+            py_dir_glob = glob.glob(os.path.join(self.spack_env_directory,"view","python*"))
+            if len(py_dir_glob) > 0:
+                py_dir = py_dir_glob[0]
+                # NOTE: reqs `python3``
+                py_exe = os.path.abspath(os.path.join(py_dir,"bin","python3"))
+                if not os.path.exists(py_exe):
+                    print("[ERROR: Could not find python executable: {0}]".format(py_exe))
+                    return -1
+                hc_out = open(host_config_file_patched,"w")
+                for l in hc_lines:
+                    if l.count("PYTHON_EXECUTABLE") > 0:
+                        # replace this line with our own
+                        entry = 'set(PYTHON_EXECUTABLE "{0}" CACHE PATH "")\n'.format(py_exe)
+                        hc_out.write(entry)
+                    else:
+                        hc_out.write(l)
+
+    def get_mirror_path(self):
+        mirror_path = self.args["mirror"]
+        if not mirror_path:
+            print("[--create-mirror requires a mirror directory]")
+            sys.exit(-1)
+        return mirror_path
 
     def get_mirror_path(self):
         mirror_path = self.args["mirror"]
