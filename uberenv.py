@@ -1128,7 +1128,7 @@ class SpackEnv(UberEnv):
                         print("[symlinking host config file {0} to {1}]".format(hc_path,hc_symlink_path))
                         os.symlink(hc_path,hc_symlink_path)
                         # NOTE: you may want this for dev build as well
-                        hc_patch_path = os.path.basename(hc_fname) + "-patch.cmake"
+                        hc_patch_path = os.path.splitext(hc_fname)[0] + "-patch.cmake"
                         hc_patch_path = pjoin(self.dest_dir,hc_patch_path)
                         if self.patch_host_config_for_python(hc_symlink_path,hc_patch_path) == -1:
                             return -1
