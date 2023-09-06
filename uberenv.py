@@ -1213,13 +1213,6 @@ class SpackEnv(UberEnv):
             sys.exit(-1)
         return mirror_path
 
-    def get_mirror_path(self):
-        mirror_path = self.args["mirror"]
-        if not mirror_path:
-            print("[--create-mirror requires a mirror directory]")
-            sys.exit(-1)
-        return mirror_path
-
     def create_mirror(self):
         """
         Creates a spack mirror for pkg_name at mirror_path.
