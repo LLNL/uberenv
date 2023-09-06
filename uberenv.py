@@ -269,13 +269,6 @@ def parse_args():
                       nargs="+",
                       help="Space delimited string of packages for Spack to search for externals (if no spack_env_file is found)")
 
-    # Spack externals exclude list
-    parser.add_argument("--spack-externals-exclude",
-                      dest="spack_externals_exclude",
-                      default=None,
-                      nargs="+",
-                      help="Space delimited string of packages for Spack to exclude when searching for externals (if no spack_env_file is found)")
-
     # Spack compiler paths list
     parser.add_argument("--spack-compiler-paths",
                       dest="spack_compiler_paths",
