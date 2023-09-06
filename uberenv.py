@@ -425,14 +425,14 @@ class UberEnv():
             setting_value = self.args[setting]
         return setting_value
 
-    def set_from_json(self,setting, optional=True):
+    def set_from_json(self,setting, optional=True, default_value=None):
         """
         When optional=False: 
             If the setting key is not in the json file, error and raise an exception.
         When optional=True:
-            If the setting key is not in the json file or args, return None.
+            If the setting key is not in the json file or args, return {default_value}.
         """
-        setting_value = None
+        setting_value = default_value
         try:
             setting_value = self.project_args[setting]
         except (KeyError):
@@ -592,15 +592,15 @@ class SpackEnv(UberEnv):
 
     def __init__(self, args, extra_args):
         UberEnv.__init__(self,args,extra_args)
-        
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
         self.spack_skip_externals = self.set_from_args_or_json("spack_skip_externals", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
-        self.spack_externals_exclude = self.set_from_args_or_json("spack_externals_exclude", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
+        default_dict = {}
+        self.spack_host_config_patches = self.set_from_json("spack_host_config_patches", True, default_dict)
 
         # default spack build mode is dev-build
         if self.build_mode is None:
@@ -938,8 +938,6 @@ class SpackEnv(UberEnv):
             if self.spack_skip_externals is None:
                 # Finding externals
                 spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
-                if not self.spack_externals_exclude is None:
-                    spack_external_find_cmd = '{0} --exclude "{1}"'.format(spack_external_find_cmd, self.spack_externals_exclude)
                 if self.spack_externals is None:
                     print("[finding all packages Spack knows about]")
                     spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
@@ -975,8 +973,8 @@ class SpackEnv(UberEnv):
                     print("[ERROR: No Spack repo.yaml detected in {0}]".format(spack_pkg_repo))
                     sys.exit(-1)
 
-        # Add spack package
-        print("[adding spack package]")
+        # Add main spack package
+        print("[adding spack package: {0}]".format(self.pkg_name_with_spec))
         spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
             self.pkg_name_with_spec)
         sexe(spack_add_cmd, echo=True)
@@ -989,6 +987,9 @@ class SpackEnv(UberEnv):
             sexe(spack_develop_cmd, echo=True)
 
     def setup_spack_env_view(self):
+        """
+        Update spack env yaml to provide view dir that isn't hidden.
+        """
         # Note: there is no way to do this via spack command line, we have to
         # hack yaml
         spack_yaml_file =pjoin(self.spack_env_directory, "spack.yaml")
@@ -1128,10 +1129,11 @@ class SpackEnv(UberEnv):
                         print("[symlinking host config file {0} to {1}]".format(hc_path,hc_symlink_path))
                         os.symlink(hc_path,hc_symlink_path)
                         # NOTE: you may want this for dev build as well
-                        hc_patch_path = os.path.splitext(hc_fname)[0] + "-patch.cmake"
-                        hc_patch_path = pjoin(self.dest_dir,hc_patch_path)
-                        if self.patch_host_config_for_python(hc_symlink_path,hc_patch_path) == -1:
-                            return -1
+                        if len(self.spack_host_config_patches) > 0:
+                            hc_patch_path = os.path.splitext(hc_fname)[0] + "-patch.cmake"
+                            hc_patch_path = pjoin(self.dest_dir,hc_patch_path)
+                            if self.patch_host_config_for_spack_view(hc_symlink_path,hc_patch_path) == -1:
+                                return -1
                     # if user opt'd for an install, we want to symlink the final
                     # install to an easy place:
                     # Symlink install directory
@@ -1165,48 +1167,43 @@ class SpackEnv(UberEnv):
             print("[ERROR: Unsupported build mode: {0}]".format(self.build_mode))
             return -1
 
-    def patch_host_config_for_python(self, host_config_file_src, host_config_file_patched):
-        "Fix host config entry to point spacks python view"
+    def patch_host_config_for_spack_view(self, host_config_file_src, host_config_file_patched):
+        """
+        Patch host config entries to point final spack python view paths
+        """
         #
         # NOTE:
         #
-        # This isn't pretty, this logic exists here to solve a chicken vs egg issue with how
-        # spack views are setup.
+        # This isn't pretty, this logic exists to solve a chicken vs egg issue
+        # with how spack views are setup.
         #
-        # We need to use the final python view layout created by spack if we want
-        # our dependent modules to work outside of spack without env var gymnastics.
+        # We need to use the final python view layout created by spack if we
+        # want our dependent python modules to work outside of spack without
+        # env var gymnastics.
         #
-        # This method replaces the PYTHON_EXECUTABLE cmake cache entry with
-        # a new one that points to the spack view python path.
+        # This method replaces cmake cache entries with new entires that point
+        # to the result of a spack view path glob.
         #
-        print("[patching python path in host config file {0} to create {1}]".format(host_config_file_src,host_config_file_patched))
-        #
-        # TODO: Lean how to ask spack about the view path
-        #
-        # NOTE: This file system query logic assumes the "spack_env/view" dir layout
+        print("[patching spack view paths into host config file {0} to create {1}]".format(host_config_file_src,host_config_file_patched))
         hc_lines = open(host_config_file_src).readlines()
-        # first check if we have any work to do
-        has_python_entry = False
+        hc_out = open(host_config_file_patched,"w")
         for l in hc_lines:
-            if l.count("PYTHON_EXECUTABLE") > 0:
-                has_python_entry =True
-        if has_python_entry:
-            py_dir_glob = glob.glob(os.path.join(self.spack_env_directory,"view","python*"))
-            if len(py_dir_glob) > 0:
-                py_dir = py_dir_glob[0]
-                # NOTE: reqs `python3``
-                py_exe = os.path.abspath(os.path.join(py_dir,"bin","python3"))
-                if not os.path.exists(py_exe):
-                    print("[ERROR: Could not find python executable: {0}]".format(py_exe))
-                    return -1
-                hc_out = open(host_config_file_patched,"w")
-                for l in hc_lines:
-                    if l.count("PYTHON_EXECUTABLE") > 0:
-                        # replace this line with our own
-                        entry = 'set(PYTHON_EXECUTABLE "{0}" CACHE PATH "")\n'.format(py_exe)
-                        hc_out.write(entry)
-                    else:
-                        hc_out.write(l)
+            found = False
+            for k,v in self.spack_host_config_patches.items():
+                if l.count(k) > 0:
+                    found = True
+                    # find view path
+                    view_search_path = os.path.join(self.spack_env_directory,v)
+                    view_path_glob = glob.glob(view_search_path)
+                    if len(view_path_glob) == 0:
+                        print("[ERROR: Could not find view entry {0} path: {1}]".format(k,view_search_path))
+                        return -1
+                    # replace existing entry with what we found
+                    entry  = " # NOTE: Pathed by uberenv to use spack view path instead of spack build path\n"
+                    entry += 'set({0} "{1}" CACHE PATH "")\n'.format(k,view_path_glob[0])
+                    hc_out.write(entry)
+            if not found:
+                hc_out.write(l)
 
     def get_mirror_path(self):
         mirror_path = self.args["mirror"]
