@@ -998,6 +998,7 @@ class SpackEnv(UberEnv):
         view_indent = ""
         res_lines = []
         for l in spack_yaml_txt:
+            # view: true is default case (complex view was not provided)
             if l.strip().startswith("view:"):
                 if not l.strip().count("true"):
                     found_view = True
