@@ -949,10 +949,6 @@ class SpackEnv(UberEnv):
             sexe("cp {0} {1}".format(generated_spack_yaml, copied_spack_yaml))
             print("[setup environment]")
 
-        # if the existing spack.yaml does not have a view entry,
-        # add a "view" folder at the root of the env
-        self.setup_spack_env_view()
-
         # For each package path (if there is a repo.yaml), add Spack repository to environment
         if len(self.packages_paths) > 0:
             for _base_path in self.packages_paths:
@@ -979,37 +975,25 @@ class SpackEnv(UberEnv):
                 self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec)
             sexe(spack_develop_cmd, echo=True)
 
-    def setup_spack_env_view(self):
+    def symlink_spack_env_view(self):
         """
-        Update spack env yaml to provide view dir that isn't hidden.
+        Symlink spack view for easy access.
         """
-        # Note: there is no way to do this via spack command line, we have to
-        # hack yaml
-        spack_yaml_file =pjoin(self.spack_env_directory, "spack.yaml")
-        spack_yaml_txt = open(spack_yaml_file).readlines()
-        found_view = False
-        view_indent = ""
-        res_lines = []
-        for l in spack_yaml_txt:
-            # view: true is default case (complex view was not provided)
-            if l.strip().startswith("view:"):
-                if not l.strip().count("true"):
-                    found_view = True
-                    res_lines.append(l)
-                else:
-                    view_indent = l[0:l.find("view")]
-            else:
-                res_lines.append(l)
-        if not found_view:
-            print("[adding spack view section to env yaml file {0}]".format(spack_yaml_file))
-            ofile = open(spack_yaml_file,"w")
-            for l in res_lines:
-                ofile.write(l)
-            ofile.write("{0}view:\n".format(view_indent))
-            ofile.write("{0}{0}default:\n".format(view_indent))
-            ofile.write("{0}{0}{0}root: view\n".format(view_indent))
-            ofile.write("{0}{0}{0}projections:\n".format(view_indent))
-            ofile.write("{0}{0}{0}{0}all: ".format(view_indent) + "'{name}-{version}'\n")
+        py_script  = "env = spack.environment.active_environment();"
+        py_script += 'print(env.views["default"].get_projection_for_spec(env.matching_spec("{0}")))'.format(self.pkg_name_with_spec)
+        spack_vfind_cmd = "{0} python -c '{1}'".format(self.spack_exe(),py_script)
+        res, out = sexe(spack_vfind_cmd, ret_output=True, echo=True)
+        if res != 0:
+            print("[failed to find spack view info]")
+            sys.exit(-1)
+        # this will be one level down from the spack view dir, for example:
+        # 'spack_env/view/python-3.10.10'
+        view_src_path = pjoin(self.spack_env_directory, os.path.split(out)[0])
+        view_symlink_path = pjoin(self.dest_dir,"spack_view")
+        if os.path.islink(view_symlink_path):
+            os.unlink(view_symlink_path)
+        print("[symlinking env view {0} to {1} ]".format(view_src_path,view_symlink_path))
+        os.symlink(view_src_path,view_symlink_path)
 
     def concretize_spack_env(self):
         # Spack concretize
@@ -1100,6 +1084,7 @@ class SpackEnv(UberEnv):
         if self.build_mode == "install" or \
            self.build_mode == "uberenv-pkg" or \
            self.use_install:
+            self.symlink_spack_env_view()
             # only create a symlink if you're completing all phases
             if self.pkg_final_phase == None or self.pkg_final_phase == "install":
                 # use spec_hash to locate b/c other helper won't work if complex
@@ -1187,7 +1172,7 @@ class SpackEnv(UberEnv):
                 if l.count(k) > 0:
                     found = True
                     # find view path
-                    view_search_path = os.path.join(self.spack_env_directory,v)
+                    view_search_path = os.path.join(self.dest_dir,v)
                     view_path_glob = glob.glob(view_search_path)
                     if len(view_path_glob) == 0:
                         print("[ERROR: Could not find view entry {0} path: {1}]".format(k,view_search_path))
