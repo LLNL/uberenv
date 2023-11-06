@@ -650,13 +650,14 @@ class SpackEnv(UberEnv):
 
         print("[spack spec: {0}]".format(self.args["spec"]))
 
-        # Appends spec to package name (Example: 'magictestlib_cached@1.0.0%gcc')
-        self.pkg_name_with_spec = "'{0}{1}'".format(self.pkg_name, self.args["spec"])
-
         # List of concretizer options not in all versions of spack
         # (to be checked if it exists after cloning spack)
         self.fresh_exists = False
         self.reuse_exists = False
+
+    def pkg_name_with_spec(self,quote="'"):
+        # Appends spec to package name (Example: 'magictestlib_cached@1.0.0%gcc')
+        return "{0}{1}{2}{0}".format(quote,self.pkg_name, self.args["spec"])
 
     # Spack executable (will include environment -e option by default)
     def spack_exe(self, use_spack_env = True):
@@ -963,16 +964,16 @@ class SpackEnv(UberEnv):
                     sys.exit(-1)
 
         # Add main spack package
-        print("[adding spack package: {0}]".format(self.pkg_name_with_spec))
+        print("[adding spack package: {0}]".format(self.pkg_name_with_spec()))
         spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
-            self.pkg_name_with_spec)
+            self.pkg_name_with_spec())
         sexe(spack_add_cmd, echo=True)
 
         # For dev-build, call develop
         if self.build_mode == "dev-build":
             print("[calling spack develop]")
             spack_develop_cmd = "{0} develop --no-clone --path={1} {2}".format(
-                self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec)
+                self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec())
             sexe(spack_develop_cmd, echo=True)
 
     def symlink_spack_env_view(self):
@@ -980,7 +981,7 @@ class SpackEnv(UberEnv):
         Symlink spack view for easy access.
         """
         py_script  = "env = spack.environment.active_environment();"
-        py_script += 'print(env.views["default"].get_projection_for_spec(env.matching_spec("{0}")))'.format(self.pkg_name_with_spec)
+        py_script += 'print(env.views["default"].get_projection_for_spec(env.matching_spec("{0}")))'.format(self.pkg_name_with_spec(quote=""))
         spack_vfind_cmd = "{0} python -c '{1}'".format(self.spack_exe(),py_script)
         res, out = sexe(spack_vfind_cmd, ret_output=True, echo=True)
         if res != 0:
@@ -1044,7 +1045,7 @@ class SpackEnv(UberEnv):
                     # testing that the path exists is mandatory until Spack team fixes
                     # https://github.com/spack/spack/issues/16329
                     if os.path.isdir(install_path):
-                        print("[Warning: {0} has already been installed in {1}]".format(self.pkg_name_with_spec,install_path))
+                        print("[Warning: {0} has already been installed in {1}]".format(self.pkg_name_with_spec(),install_path))
                         print("[Warning: Uberenv will proceed using this directory]")
                         self.use_install = True
 
@@ -1202,7 +1203,7 @@ class SpackEnv(UberEnv):
         if self.args["ignore_ssl_errors"]:
             mirror_cmd += "-k "
         mirror_cmd += "mirror create -d {0} --dependencies {1}".format(
-            mirror_path, self.pkg_name_with_spec)
+            mirror_path, self.pkg_name_with_spec())
         return sexe(mirror_cmd, echo=True)
 
     def find_spack_mirror(self, mirror_name):
