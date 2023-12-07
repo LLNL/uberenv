@@ -1064,7 +1064,7 @@ class SpackEnv(UberEnv):
                 install_cmd += "-k "
             
             # install flags
-            install_cmd += "install "
+            install_cmd += "install --fail-fast "
             install_cmd = self.add_concretizer_args(install_cmd)
             if self.build_mode == "dev-build":
                 install_cmd += "--keep-stage "
