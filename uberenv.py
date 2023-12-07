@@ -59,12 +59,10 @@ import shutil
 import socket
 import platform
 import json
-import datetime
 import glob
 import re
 import argparse
 
-from distutils.version import LooseVersion
 from functools import partial
 
 from os import environ as env
@@ -536,12 +534,10 @@ class VcpkgEnv(UberEnv):
     def patch(self):
         """ hot-copy our ports into vcpkg """
 
-        import distutils.dir_util
-
         dest_vcpkg_ports = pjoin(self.dest_vcpkg, "ports")
 
         print("[info: copying from {0} to {1}]".format(self.vcpkg_ports_path, dest_vcpkg_ports))
-        distutils.dir_util.copy_tree(self.vcpkg_ports_path, dest_vcpkg_ports)
+        shutil.copytree(self.vcpkg_ports_path, dest_vcpkg_ports)
 
 
     def clean_build(self):
@@ -676,7 +672,7 @@ class SpackEnv(UberEnv):
     # Returns version of Spack being used
     def spack_version(self):
         res, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
-        return LooseVersion(out[:-1])
+        return out
 
     def check_concretizer_args(self):
         cmd = "{0} help install".format(self.spack_exe(use_spack_env=False))
