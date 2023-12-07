@@ -253,6 +253,13 @@ def parse_args():
                       default=False,
                       help="Only install (using pre-setup Spack).")
 
+    # Spack skip externals 
+    parser.add_argument("--spack-skip-externals",
+                      dest="spack_skip_externals",
+                      default=None,
+                      nargs="+",
+                      help="Skip spack finding any externals")
+
     # Spack externals list
     parser.add_argument("--spack-externals",
                       dest="spack_externals",
@@ -409,14 +416,14 @@ class UberEnv():
             setting_value = self.args[setting]
         return setting_value
 
-    def set_from_json(self,setting, optional=True):
+    def set_from_json(self,setting, optional=True, default_value=None):
         """
         When optional=False: 
             If the setting key is not in the json file, error and raise an exception.
         When optional=True:
-            If the setting key is not in the json file or args, return None.
+            If the setting key is not in the json file or args, return {default_value}.
         """
-        setting_value = None
+        setting_value = default_value
         try:
             setting_value = self.project_args[setting]
         except (KeyError):
@@ -574,13 +581,15 @@ class SpackEnv(UberEnv):
 
     def __init__(self, args, extra_args):
         UberEnv.__init__(self,args,extra_args)
-        
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
+        self.spack_skip_externals = self.set_from_args_or_json("spack_skip_externals", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
+        default_dict = {}
+        self.spack_host_config_patches = self.set_from_json("spack_host_config_patches", True, default_dict)
 
         # default spack build mode is dev-build
         if self.build_mode is None:
@@ -637,13 +646,14 @@ class SpackEnv(UberEnv):
 
         print("[spack spec: {0}]".format(self.args["spec"]))
 
-        # Appends spec to package name (Example: 'magictestlib_cached@1.0.0%gcc')
-        self.pkg_name_with_spec = "'{0}{1}'".format(self.pkg_name, self.args["spec"])
-
         # List of concretizer options not in all versions of spack
         # (to be checked if it exists after cloning spack)
         self.fresh_exists = False
         self.reuse_exists = False
+
+    def pkg_name_with_spec(self,quote="'"):
+        # Appends spec to package name (Example: 'magictestlib_cached@1.0.0%gcc')
+        return "{0}{1}{2}{0}".format(quote,self.pkg_name, self.args["spec"])
 
     # Spack executable (will include environment -e option by default)
     def spack_exe(self, use_spack_env = True):
@@ -784,17 +794,22 @@ class SpackEnv(UberEnv):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name) and len(l.split()) > 1:
-                return {"name": pkg_name, "path": l.split()[-1]}
+                pkg_path = l.split()[-1]
+                if os.path.exists(pkg_path):
+                    return {"name": pkg_name, "path": pkg_path}
         print("[ERROR: Failed to find package from hash named '{0}' with hash '{1}']".format(pkg_name, pkg_hash))
         sys.exit(-1)
 
     def find_spack_pkg_path(self, pkg_name, spec = ""):
-        res, out = sexe("{0} find -p {1}".format(self.spack_exe(),self.pkg_name_with_spec), ret_output = True)
+        requested_pkg_name_with_spec = "'{0}{1}'".format(pkg_name,spec)
+        res, out = sexe("{0} find -p {1}".format(self.spack_exe(), requested_pkg_name_with_spec), ret_output = True)
         for l in out.split("\n"):
             # TODO: at least print a warning when several choices exist. This will
             # pick the first in the list.
             if l.startswith(pkg_name) and len(l.split()) > 1:
-                return {"name": pkg_name, "path": l.split()[-1]}
+                pkg_path = l.split()[-1]
+                if os.path.exists(pkg_path):
+                    return {"name": pkg_name, "path": pkg_path}
         print("[ERROR: Failed to find package from spec named '{0}' with spec '{1}']".format(pkg_name, spec))
         sys.exit(-1)
 
@@ -896,7 +911,7 @@ class SpackEnv(UberEnv):
         if res != 0:
             print("[ERROR: Failed to create Spack Environment]")
             sys.exit(-1)
-        
+
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:
             # Finding compilers
@@ -910,25 +925,25 @@ class SpackEnv(UberEnv):
                 print("[failed to setup environment]")
                 sys.exit(-1)
 
-            # Finding externals
-            spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
-            if self.spack_externals is None:
-                print("[finding all packages Spack knows about]")
-                spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
-            else:
-                print("[finding packages from list]")
-                spack_external_find_cmd = "{0} {1}".format(spack_external_find_cmd, self.spack_externals)
-            res_external = sexe(spack_external_find_cmd, echo=True)
-            if res_external != 0:
-                print("[failed to setup environment]")
-                sys.exit(-1)
+            if self.spack_skip_externals is None:
+                # Finding externals
+                spack_external_find_cmd = "{0} external find --not-buildable".format(self.spack_exe())
+                if self.spack_externals is None:
+                    print("[finding all packages Spack knows about]")
+                    spack_external_find_cmd = "{0} --all".format(spack_external_find_cmd)
+                else:
+                    print("[finding packages from list]")
+                    spack_external_find_cmd = "{0} {1}".format(spack_external_find_cmd, self.spack_externals)
+                res_external = sexe(spack_external_find_cmd, echo=True)
+                if res_external != 0:
+                    print("[failed to setup environment]")
+                    sys.exit(-1)
 
             # Copy spack.yaml to where you called package source dir
             generated_spack_yaml = pjoin(self.spack_env_directory, "spack.yaml")
             copied_spack_yaml = pjoin(pabs(self.pkg_src_dir), "spack.yaml")
             print("[copying spack yaml file to {0}]".format(copied_spack_yaml))
             sexe("cp {0} {1}".format(generated_spack_yaml, copied_spack_yaml))
-
             print("[setup environment]")
 
         # For each package path (if there is a repo.yaml), add Spack repository to environment
@@ -944,18 +959,38 @@ class SpackEnv(UberEnv):
                     print("[ERROR: No Spack repo.yaml detected in {0}]".format(spack_pkg_repo))
                     sys.exit(-1)
 
-        # Add spack package
-        print("[adding spack package]")
+        # Add main spack package
+        print("[adding spack package: {0}]".format(self.pkg_name_with_spec()))
         spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
-            self.pkg_name_with_spec)
+            self.pkg_name_with_spec())
         sexe(spack_add_cmd, echo=True)
 
         # For dev-build, call develop
         if self.build_mode == "dev-build":
             print("[calling spack develop]")
             spack_develop_cmd = "{0} develop --no-clone --path={1} {2}".format(
-                self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec)
+                self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec())
             sexe(spack_develop_cmd, echo=True)
+
+    def symlink_spack_env_view(self):
+        """
+        Symlink spack view for easy access.
+        """
+        py_script  = "env = spack.environment.active_environment();"
+        py_script += 'print(env.views["default"].get_projection_for_spec(env.matching_spec("{0}")))'.format(self.pkg_name_with_spec(quote=""))
+        spack_vfind_cmd = "{0} python -c '{1}'".format(self.spack_exe(),py_script)
+        res, out = sexe(spack_vfind_cmd, ret_output=True, echo=True)
+        if res != 0:
+            print("[failed to find spack view info]")
+            sys.exit(-1)
+        # this will be one level down from the spack view dir, for example:
+        # 'spack_env/view/python-3.10.10'
+        view_src_path = pjoin(self.spack_env_directory, os.path.split(out)[0])
+        view_symlink_path = pjoin(self.dest_dir,"spack_view")
+        if os.path.islink(view_symlink_path):
+            os.unlink(view_symlink_path)
+        print("[symlinking env view {0} to {1} ]".format(view_src_path,view_symlink_path))
+        os.symlink(view_src_path,view_symlink_path)
 
     def concretize_spack_env(self):
         # Spack concretize
@@ -1006,7 +1041,7 @@ class SpackEnv(UberEnv):
                     # testing that the path exists is mandatory until Spack team fixes
                     # https://github.com/spack/spack/issues/16329
                     if os.path.isdir(install_path):
-                        print("[Warning: {0} has already been installed in {1}]".format(self.pkg_name_with_spec,install_path))
+                        print("[Warning: {0} has already been installed in {1}]".format(self.pkg_name_with_spec(),install_path))
                         print("[Warning: Uberenv will proceed using this directory]")
                         self.use_install = True
 
@@ -1025,7 +1060,7 @@ class SpackEnv(UberEnv):
                 install_cmd += "-k "
             
             # install flags
-            install_cmd += "install "
+            install_cmd += "install --fail-fast "
             install_cmd = self.add_concretizer_args(install_cmd)
             if self.build_mode == "dev-build":
                 install_cmd += "--keep-stage "
@@ -1042,18 +1077,19 @@ class SpackEnv(UberEnv):
             if res != 0:
                 print("[ERROR: Failure of spack install]")
                 return res
-        
         # when using install or uberenv-pkg mode, create a symlink to the host config 
         if self.build_mode == "install" or \
-           self.build_mode == "uberenv-pkg" \
-           or self.use_install:
+           self.build_mode == "uberenv-pkg" or \
+           self.use_install:
+            self.symlink_spack_env_view()
             # only create a symlink if you're completing all phases
             if self.pkg_final_phase == None or self.pkg_final_phase == "install":
                 # use spec_hash to locate b/c other helper won't work if complex
                 # deps are provided in the spec (e.g: @ver+variant ^package+variant)
                 pkg_path = self.find_spack_pkg_path_from_hash(self.pkg_name, self.spec_hash)
-                if self.pkg_name != pkg_path["name"]:
+                if self.pkg_name != pkg_path["name"] or not os.path.exists(pkg_path["path"]):
                     print("[ERROR: Could not find install of {0} with hash {1}]".format(self.pkg_name,self.spec_hash))
+                    print("[package info: {0}]".format(str(pkg_path)))
                     return -1
                 else:
                     # Symlink host-config file
@@ -1068,6 +1104,12 @@ class SpackEnv(UberEnv):
                             sexe("rm -f {0}".format(hc_symlink_path))
                         print("[symlinking host config file {0} to {1}]".format(hc_path,hc_symlink_path))
                         os.symlink(hc_path,hc_symlink_path)
+                        # NOTE: you may want this for dev build as well
+                        if len(self.spack_host_config_patches) > 0:
+                            hc_patch_path = os.path.splitext(hc_fname)[0] + "-patch.cmake"
+                            hc_patch_path = pjoin(self.dest_dir,hc_patch_path)
+                            if self.patch_host_config_for_spack_view(hc_symlink_path,hc_patch_path) == -1:
+                                return -1
                     # if user opt'd for an install, we want to symlink the final
                     # install to an easy place:
                     # Symlink install directory
@@ -1101,6 +1143,44 @@ class SpackEnv(UberEnv):
             print("[ERROR: Unsupported build mode: {0}]".format(self.build_mode))
             return -1
 
+    def patch_host_config_for_spack_view(self, host_config_file_src, host_config_file_patched):
+        """
+        Patch host config entries to point final spack python view paths
+        """
+        #
+        # NOTE:
+        #
+        # This isn't pretty, this logic exists to solve a chicken vs egg issue
+        # with how spack views are setup.
+        #
+        # We need to use the final python view layout created by spack if we
+        # want our dependent python modules to work outside of spack without
+        # env var gymnastics.
+        #
+        # This method replaces cmake cache entries with new entires that point
+        # to the result of a spack view path glob.
+        #
+        print("[patching spack view paths into host config file {0} to create {1}]".format(host_config_file_src,host_config_file_patched))
+        hc_lines = open(host_config_file_src).readlines()
+        hc_out = open(host_config_file_patched,"w")
+        for l in hc_lines:
+            found = False
+            for k,v in self.spack_host_config_patches.items():
+                if l.count(k) > 0:
+                    found = True
+                    # find view path
+                    view_search_path = os.path.join(self.dest_dir,v)
+                    view_path_glob = glob.glob(view_search_path)
+                    if len(view_path_glob) == 0:
+                        print("[ERROR: Could not find view entry {0} path: {1}]".format(k,view_search_path))
+                        return -1
+                    # replace existing entry with what we found
+                    entry  = " # NOTE: Pathed by uberenv to use spack view path instead of spack build path\n"
+                    entry += 'set({0} "{1}" CACHE PATH "")\n'.format(k,view_path_glob[0])
+                    hc_out.write(entry)
+            if not found:
+                hc_out.write(l)
+
     def get_mirror_path(self):
         mirror_path = self.args["mirror"]
         if not mirror_path:
@@ -1119,7 +1199,7 @@ class SpackEnv(UberEnv):
         if self.args["ignore_ssl_errors"]:
             mirror_cmd += "-k "
         mirror_cmd += "mirror create -d {0} --dependencies {1}".format(
-            mirror_path, self.pkg_name_with_spec)
+            mirror_path, self.pkg_name_with_spec())
         return sexe(mirror_cmd, echo=True)
 
     def find_spack_mirror(self, mirror_name):
