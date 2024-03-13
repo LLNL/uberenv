@@ -1,5 +1,5 @@
 .. ############################################################################
-.. # Copyright (c) 2014-2023, Lawrence Livermore National Security, LLC.
+.. # Copyright (c) 2014-2024, Lawrence Livermore National Security, LLC.
 .. #
 .. # Produced at the Lawrence Livermore National Laboratory
 .. #
@@ -221,8 +221,8 @@ Project settings are as follows:
   spack_commit             **None**                   Spack commit to checkout                         **None**
   spack_activate           **None**                   Spack packages to activate                       **None**
   spack_build_mode         ``--spack-build-mode``     Set mode used to build TPLs with Spack           ``dev-build``
-  spack_configs_path       **None**                   Directory with Spack configs to be copied        ``spack_configs``
-  spack_packages_path      **None**                   Directory with Spack packages to be copied       ``packages``
+  spack_configs_path       **None**                   Directory with Spack configs to be autodetected  ``spack_configs``
+  spack_packages_path      **None**                   Directory|List with Package Repos to be added    ``packages``
   spack_concretizer        **None**                   Spack concretizer to use ``original, clingo``    ``original``
   spack_setup_clingo       **None**                   Do not install clingo if set to ``false``        ``true``
   spack_externals          ``--spack-externals``      Space delimited string of packages for Spack to  **None**
@@ -235,11 +235,21 @@ Project settings are as follows:
   vcpkg_ports_path         ``--vcpkg-ports-path``     Folder with vcpkg ports files                    **None**
  ========================= ========================== ================================================ =======================================
 
-If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit`` and ``vcpkg_branch``.
+If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit``and ``vcpkg_branch``.
 
 When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``,
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories.
 Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv repo does not provide them.
+
+``spack_packages_path`` can either be a singular directory or a list of directories. These are relative to the
+location of the ``.uberenv_config.json``. When it is a list, the directories are added from left to right in Spack
+and right-most directories have the highest priority. The built-in Spack package repository is the lowest priority.
+Example:
+
+.. code-block:: json
+
+    "spack_packages_path": "package/repo/higher/than/spacks",
+    "spack_packages_path": ["package/repo/higher/than/spacks", "package/repo/even/higher"],
 
 .. note::
     Uberenv no longer copies all directories that exist under ``spack_packages_path`` to the cloned
