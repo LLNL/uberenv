@@ -551,7 +551,7 @@ class VcpkgEnv(UberEnv):
         pass
 
     def install(self):
-        
+
         os.chdir(self.dest_vcpkg)
         install_cmd = "vcpkg.exe "
         install_cmd += "install {0}:{1}".format(self.pkg_name, self.vcpkg_triplet)
@@ -574,7 +574,7 @@ class SpackEnv(UberEnv):
 
     def __init__(self, args, extra_args):
         UberEnv.__init__(self,args,extra_args)
-        
+
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
@@ -596,7 +596,7 @@ class SpackEnv(UberEnv):
             self.spack_externals = " ".join(self.spack_externals)
         if type(self.spack_compiler_paths) is list:
             self.spack_compiler_paths = " ".join(self.spack_compiler_paths)
-        
+
         # Whether or not to generate a spack.yaml
         self.spack_setup_environment = False
 
@@ -604,7 +604,7 @@ class SpackEnv(UberEnv):
         self.packages_paths = []
         self.spec_hash = ""
         self.use_install = False
-  
+
         if "spack_concretizer" in self.project_args and self.project_args["spack_concretizer"] == "clingo":
             self.use_clingo = True
             if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
@@ -648,7 +648,7 @@ class SpackEnv(UberEnv):
     # Spack executable (will include environment -e option by default)
     def spack_exe(self, use_spack_env = True):
         exe = pjoin(self.dest_dir, "spack/bin/spack")
-        
+
         # Add debug flags
         if self.args["spack_debug"]:
             exe = "{0} --debug --stacktrace".format(exe)
@@ -656,9 +656,9 @@ class SpackEnv(UberEnv):
         # Run Spack with environment directory
         if use_spack_env:
             exe = "{0} -D {1}".format(exe, self.spack_env_directory)
-        
+
         return exe
-    
+
     # Returns version of Spack being used
     def spack_version(self):
         res, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
@@ -896,7 +896,7 @@ class SpackEnv(UberEnv):
         if res != 0:
             print("[ERROR: Failed to create Spack Environment]")
             sys.exit(-1)
-        
+
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:
             # Finding compilers
@@ -1023,7 +1023,7 @@ class SpackEnv(UberEnv):
             # spack flags
             if self.args["ignore_ssl_errors"]:
                 install_cmd += "-k "
-            
+
             # install flags
             install_cmd += "install "
             install_cmd = self.add_concretizer_args(install_cmd)
@@ -1037,12 +1037,12 @@ class SpackEnv(UberEnv):
                 install_cmd += "--test=root "
             if self.args["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.args["build_jobs"])
-            
+
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: Failure of spack install]")
                 return res
-        
+
         # when using install or uberenv-pkg mode, create a symlink to the host config 
         if self.build_mode == "install" or \
            self.build_mode == "uberenv-pkg" \
