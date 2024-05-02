@@ -745,7 +745,7 @@ class SpackEnv(UberEnv):
 
         # If you still could not find a spack.yaml, create one later on
         if self.spack_env_file is None:
-            print("[No Spack Environment file found, so Uberenv will generate one. If you do not want this behavior, then supply a Spack Environment file using the command line argument: --spack-env-file=/path/to/spack.yaml]")
+            print("[No Spack Environment file found, so Uberenv will generate one. If you do not want this behavior, then supply a Spack Environment file in <spack_configs_path>/<platform>/ or specify one using the command line argument: --spack-env-file=/path/to/spack.yaml]")
             self.spack_setup_environment = True
         else:
             self.spack_env_file = pabs(self.spack_env_file)
