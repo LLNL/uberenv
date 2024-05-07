@@ -734,7 +734,7 @@ class SpackEnv(UberEnv):
         # Set spack_env_directory to absolute path and (if exists) check validity
         self.spack_env_name = self.args["spack_env_name"]
         self.spack_env_directory = pabs(os.path.join(self.dest_dir, self.spack_env_name))
-        if os.path.exists(self.spack_env_directory):
+        if os.path.exists(self.spack_env_directory) and not args["skip_setup_and_env"]:
             print("Removing old Spack Environment Directory: {0}".format(self.spack_env_directory))
             shutil.rmtree(self.spack_env_directory)
 
