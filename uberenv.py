@@ -292,7 +292,7 @@ def parse_args():
     # (it should be relative to where uberenv is run from, so it matches what you expect
     #  from shell completion, etc)
     if not is_windows() and args["mirror"] is not None:
-        if not args["mirror"].startswith("http") and not os.path.isabs(args["mirror"]):
+        if not args["mirror"].startswith(("http","oci")) and not os.path.isabs(args["mirror"]):
             args["mirror"] = pabs(args["mirror"])
     return args, extra_args
 
