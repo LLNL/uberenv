@@ -246,12 +246,26 @@ def parse_args():
                       default=False,
                       help="Only download and setup the package manager. No further Spack command will be run. Will not create Spack Environment.")
 
+    # option to stop after spack env creation
+    parser.add_argument("--setup-and-env-only",
+                      action="store_true",
+                      dest="setup_and_env_only",
+                      default=False,
+                      help="Download and setup the package manager, create a Spack Environment. No further Spack command will be run.")
+
     # option to skip spack download and setup
     parser.add_argument("--skip-setup",
                       action="store_true",
                       dest="skip_setup",
                       default=False,
-                      help="Only install (using pre-setup Spack).")
+                      help="Only create env and install (using pre-setup Spack).")
+
+    # option to skip spack download, setup and env creation
+    parser.add_argument("--skip-setup-and-env",
+                      action="store_true",
+                      dest="skip_setup_and_env",
+                      default=False,
+                      help="Only install (using pre-setup Spack and environment).")
 
     # Spack externals list
     parser.add_argument("--spack-externals",
@@ -1313,7 +1327,7 @@ def main():
     os.chdir(env.dest_dir)
 
     # Setup package manager
-    if not args["skip_setup"]:
+    if not args["skip_setup"] and not args["skip_setup_and_env"]:
         # Clone the package manager
         env.clone_repo()
 
@@ -1333,8 +1347,12 @@ def main():
             return 0
 
     # Create Spack Environment and setup Spack package repos
-    if not is_windows():
+    if not is_windows() and not args["skip_setup_and_env"]:
         env.create_spack_env()
+
+        # Allow to end uberenv after Spack environment is ready
+        if args["setup_and_env_only"]:
+            return 0
 
     ###########################################################
     # We now have an instance of our package manager configured,
