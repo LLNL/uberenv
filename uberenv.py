@@ -122,6 +122,12 @@ def parse_args():
                       default=None,
                       help="spack mirror directory")
 
+    parser.add_option("--mirror-autopush",
+                      action="store_true",
+                      dest="mirror_autopush",
+                      default=False,
+                      help="Use spack v0.22+ --autopush functionality for binary cache mirrors")
+
     # flag to create mirror
     parser.add_argument("--create-mirror",
                       action="store_true",
@@ -407,7 +413,7 @@ class UberEnv():
 
     def set_from_args_or_json(self,setting, optional=True):
         """
-        When optional=False: 
+        When optional=False:
             If the setting key is not in the json file, error and raise an exception.
         When optional=True:
             If the setting key is not in the json file or args, return None.
@@ -425,7 +431,7 @@ class UberEnv():
 
     def set_from_json(self,setting, optional=True):
         """
-        When optional=False: 
+        When optional=False:
             If the setting key is not in the json file, error and raise an exception.
         When optional=True:
             If the setting key is not in the json file or args, return None.
@@ -509,7 +515,7 @@ class VcpkgEnv(UberEnv):
 
             os.chdir(self.dest_dir)
 
-            clone_args = ("-c http.sslVerify=false " 
+            clone_args = ("-c http.sslVerify=false "
                           if self.args["ignore_ssl_errors"] else "")
 
             clone_cmd =  "git {0} clone --single-branch -b {1} {2} vcpkg".format(clone_args, vcpkg_branch,vcpkg_url)
@@ -1057,7 +1063,7 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Failure of spack install]")
                 return res
 
-        # when using install or uberenv-pkg mode, create a symlink to the host config 
+        # when using install or uberenv-pkg mode, create a symlink to the host config
         if self.build_mode == "install" or \
            self.build_mode == "uberenv-pkg" \
            or self.use_install:
@@ -1157,6 +1163,7 @@ class SpackEnv(UberEnv):
         mirror_name = self.pkg_name
         mirror_path = self.get_mirror_path()
         existing_mirror_path = self.find_spack_mirror(mirror_name)
+        autopush = "--autopush" if self.mirror_autopush else ""
 
         if existing_mirror_path and mirror_path != existing_mirror_path:
             # Existing mirror has different URL, error out
@@ -1171,8 +1178,8 @@ class SpackEnv(UberEnv):
             existing_mirror_path = None
         if not existing_mirror_path:
             # Add if not already there
-            sexe("{0} mirror add --scope=defaults {1} {2}".format(
-                    self.spack_exe(), mirror_name, mirror_path), echo=True)
+            sexe("{0} mirror add --scope=defaults {1} {2} {3}".format(
+                    self.spack_exe_path(), autopush, mirror_name, mirror_path), echo=True)
             print("[using mirror {0}]".format(mirror_path))
 
     def find_spack_upstream(self, upstream_name):
