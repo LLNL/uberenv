@@ -122,11 +122,11 @@ def parse_args():
                       default=None,
                       help="spack mirror directory")
 
-    parser.add_option("--mirror-autopush",
-                      action="store_true",
-                      dest="mirror_autopush",
-                      default=False,
-                      help="Use spack v0.22+ --autopush functionality for binary cache mirrors")
+    parser.add_argument("--mirror-autopush",
+                       action="store_true",
+                       dest="mirror_autopush",
+                       default=False,
+                       help="Use spack v0.22+ --autopush functionality for binary cache mirrors")
 
     # flag to create mirror
     parser.add_argument("--create-mirror",
