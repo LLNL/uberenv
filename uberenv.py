@@ -1179,7 +1179,7 @@ class SpackEnv(UberEnv):
         if not existing_mirror_path:
             # Add if not already there
             sexe("{0} mirror add --scope=defaults {1} {2} {3}".format(
-                    self.spack_exe_path(), autopush, mirror_name, mirror_path), echo=True)
+                    self.spack_exe(), autopush, mirror_name, mirror_path), echo=True)
             print("[using mirror {0}]".format(mirror_path))
 
     def find_spack_upstream(self, upstream_name):
