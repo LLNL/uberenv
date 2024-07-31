@@ -1163,7 +1163,7 @@ class SpackEnv(UberEnv):
         mirror_name = self.pkg_name
         mirror_path = self.get_mirror_path()
         existing_mirror_path = self.find_spack_mirror(mirror_name)
-        autopush = "--autopush" if self.mirror_autopush else ""
+        autopush = "--autopush" if self.args["mirror_autopush"] else ""
 
         if existing_mirror_path and mirror_path != existing_mirror_path:
             # Existing mirror has different URL, error out
