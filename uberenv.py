@@ -1346,10 +1346,6 @@ def main():
     # Setup the necessary paths and directories
     env.setup_paths_and_dirs()
 
-    # Trust keys if the option was provided
-    if args["key_path"]:
-        env.trust_gpg_key()
-
     # Go to package manager's destination
     os.chdir(env.dest_dir)
 
@@ -1360,6 +1356,10 @@ def main():
 
         # Patch the package manager, as necessary
         env.patch()
+
+        # Trust keys if the option was provided
+        if args["key_path"]:
+            env.trust_gpg_key()
 
         # Clean the build
         env.clean_build()
