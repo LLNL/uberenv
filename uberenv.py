@@ -301,7 +301,6 @@ def parse_args():
 
     # option to add trusted keys to spack gpg keyring
     parser.add_argument("--trust-keys",
-                      action="store_true",
                       dest="key_path",
                       default=None,
                       help="Add the gpg keys to the spack gpg keyring")
