@@ -300,7 +300,7 @@ def parse_args():
                       help="Path to Spack Environment file (e.g. spack.yaml or spack.lock)")
 
     # option to add trusted keys to spack gpg keyring
-    parser.add_argument("--trust-keys",
+    parser.add_argument("--trust-key",
                       dest="key_path",
                       default=None,
                       help="Add the gpg keys to the spack gpg keyring")
@@ -1270,7 +1270,7 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Clingo install failed with returncode {0}]".format(res))
                 sys.exit(-1)
 
-    def trust_gpg_keys(self):
+    def trust_gpg_key(self):
         """
         Tells spack to trust the gpg keys at keypath.
         """
@@ -1279,7 +1279,7 @@ class SpackEnv(UberEnv):
             print("[--trust-key requires a gpg key path]")
         key_path = pabs(key_path)
         print("[adding gpg keys to spack gpg keyring]")
-        sexe("gpg trust {0}".format(key_path))
+        sexe("{0} gpg trust {1}".format(self.spack_exe(), key_path), echo=True)
 
 def find_osx_sdks():
     """
@@ -1348,7 +1348,7 @@ def main():
 
     # Trust keys if the option was provided
     if args["key_path"]:
-        env.trust_gpg_keys()
+        env.trust_gpg_key()
 
     # Go to package manager's destination
     os.chdir(env.dest_dir)
