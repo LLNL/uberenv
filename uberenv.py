@@ -1275,7 +1275,7 @@ class SpackEnv(UberEnv):
         """
         Tells spack to trust the gpg keys at keypath.
         """
-        key_path = self.opts["key_path"]
+        key_path = self.args["key_path"]
         if not key_path:
             print("[--trust-key requires a gpg key path]")
         key_path = pabs(key_path)
