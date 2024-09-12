@@ -1279,7 +1279,7 @@ class SpackEnv(UberEnv):
             print("[--trust-key requires a gpg key path]")
         key_path = pabs(key_path)
         print("[adding gpg keys to spack gpg keyring]")
-        sexe("{0} gpg trust {1}".format(self.spack_exe(), key_path), echo=True)
+        sexe("{0} gpg trust {1}".format(self.spack_exe(use_spack_env=False), key_path), echo=True)
 
 def find_osx_sdks():
     """
