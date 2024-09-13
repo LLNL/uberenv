@@ -300,7 +300,7 @@ def parse_args():
                       help="Path to Spack Environment file (e.g. spack.yaml or spack.lock)")
 
     # option to add trusted keys to spack gpg keyring
-    parser.add_argument("--trust-keys",
+    parser.add_argument("--trust-key",
                       dest="key_paths",
                       action="append",
                       default=None,
