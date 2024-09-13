@@ -1358,7 +1358,7 @@ def main():
         env.patch()
 
         # Trust keys if the option was provided
-        if args["key_path"]:
+        if args["key_paths"]:
             env.trust_gpg_keys()
 
         # Clean the build
