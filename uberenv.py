@@ -1273,7 +1273,7 @@ class SpackEnv(UberEnv):
 
     def trust_gpg_keys(self):
         """
-        Tells spack to trust the gpg keys at keypath.
+        Tells spack to trust the gpg keys in key_paths.
         """
         key_paths = self.args["key_paths"]
         for key_path in key_paths:
