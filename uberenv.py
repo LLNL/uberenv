@@ -1281,17 +1281,17 @@ class SpackEnv(UberEnv):
             print("[adding gpg key to spack gpg keyring]")
             sexe("{0} gpg trust {1}".format(self.spack_exe(use_spack_env=False), key_path), echo=True)
 
-    def find_osx_sdks():
-        """
-        Finds installed osx sdks, returns dict mapping version to file system path
-        """
-        res = {}
-        sdks = glob.glob("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX*.sdk")
-        for sdk in sdks:
-            sdk_base = os.path.split(sdk)[1]
-            ver = sdk_base[len("MacOSX"):sdk_base.rfind(".")]
-            res[ver] = sdk
-        return res
+def find_osx_sdks():
+    """
+    Finds installed osx sdks, returns dict mapping version to file system path
+    """
+    res = {}
+    sdks = glob.glob("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX*.sdk")
+    for sdk in sdks:
+        sdk_base = os.path.split(sdk)[1]
+        ver = sdk_base[len("MacOSX"):sdk_base.rfind(".")]
+        res[ver] = sdk
+    return res
 
 def setup_osx_sdk_env_vars():
     """
