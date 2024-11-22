@@ -908,7 +908,7 @@ class SpackEnv(UberEnv):
             res = sexe(spack_create_cmd, echo=True)
         else:
             env_file_dir = os.path.dirname(os.path.abspath(self.spack_env_file))
-            env_copy_cmd = "cp -r {0} {1}".format(env_file_dir, self.spack_env_directory)
+            env_copy_cmd = "cp -r {0}/ {1}".format(env_file_dir, self.spack_env_directory)
             res = sexe(env_copy_cmd, echo=True)
         if res != 0:
             print("[ERROR: Failed to create Spack Environment]")
