@@ -902,11 +902,14 @@ class SpackEnv(UberEnv):
     def create_spack_env(self):
         # Create Spack Environment
         print("[creating spack env]")
+        res = 0
         if self.spack_env_file is None:
-            self.spack_env_file = ""
-        spack_create_cmd = "{0} env create -d {1} {2}".format(self.spack_exe(use_spack_env=False),
-            self.spack_env_directory, self.spack_env_file)
-        res = sexe(spack_create_cmd, echo=True)
+            spack_create_cmd = "{0} env create -d {1}".format(self.spack_exe(use_spack_env=False), self.spack_env_directory)
+            res = sexe(spack_create_cmd, echo=True)
+        else:
+            env_file_dir = os.path.dirname(os.path.abspath(self.spack_env_file))
+            env_copy_cmd = "cp -r {0} {1}".format(env_file_dir, self.spack_env_directory)
+            res = sexe(env_copy_cmd, echo=True)
         if res != 0:
             print("[ERROR: Failed to create Spack Environment]")
             sys.exit(-1)
