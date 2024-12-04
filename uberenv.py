@@ -902,7 +902,6 @@ class SpackEnv(UberEnv):
     def create_spack_env(self):
         # Create Spack Environment
         print("[creating spack env]")
-        res = 0
         if self.spack_env_file is None:
             spack_create_cmd = "{0} env create -d {1}".format(self.spack_exe(use_spack_env=False), self.spack_env_directory)
             res = sexe(spack_create_cmd, echo=True)
