@@ -879,26 +879,14 @@ class SpackEnv(UberEnv):
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes()
 
-        # determine if using clingo and set it up if so
-        if "spack_concretizer" in self.project_args and self.project_args["spack_concretizer"] == "clingo":
-            self.use_clingo = True
-            if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
-                print("[info: clingo will not be installed by uberenv]")
-            else:
-                self.setup_clingo()
+        # setup clingo (unless specified not to)
+        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
+            print("[info: clingo will not be installed by uberenv]")
         else:
-            self.use_clingo = False
+            self.setup_clingo()
 
         # Check which concretizer this version of Spack has
         self.check_concretizer_args()
-
-        # Update spack's config.yaml if clingo was requested
-        if self.use_clingo:
-            concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_exe(use_spack_env=False))
-            res = sexe(concretizer_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Failed to update Spack configuration to use new concretizer]")
-                sys.exit(-1)
 
     def create_spack_env(self):
         # Create Spack Environment

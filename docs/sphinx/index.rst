@@ -223,7 +223,6 @@ Project settings are as follows:
   spack_build_mode         ``--spack-build-mode``     Set mode used to build TPLs with Spack           ``dev-build``
   spack_configs_path       **None**                   Directory with Spack configs to be autodetected  ``spack_configs``
   spack_packages_path      **None**                   Directory|List with Package Repos to be added    ``packages``
-  spack_concretizer        **None**                   Spack concretizer to use ``original, clingo``    ``original``
   spack_setup_clingo       **None**                   Do not install clingo if set to ``false``        ``true``
   spack_externals          ``--spack-externals``      Space delimited string of packages for Spack to  **None**
                                                       search for externals
@@ -277,12 +276,3 @@ Uberenv also features options to optimize the installation
 
 .. note::
     These options are only currently available for spack.
-
-Spack Concretization
---------------------
-
-Uberenv provides a ``spack_concretizer`` setting to select the method by which the "concrete" dependency tree is determined.
-The ``original`` option is the default behavior and is often subject to errors where a valid set of constraints fails to
-concretize.  The ``clingo`` option is more robust in this respect but requires the installation of the ``clingo`` Python module.
-This happens automatically when the ``spack_concretizer`` option is set to ``clingo`` through ``spack bootstrap``. See
-`Spack documentation on bootstrapping <https://spack.readthedocs.io/en/latest/bootstrapping.html>`_.

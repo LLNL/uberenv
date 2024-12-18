@@ -37,6 +37,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Reduce Spack's git history to a bare minimum
 - Uberenv now requires python version 3.3 or above.
 - Rather than using pip, Uberenv uses `spack bootstrap now` to install clingo.
+- Removes Spack concretizer options, since clingo is the only option in newer Spack. (You can still disable clingo install.)
 
 ### Fixed
 
