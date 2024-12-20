@@ -23,7 +23,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Adds support for the spack `--reuse` option for more relaxed tpl/dependency matching.
 - Adds support for `--upstream` with `--setup-only`.
 - Allow to prevent Uberenv from installing clingo setting `spack_setup_clingo`
-  to `no` in `.uberenv_config.json`.
+  to `false` in `.uberenv_config.json`.
 - Adds the `--spack-debug` option to run spack spec/install commands in debug mode.
 - Adds the `--spack-allow-deprecated` option, to allow spack to build packages marked deprecated.
 
