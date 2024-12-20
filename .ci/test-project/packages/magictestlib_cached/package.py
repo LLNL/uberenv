@@ -42,7 +42,7 @@
 #
 ###############################################################################
 
-from spack import *
+from spack.package import *
 
 import os
 import socket
