@@ -710,7 +710,7 @@ class SpackEnv(UberEnv):
 
         UberEnv.setup_paths_and_dirs(self)
 
-        # Next to uberenv.py (backwards compatility)
+        # Next to uberenv.py (backwards compatibility)
         spack_configs_path = pabs(pjoin(self.uberenv_path,"spack_config"))
 
         # In project config file
@@ -880,7 +880,7 @@ class SpackEnv(UberEnv):
         self.disable_spack_config_scopes()
 
         # setup clingo (unless specified not to)
-        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
+        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"].lower() == "false":
             print("[info: clingo will not be installed by uberenv]")
         else:
             self.setup_clingo()
