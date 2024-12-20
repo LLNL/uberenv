@@ -619,15 +619,6 @@ class SpackEnv(UberEnv):
         self.spec_hash = ""
         self.use_install = False
 
-        if "spack_concretizer" in self.project_args and self.project_args["spack_concretizer"] == "clingo":
-            self.use_clingo = True
-            if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
-                print("[info: clingo will not be installed by uberenv]")
-            else:
-                self.setup_clingo()
-        else:
-            self.use_clingo = False
-
         # Some additional setup for macos
         if is_darwin():
             if args["macos_sdk_env_setup"]:
@@ -719,7 +710,7 @@ class SpackEnv(UberEnv):
 
         UberEnv.setup_paths_and_dirs(self)
 
-        # Next to uberenv.py (backwards compatility)
+        # Next to uberenv.py (backwards compatibility)
         spack_configs_path = pabs(pjoin(self.uberenv_path,"spack_config"))
 
         # In project config file
@@ -885,19 +876,17 @@ class SpackEnv(UberEnv):
         # this is an opportunity to show spack python info post obtaining spack
         self.print_spack_python_info()
 
-        # Check which concretizer this version of Spack has
-        self.check_concretizer_args()
-
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes()
 
-        # Update spack's config.yaml if clingo was requested
-        if self.use_clingo:
-            concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_exe(use_spack_env=False))
-            res = sexe(concretizer_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Failed to update Spack configuration to use new concretizer]")
-                sys.exit(-1)
+        # setup clingo (unless specified not to)
+        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"].lower() == "false":
+            print("[info: clingo will not be installed by uberenv]")
+        else:
+            self.setup_clingo()
+
+        # Check which concretizer this version of Spack has
+        self.check_concretizer_args()
 
     def create_spack_env(self):
         # Create Spack Environment
@@ -1219,43 +1208,22 @@ class SpackEnv(UberEnv):
 
     def setup_clingo(self):
         """
-        Attempts to install the clingo answer set programming library
+        Attempts to install the clingo answer set programming library via Spack
         if it is not already available as a Python module
         """
         if not have_internet():
             print("[WARNING: No internet detected. Skipping setting up clingo.]")
             return
 
-        try:
-            import clingo
-        except ImportError:
-            import pip
-            pip_ver = pip.__version__
-            # Requirement comes from https://github.com/pypa/manylinux
-            # JBE: I think the string comparison is somewhat correct here, if not we'll
-            # need to install setuptools for 'packaging.version'
-            if pip_ver < "19.3":
-                print("[!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print("  ERROR: pip version {0} is too old to install clingo".format(pip_ver))
-                print("  pip 19.3 is required for PEP 599 support")
-                print("  Try running the following command to upgrade pip:")
-                print("     python3 -m pip install --user --upgrade pip")
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!]")
-                sys.exit(-1)
-            py_interp = sys.executable
-            clingo_pkg = "clingo"
-            uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
-            # Uninstall it first in case the available version failed due to differing arch
-            # pip will still return 0 in the case of a "trivial" uninstall
-            res = sexe(uninstall_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Clingo uninstall failed with returncode {0}]".format(res))
-                sys.exit(-1)
-            install_cmd = "{0} -m pip install --user {1}".format(py_interp, clingo_pkg)
-            res = sexe(install_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Clingo install failed with returncode {0}]".format(res))
-                sys.exit(-1)
+        res = sexe('{0} bootstrap now'.format(self.spack_exe(use_spack_env = False)), echo=True)
+        if res != 0:
+            print("[ERROR: 'spack bootstrap now' failed with returncode {0}]".format(res))
+            sys.exit(-1)
+
+        res = sexe('{0} bootstrap status'.format(self.spack_exe(use_spack_env = False)), echo=True)
+        if res != 0:
+            print("[ERROR: 'spack bootstrap status' failed with returncode {0}]".format(res))
+            sys.exit(-1)
 
 
 def find_osx_sdks():
