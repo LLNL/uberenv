@@ -880,7 +880,7 @@ class SpackEnv(UberEnv):
         self.disable_spack_config_scopes()
 
         # setup clingo (unless specified not to)
-        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"].lower() == "false":
+        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
             print("[info: clingo will not be installed by uberenv]")
         else:
             self.setup_clingo()
