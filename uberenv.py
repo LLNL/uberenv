@@ -706,6 +706,7 @@ class SpackEnv(UberEnv):
 
 
     def setup_paths_and_dirs(self):
+        print("[setting up paths for environment]")
         # get the current working path
 
         UberEnv.setup_paths_and_dirs(self)
@@ -747,6 +748,15 @@ class SpackEnv(UberEnv):
                 else:
                     print("[WARNING: Could not find Spack Environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
                     self.spack_env_file = None
+
+        # Copy "defaults.yaml" and "versions.yaml" from configs dir, if they exist
+        for _config_file in ("defaults.yaml", "versions.yaml"):
+          _src = pjoin(spack_configs_path, _config_file)
+          _dst = pabs(pjoin(self.spack_env_directory, "..", _config_file))
+          print("[checking for '{0}' yaml file]".format(_src))
+          if os.path.exists(_src):
+            print("[copying '{0}' config file to {1}]".format(_config_file, _dst))
+            sexe("cp {0} {1}".format(_src, _dst))
 
         # If you still could not find a spack.yaml, create one later on
         if self.spack_env_file is None:
