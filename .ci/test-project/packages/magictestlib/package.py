@@ -77,6 +77,7 @@ class Magictestlib(Package):
 
     depends_on('zlib')
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     ###################################

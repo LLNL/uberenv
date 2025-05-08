@@ -62,6 +62,7 @@ class MagictestlibCached(CachedCMakePackage):
 
     depends_on('hdf5~mpi')
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     def url_for_version(self, version):
