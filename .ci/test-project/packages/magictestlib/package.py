@@ -100,7 +100,7 @@ class Magictestlib(Package):
                                                                        sys_type,
                                                                        spec.compiler,
                                                                        spec.dag_hash())
-        dest_dir = self.pkg.stage.source_path
+        dest_dir = self.stage.source_path
         host_config_path = os.path.abspath(join_path(dest_dir,
                                                      host_config_name))
         return host_config_path
