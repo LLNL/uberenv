@@ -155,3 +155,9 @@ class Magictestlib(Package):
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated host-config file: " + host_cfg_fname)
 
+    # Copy the generated host-config to install directory for downstream use
+    @run_before("install")
+    def copy_host_config(self):
+        src = self._get_host_config_path(self.spec)
+        dst = join_path(self.spec.prefix, os.path.basename(src))
+        copy(src, dst)
