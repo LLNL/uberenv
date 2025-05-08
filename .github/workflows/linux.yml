@@ -24,7 +24,15 @@ jobs:
       run: |
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=uberenv_configs/uberenv-pkg.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml
+          echo "~~~~~~~~~~~~~~~"
+          pwd
+          echo "~~~~~~~~~~~~~~~"
+          ls -al
+          echo "~~~~~~~~~~~~~~~"
+          ls -al ./uberenv_libs
+          echo "~~~~~~~~~~~~~~~"
           find ./uberenv_libs -type f -name "*.cmake"
+          echo "~~~~~~~~~~~~~~~"
           cat uberenv_libs/*.cmake
   # Tests dev-build Spack build mode
   build_dev_build_full_mode:
