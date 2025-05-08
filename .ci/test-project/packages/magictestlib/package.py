@@ -114,8 +114,8 @@ class Magictestlib(Package):
         #######################
         # Compiler Info
         #######################
-        c_compiler = env["SPACK_CC"]
-        cpp_compiler = env["SPACK_CXX"]
+        c_compiler = env["CC"]
+        cpp_compiler = env["CXX"]
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
