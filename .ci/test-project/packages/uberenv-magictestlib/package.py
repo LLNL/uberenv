@@ -62,3 +62,9 @@ class UberenvMagictestlib(Magictestlib):
         dummy_tar_path = os.path.abspath(os.path.join(__file__, "../uberenv-magictestlib.tar.gz"))
         url = "file://" + dummy_tar_path
         return url
+
+    def hostconfig(self, spec, prefix):
+        super().hostconfig(spec, prefix)
+        src = self._get_host_config_path(self.spec)
+        dst = join_path(self.spec.prefix, os.path.basename(src))
+        copy(src, dst)
