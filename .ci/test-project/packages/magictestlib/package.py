@@ -99,7 +99,7 @@ class Magictestlib(Package):
 
         compiler_str = f"{self['c'].name}-{self['c'].version}"
         host_config_path = (
-            f"{socket.gethostname()}-{sys_type}-{compiler_str}" f"-conduit-{spec.dag_hash()}.cmake"
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}-magictestlib-{spec.dag_hash()}.cmake"
         )
         dest_dir = self.stage.source_path
         host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
