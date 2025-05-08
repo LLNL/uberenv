@@ -114,6 +114,8 @@ Uberenv has a few options that allow you to control how dependencies are built:
   ``--run_tests``             Invoke tests during build and against install  **False**
   ``--setup-only``            Only download and setup Spack                  **False**
   ``--skip-setup``            Only install (using pre-setup Spack)           **False**
+  ``--setup-and-env-only``    Download, setup Spack, and generate env file   **False**
+  ``--skip-setup-and-env``    Only install (using pre-setup Spack/env file)  **False**
   ``--spack-externals``       Space delimited string of packages for         **none**
                               Spack to search for externals
   ``--spack-compiler-paths``  Space delimited string of paths for            **none**
