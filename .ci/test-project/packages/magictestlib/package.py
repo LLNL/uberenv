@@ -96,13 +96,13 @@ class Magictestlib(Package):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-magictestlib-{3}.cmake".format(socket.gethostname(),
-                                                                  sys_type,
-                                                                  spec.compiler,
-                                                                  spec.dag_hash())
-        dest_dir = spec.prefix
+        host_config_name = "{0}-{1}-{2}-magictestlib-{3}.cmake".format(socket.gethostname(),
+                                                                       sys_type,
+                                                                       spec.compiler,
+                                                                       spec.dag_hash())
+        dest_dir = self.pkg.stage.source_path
         host_config_path = os.path.abspath(join_path(dest_dir,
-                                                     host_config_path))
+                                                     host_config_name))
         return host_config_path
 
     def hostconfig(self, spec, prefix):
