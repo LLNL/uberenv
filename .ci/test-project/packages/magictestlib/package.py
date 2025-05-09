@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2014-2024, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2025, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -77,6 +77,9 @@ class Magictestlib(Package):
 
     depends_on('zlib')
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     ###################################
     # build phases used by this package
     ###################################
@@ -93,13 +96,13 @@ class Magictestlib(Package):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-magictestlib-{3}.cmake".format(socket.gethostname(),
-                                                                  sys_type,
-                                                                  spec.compiler,
-                                                                  spec.dag_hash())
-        dest_dir = spec.prefix
-        host_config_path = os.path.abspath(join_path(dest_dir,
-                                                     host_config_path))
+
+        compiler_str = f"{self['c'].name}-{self['c'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}-magictestlib-{spec.dag_hash()}.cmake"
+        )
+        dest_dir = self.stage.source_path
+        host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
         return host_config_path
 
     def hostconfig(self, spec, prefix):
@@ -112,8 +115,8 @@ class Magictestlib(Package):
         #######################
         # Compiler Info
         #######################
-        c_compiler = env["SPACK_CC"]
-        cpp_compiler = env["SPACK_CXX"]
+        c_compiler = env["CC"]
+        cpp_compiler = env["CXX"]
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
@@ -152,3 +155,9 @@ class Magictestlib(Package):
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated host-config file: " + host_cfg_fname)
 
+    # Copy the generated host-config to install directory for downstream use
+    @run_before("install")
+    def copy_host_config(self):
+        src = self._get_host_config_path(self.spec)
+        dst = join_path(self.spec.prefix, os.path.basename(src))
+        copy(src, dst)

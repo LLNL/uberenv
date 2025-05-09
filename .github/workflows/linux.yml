@@ -40,7 +40,7 @@ jobs:
           cp .ci/test-project/packages/magictestlib.tar.gz . && tar -xvf magictestlib.tar.gz && cp src/* .
           cd .ci/test-project
           python3 ../../uberenv.py --project-json=uberenv_configs/dev-build.json --spack-env-file=spack_configs/linux_ubuntu_22/spack.yaml
-          ./uberenv_libs/spack/opt/spack/linux-*/gcc-*/magictestlib_cached-1.0.0-*/bin/uberenv_conduit_hello
+          find . -type f -name uberenv_conduit_hello -exec {} \;
   # Tests install Spack build mode
   build_install_full_mode:
     name: Install Full Mode (Linux)

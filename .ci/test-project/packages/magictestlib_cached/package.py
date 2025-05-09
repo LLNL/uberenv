@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2014-2024, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2025, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -61,6 +61,9 @@ class MagictestlibCached(CachedCMakePackage):
     version('1.0.0', 'c8b277080a00041cfc4f64619e31f6d6',preferred=True)
 
     depends_on('hdf5~mpi')
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     def url_for_version(self, version):
         dummy_tar_path = os.path.abspath(os.path.join(__file__, "../../magictestlib.tar.gz"))
