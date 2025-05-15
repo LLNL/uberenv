@@ -544,7 +544,7 @@ class VcpkgEnv(UberEnv):
         dest_vcpkg_ports = pjoin(self.dest_vcpkg, "ports")
 
         print("[info: copying from {0} to {1}]".format(self.vcpkg_ports_path, dest_vcpkg_ports))
-        shutil.copytree(self.vcpkg_ports_path, dest_vcpkg_ports)
+        shutil.copytree(self.vcpkg_ports_path, dest_vcpkg_ports, dirs_exist_ok=True)
 
 
     def clean_build(self):
