@@ -756,10 +756,7 @@ class SpackEnv(UberEnv):
           print("[checking for '{0}' yaml file]".format(_src))
           if os.path.exists(_src):
             print("[copying '{0}' config file to {1}]".format(_config_file, _dst))
-            if os.path.exists(_dst):
-                raise FileExistsError(f"The file '{_dst}' already exists.")
-            else:
-                shutil.copy(_src, _dst)
+            shutil.copy(_src, _dst)
 
         # If you still could not find a spack.yaml, create one later on
         if self.spack_env_file is None:
