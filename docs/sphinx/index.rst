@@ -268,13 +268,15 @@ Optimization
 
 Uberenv also features options to optimize the installation
 
- ===================== ============================================== ================================================
-  Option               Description                                    Default
- ===================== ============================================== ================================================
-  ``--mirror``         Location of a Spack mirror                     **None**
-  ``--create-mirror``  Creates a Spack mirror at specified location   **None**
-  ``--upstream``       Location of a Spack upstream                   **None**
- ===================== ============================================== ================================================
+ ====================== ============================================== ================================================
+  Option                Description                                    Default
+ ====================== ============================================== ================================================
+  ``--mirror``          Location of a Spack mirror                     **None**
+  ``--create-mirror``   Creates a Spack mirror at specified location   **None**
+  ``--upstream``        Location of a Spack upstream                   **None**
+  ``--mirror-autopush`` Push binaries to mirror as they are built      False
+  ``--trust-key``       Load the gpg key(s) to the Spack gpg keyring   **None**
+ ====================== ============================================== ================================================
 
 .. note::
     These options are only currently available for spack.
