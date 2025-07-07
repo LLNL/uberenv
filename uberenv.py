@@ -1,7 +1,7 @@
 #!/bin/sh
 "exec" "python3" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2023, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2025, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -246,12 +246,26 @@ def parse_args():
                       default=False,
                       help="Only download and setup the package manager. No further Spack command will be run. Will not create Spack Environment.")
 
+    # option to stop after spack env creation
+    parser.add_argument("--setup-and-env-only",
+                      action="store_true",
+                      dest="setup_and_env_only",
+                      default=False,
+                      help="Download and setup the package manager, create a Spack Environment. No further Spack command will be run.")
+
     # option to skip spack download and setup
     parser.add_argument("--skip-setup",
                       action="store_true",
                       dest="skip_setup",
                       default=False,
-                      help="Only install (using pre-setup Spack).")
+                      help="Only create env and install (using pre-setup Spack).")
+
+    # option to skip spack download, setup and env creation
+    parser.add_argument("--skip-setup-and-env",
+                      action="store_true",
+                      dest="skip_setup_and_env",
+                      default=False,
+                      help="Only install (using pre-setup Spack and environment).")
 
     # Spack skip externals 
     parser.add_argument("--spack-skip-externals",
@@ -299,7 +313,7 @@ def parse_args():
     # (it should be relative to where uberenv is run from, so it matches what you expect
     #  from shell completion, etc)
     if not is_windows() and args["mirror"] is not None:
-        if not args["mirror"].startswith("http") and not os.path.isabs(args["mirror"]):
+        if not args["mirror"].startswith(("http","oci")) and not os.path.isabs(args["mirror"]):
             args["mirror"] = pabs(args["mirror"])
     return args, extra_args
 
@@ -537,7 +551,7 @@ class VcpkgEnv(UberEnv):
         dest_vcpkg_ports = pjoin(self.dest_vcpkg, "ports")
 
         print("[info: copying from {0} to {1}]".format(self.vcpkg_ports_path, dest_vcpkg_ports))
-        shutil.copytree(self.vcpkg_ports_path, dest_vcpkg_ports)
+        shutil.copytree(self.vcpkg_ports_path, dest_vcpkg_ports, dirs_exist_ok=True)
 
 
     def clean_build(self):
@@ -558,7 +572,7 @@ class VcpkgEnv(UberEnv):
         pass
 
     def install(self):
-        
+
         os.chdir(self.dest_vcpkg)
         install_cmd = "vcpkg.exe "
         install_cmd += "install {0}:{1}".format(self.pkg_name, self.vcpkg_triplet)
@@ -605,7 +619,7 @@ class SpackEnv(UberEnv):
             self.spack_externals = " ".join(self.spack_externals)
         if type(self.spack_compiler_paths) is list:
             self.spack_compiler_paths = " ".join(self.spack_compiler_paths)
-        
+
         # Whether or not to generate a spack.yaml
         self.spack_setup_environment = False
 
@@ -613,15 +627,6 @@ class SpackEnv(UberEnv):
         self.packages_paths = []
         self.spec_hash = ""
         self.use_install = False
-  
-        if "spack_concretizer" in self.project_args and self.project_args["spack_concretizer"] == "clingo":
-            self.use_clingo = True
-            if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
-                print("[info: clingo will not be installed by uberenv]")
-            else:
-                self.setup_clingo()
-        else:
-            self.use_clingo = False
 
         # Some additional setup for macos
         if is_darwin():
@@ -658,7 +663,7 @@ class SpackEnv(UberEnv):
     # Spack executable (will include environment -e option by default)
     def spack_exe(self, use_spack_env = True):
         exe = pjoin(self.dest_dir, "spack/bin/spack")
-        
+
         # Add debug flags
         if self.args["spack_debug"]:
             exe = "{0} --debug --stacktrace".format(exe)
@@ -666,9 +671,9 @@ class SpackEnv(UberEnv):
         # Run Spack with environment directory
         if use_spack_env:
             exe = "{0} -D {1}".format(exe, self.spack_env_directory)
-        
+
         return exe
-    
+
     # Returns version of Spack being used
     def spack_version(self):
         res, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
@@ -711,11 +716,12 @@ class SpackEnv(UberEnv):
 
 
     def setup_paths_and_dirs(self):
+        print("[setting up paths for environment]")
         # get the current working path
 
         UberEnv.setup_paths_and_dirs(self)
 
-        # Next to uberenv.py (backwards compatility)
+        # Next to uberenv.py (backwards compatibility)
         spack_configs_path = pabs(pjoin(self.uberenv_path,"spack_config"))
 
         # In project config file
@@ -730,7 +736,7 @@ class SpackEnv(UberEnv):
         # Set spack_env_directory to absolute path and (if exists) check validity
         self.spack_env_name = self.args["spack_env_name"]
         self.spack_env_directory = pabs(os.path.join(self.dest_dir, self.spack_env_name))
-        if os.path.exists(self.spack_env_directory):
+        if os.path.exists(self.spack_env_directory) and not self.args["skip_setup_and_env"]:
             print("Removing old Spack Environment Directory: {0}".format(self.spack_env_directory))
             shutil.rmtree(self.spack_env_directory)
 
@@ -753,9 +759,18 @@ class SpackEnv(UberEnv):
                     print("[WARNING: Could not find Spack Environment file (e.g. spack.yaml) under: {0}]".format(self.spack_env_file))
                     self.spack_env_file = None
 
+        # Copy "defaults.yaml" and "versions.yaml" from configs dir, if they exist
+        for _config_file in ("defaults.yaml", "versions.yaml"):
+          _src = pjoin(spack_configs_path, _config_file)
+          _dst = pabs(pjoin(self.spack_env_directory, "..", _config_file))
+          print("[checking for '{0}' yaml file]".format(_src))
+          if os.path.exists(_src):
+            print("[copying '{0}' config file to {1}]".format(_config_file, _dst))
+            shutil.copy(_src, _dst)
+
         # If you still could not find a spack.yaml, create one later on
         if self.spack_env_file is None:
-            print("[No Spack Environment file found, so Uberenv will generate one. If you do not want this behavior, then supply a Spack Environment file using the command line argument: --spack-env-file=/path/to/spack.yaml]")
+            print("[No Spack Environment file found, so Uberenv will generate one. If you do not want this behavior, then supply a Spack Environment file in <spack_configs_path>/<platform>/ or specify one using the command line argument: --spack-env-file=/path/to/spack.yaml]")
             self.spack_setup_environment = True
         else:
             self.spack_env_file = pabs(self.spack_env_file)
@@ -886,19 +901,17 @@ class SpackEnv(UberEnv):
         # this is an opportunity to show spack python info post obtaining spack
         self.print_spack_python_info()
 
-        # Check which concretizer this version of Spack has
-        self.check_concretizer_args()
-
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes()
 
-        # Update spack's config.yaml if clingo was requested
-        if self.use_clingo:
-            concretizer_cmd = "{0} config --scope defaults add config:concretizer:clingo".format(self.spack_exe(use_spack_env=False))
-            res = sexe(concretizer_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Failed to update Spack configuration to use new concretizer]")
-                sys.exit(-1)
+        # setup clingo (unless specified not to)
+        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
+            print("[info: clingo will not be installed by uberenv]")
+        else:
+            self.setup_clingo()
+
+        # Check which concretizer this version of Spack has
+        self.check_concretizer_args()
 
     def create_spack_env(self):
         # Create Spack Environment
@@ -1058,7 +1071,7 @@ class SpackEnv(UberEnv):
             # spack flags
             if self.args["ignore_ssl_errors"]:
                 install_cmd += "-k "
-            
+
             # install flags
             install_cmd += "install --fail-fast "
             install_cmd = self.add_concretizer_args(install_cmd)
@@ -1072,7 +1085,7 @@ class SpackEnv(UberEnv):
                 install_cmd += "--test=root "
             if self.args["build_jobs"]:
                 install_cmd += "-j {0} ".format(self.args["build_jobs"])
-            
+
             res = sexe(install_cmd, echo=True)
             if res != 0:
                 print("[ERROR: Failure of spack install]")
@@ -1285,43 +1298,22 @@ class SpackEnv(UberEnv):
 
     def setup_clingo(self):
         """
-        Attempts to install the clingo answer set programming library
+        Attempts to install the clingo answer set programming library via Spack
         if it is not already available as a Python module
         """
         if not have_internet():
             print("[WARNING: No internet detected. Skipping setting up clingo.]")
             return
 
-        try:
-            import clingo
-        except ImportError:
-            import pip
-            pip_ver = pip.__version__
-            # Requirement comes from https://github.com/pypa/manylinux
-            # JBE: I think the string comparison is somewhat correct here, if not we'll
-            # need to install setuptools for 'packaging.version'
-            if pip_ver < "19.3":
-                print("[!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print("  ERROR: pip version {0} is too old to install clingo".format(pip_ver))
-                print("  pip 19.3 is required for PEP 599 support")
-                print("  Try running the following command to upgrade pip:")
-                print("     python3 -m pip install --user --upgrade pip")
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!]")
-                sys.exit(-1)
-            py_interp = sys.executable
-            clingo_pkg = "clingo"
-            uninstall_cmd = "{0} -m pip uninstall -y {1}".format(py_interp, clingo_pkg)
-            # Uninstall it first in case the available version failed due to differing arch
-            # pip will still return 0 in the case of a "trivial" uninstall
-            res = sexe(uninstall_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Clingo uninstall failed with returncode {0}]".format(res))
-                sys.exit(-1)
-            install_cmd = "{0} -m pip install --user {1}".format(py_interp, clingo_pkg)
-            res = sexe(install_cmd, echo=True)
-            if res != 0:
-                print("[ERROR: Clingo install failed with returncode {0}]".format(res))
-                sys.exit(-1)
+        res = sexe('{0} bootstrap now'.format(self.spack_exe(use_spack_env = False)), echo=True)
+        if res != 0:
+            print("[ERROR: 'spack bootstrap now' failed with returncode {0}]".format(res))
+            sys.exit(-1)
+
+        res = sexe('{0} bootstrap status'.format(self.spack_exe(use_spack_env = False)), echo=True)
+        if res != 0:
+            print("[ERROR: 'spack bootstrap status' failed with returncode {0}]".format(res))
+            sys.exit(-1)
 
 
 def find_osx_sdks():
@@ -1393,7 +1385,7 @@ def main():
     os.chdir(env.dest_dir)
 
     # Setup package manager
-    if not args["skip_setup"]:
+    if not args["skip_setup"] and not args["skip_setup_and_env"]:
         # Clone the package manager
         env.clone_repo()
 
@@ -1413,8 +1405,12 @@ def main():
             return 0
 
     # Create Spack Environment and setup Spack package repos
-    if not is_windows():
+    if not is_windows() and not args["skip_setup_and_env"]:
         env.create_spack_env()
+
+        # Allow to end uberenv after Spack environment is ready
+        if args["setup_and_env_only"]:
+            return 0
 
     ###########################################################
     # We now have an instance of our package manager configured,

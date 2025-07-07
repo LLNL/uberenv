@@ -23,7 +23,7 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Adds support for the spack `--reuse` option for more relaxed tpl/dependency matching.
 - Adds support for `--upstream` with `--setup-only`.
 - Allow to prevent Uberenv from installing clingo setting `spack_setup_clingo`
-  to `no` in `.uberenv_config.json`.
+  to `false` in `.uberenv_config.json`.
 - Adds the `--spack-debug` option to run spack spec/install commands in debug mode.
 - Adds the `--spack-allow-deprecated` option, to allow spack to build packages marked deprecated.
 
@@ -35,8 +35,9 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
 - Allow `.uberenv_config.json` to live at the same level as `uberenv.py`
 - No longer removes symlinks when using the directory of `uberenv.py`
 - Reduce Spack's git history to a bare minimum
-- Better error message for out-of-date `pip`, better documentation for `spack_concretizer` setting
 - Uberenv now requires python version 3.3 or above.
+- Rather than using pip, Uberenv uses `spack bootstrap now` to install clingo.
+- Removes Spack concretizer options, since clingo is the only option in newer Spack. (You can still disable clingo install.)
 
 ### Fixed
 
