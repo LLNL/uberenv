@@ -1013,6 +1013,10 @@ class SpackEnv(UberEnv):
         sexe(spack_concretize_cmd, echo=True)
 
     def clean_build(self):
+        # set bootstrap location in dest dir
+        bstrp_cmd = "{0} bootstrap root --scope=site {1}".format(self.spack_exe(use_spack_env=False),
+                                                                 pjoin(self.dest_dir,"spack_bootstrap"))
+        res = sexe(bstrp_cmd, echo=True)
         # clean out any spack cached stuff (except build stages, downloads, &
         # spack's bootstrapping software)
         cln_cmd = "{0} clean --misc-cache --failures --python-cache".format(self.spack_exe(use_spack_env=False))
