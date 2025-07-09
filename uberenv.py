@@ -860,7 +860,7 @@ class SpackEnv(UberEnv):
 
         # Move destination of Spack builtin package repository if not included in Spack repo
         if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
-            builtin_repo = pjoin(self.dest_dir, "spack_builtin_packages")
+            builtin_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
             print(f"[info: moving spack builtin package repository to {builtin_repo}]")
             spack_repo_set_cmd = f"{self.spack_exe(use_spack_env=False)} repo set --destination {builtin_repo} builtin"
             res = sexe(spack_repo_set_cmd, echo=True)
