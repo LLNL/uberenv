@@ -858,7 +858,7 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Git failed to pull]")
                 sys.exit(-1)
 
-        # Move destination of Spack builtin package repository if not included in Spack repo
+        # Move destination of Spack builtin package repository if not included in Spack repo (pre-1.0)
         if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
             builtin_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
             print(f"[info: moving spack builtin package repository to {builtin_repo}]")
