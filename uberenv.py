@@ -274,6 +274,13 @@ def parse_args():
                       nargs="+",
                       help="Skip spack finding any externals")
 
+    # Spack skip clingo 
+    parser.add_argument("--spack-skip-setup-clingo",
+                      dest="spack_skip_setup_clingo",
+                      action="store_false",
+                      default=True,
+                      help="Skip spack bootstrap clingo")
+
     # Spack externals list
     parser.add_argument("--spack-externals",
                       dest="spack_externals",
@@ -873,9 +880,10 @@ class SpackEnv(UberEnv):
     def disable_spack_config_scopes(self):
         # disables all config scopes except "defaults", which we will
         # force our settings into
-        spack_lib_config = pjoin(self.dest_spack,"lib","spack","spack","config.py")
-        print("[disabling config scope (except defaults) in: {0}]".format(spack_lib_config))
-        cfg_script = open(spack_lib_config).read()
+
+        spack_lib_config_src = pjoin(self.dest_spack,"lib","spack","spack","config.py")
+        print("[disabling config scope (except defaults) in: {0}]".format(spack_lib_config_src))
+        cfg_script = open(spack_lib_config_src).read()
         #
         # For newer versions of spack, we can use the SPACK_DISABLE_LOCAL_CONFIG
         # env var plumbing. We patch it to True to make a permanent change.
@@ -895,17 +903,42 @@ class SpackEnv(UberEnv):
                                 "('user', spack.paths.user_config_path)"]:
                 cfg_script = cfg_script.replace(cfg_scope_stmt,
                                                 "#DISABLED BY UBERENV: " + cfg_scope_stmt)
-        open(spack_lib_config,"w").write(cfg_script)
+        # write the updated source
+        open(spack_lib_config_src,"w").write(cfg_script)
+
+        # disable user cache dir
+        spack_cache_path_dir = pjoin(self.dest_dir,"spack_cache")
+        spack_lib_paths_src  = pjoin(self.dest_spack,"lib","spack","spack","paths.py")
+        path_script = open(spack_lib_paths_src).read()
+        print("[disabling user spack cache dir in: {0}]".format(spack_lib_paths_src))
+        spack_ucache_stmt = 'return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)'
+        print(path_script.count(spack_ucache_stmt))
+        if path_script.count(spack_ucache_stmt) > 0:
+            path_script = path_script.replace(spack_ucache_stmt,'return "{0}"'.format(spack_cache_path_dir))
+        # write the updated source
+        open(spack_lib_paths_src,"w").write(path_script)
+
+
+    def set_spack_bootstrap_dir(self):
+        # force bootstrap into dest dir
+        # set bootstrap location in dest dir
+        bstrp_cmd = "{0} bootstrap root --scope=site {1}".format(self.spack_exe(use_spack_env=False),
+                                                                 pjoin(self.dest_dir,"spack_bootstrap"))
+        res = sexe(bstrp_cmd, echo=True)
+
 
     def patch(self):
-        # this is an opportunity to show spack python info post obtaining spack
-        self.print_spack_python_info()
-
         # force spack to use only "defaults" config scope
         self.disable_spack_config_scopes()
 
+        # set bootstrap dir to avoid conflicts with ~/.spack
+        self.set_spack_bootstrap_dir()
+
+        # this is an opportunity to show spack python info post obtaining spack
+        self.print_spack_python_info()
+
         # setup clingo (unless specified not to)
-        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"] == False:
+        if "spack_setup_clingo" in self.project_args and self.project_args["spack_setup_clingo"].lower() == "false":
             print("[info: clingo will not be installed by uberenv]")
         else:
             self.setup_clingo()
@@ -1013,10 +1046,6 @@ class SpackEnv(UberEnv):
         sexe(spack_concretize_cmd, echo=True)
 
     def clean_build(self):
-        # set bootstrap location in dest dir
-        bstrp_cmd = "{0} bootstrap root --scope=site {1}".format(self.spack_exe(use_spack_env=False),
-                                                                 pjoin(self.dest_dir,"spack_bootstrap"))
-        res = sexe(bstrp_cmd, echo=True)
         # clean out any spack cached stuff (except build stages, downloads, &
         # spack's bootstrapping software)
         cln_cmd = "{0} clean --misc-cache --failures --python-cache".format(self.spack_exe(use_spack_env=False))
