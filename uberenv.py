@@ -274,13 +274,6 @@ def parse_args():
                       nargs="+",
                       help="Skip spack finding any externals")
 
-    # Spack skip clingo 
-    parser.add_argument("--spack-skip-setup-clingo",
-                      dest="spack_skip_setup_clingo",
-                      action="store_false",
-                      default=True,
-                      help="Skip spack bootstrap clingo")
-
     # Spack externals list
     parser.add_argument("--spack-externals",
                       dest="spack_externals",
