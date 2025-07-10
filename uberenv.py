@@ -850,7 +850,10 @@ class SpackEnv(UberEnv):
             spack_branch = self.project_args.get("spack_branch", "develop")
 
             clone_cmd =  "git {0} clone --single-branch --depth=1 -b {1} {2} spack".format(clone_args, spack_branch, spack_url)
-            sexe(clone_cmd, echo=True)
+            res = sexe(clone_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Git failed to clone Spack repository]")
+                sys.exit(-1)
 
         if "spack_commit" in self.project_args:
             # optionally, check out a specific commit
@@ -876,6 +879,17 @@ class SpackEnv(UberEnv):
                 #Usually untracked files that would be overwritten
                 print("[ERROR: Git failed to pull]")
                 sys.exit(-1)
+
+        # Move destination of Spack builtin package repository if not included in Spack repo (pre-1.0)
+        if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
+            builtin_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
+            print(f"[info: moving spack builtin package repository to {builtin_repo}]")
+            spack_repo_set_cmd = f"{self.spack_exe(use_spack_env=False)} repo set --destination {builtin_repo} builtin"
+            res = sexe(spack_repo_set_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to set builtin package repository destination]")
+                sys.exit(-1)
+
 
     def disable_spack_config_scopes(self):
         # disables all config scopes except "defaults", which we will
@@ -968,7 +982,7 @@ class SpackEnv(UberEnv):
                 spack_compiler_find_cmd = "{0} compiler find {1}".format(self.spack_exe(), self.spack_compiler_paths)
             res_compiler = sexe(spack_compiler_find_cmd, echo=True)
             if res_compiler != 0:
-                print("[failed to setup environment]")
+                print("[ERROR: Failed to setup Spack Environment]")
                 sys.exit(-1)
 
             if self.spack_skip_externals is None:
@@ -982,7 +996,7 @@ class SpackEnv(UberEnv):
                     spack_external_find_cmd = "{0} {1}".format(spack_external_find_cmd, self.spack_externals)
                 res_external = sexe(spack_external_find_cmd, echo=True)
                 if res_external != 0:
-                    print("[failed to setup environment]")
+                    print("[ERROR: Failed to setup Spack Environment]")
                     sys.exit(-1)
 
             # Copy spack.yaml to where you called package source dir
@@ -1230,7 +1244,7 @@ class SpackEnv(UberEnv):
     def get_mirror_path(self):
         mirror_path = self.args["mirror"]
         if not mirror_path:
-            print("[--create-mirror requires a mirror directory]")
+            print("[ERROR: `--create-mirror` requires a mirror directory]")
             sys.exit(-1)
         return mirror_path
 
@@ -1315,7 +1329,7 @@ class SpackEnv(UberEnv):
         """
         upstream_path = self.args["upstream"]
         if not upstream_path:
-            print("[--create-upstream requires a upstream directory]")
+            print("[ERROR: `--create-upstream` requires a upstream directory]")
             sys.exit(-1)
         upstream_path = pabs(upstream_path)
         upstream_name = self.pkg_name
