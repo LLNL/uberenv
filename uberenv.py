@@ -858,7 +858,7 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Git failed to pull]")
                 sys.exit(-1)
 
-        # Move and checkout Spack builtin package repository if not included in Spack repo (pre-1.0)
+        # Move and checkout Spack builtin package repository if not included in Spack repo
         if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
             packages_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
 
@@ -879,7 +879,7 @@ class SpackEnv(UberEnv):
                     print("[ERROR: Failed to update git commit for builtin package repository]")
                     sys.exit(-1)
             else:
-                print("[info: user did not specify `spack_packages_commit`, Spack will pull develop]")
+                print("[info: user did not specify `spack_packages_commit`, Spack will pull the spack-packages repo at develop]")
 
 
     def disable_spack_config_scopes(self):
