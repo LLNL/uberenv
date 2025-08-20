@@ -854,19 +854,32 @@ class SpackEnv(UberEnv):
             sexe("git stash", echo=True)
             res = sexe("git pull", echo=True)
             if res != 0:
-                #Usually untracked files that would be overwritten
+                # Usually untracked files that would be overwritten
                 print("[ERROR: Git failed to pull]")
                 sys.exit(-1)
 
-        # Move destination of Spack builtin package repository if not included in Spack repo (pre-1.0)
+        # Move and checkout Spack builtin package repository if not included in Spack repo (pre-1.0)
         if not os.path.exists(pjoin(self.dest_spack, "var", "spack", "repos", "builtin")):
-            builtin_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
-            print(f"[info: moving spack builtin package repository to {builtin_repo}]")
-            spack_repo_set_cmd = f"{self.spack_exe(use_spack_env=False)} repo set --destination {builtin_repo} builtin"
+            packages_repo = pjoin(self.dest_dir, "builtin_spack_packages_repo")
+
+            print(f"[info: moving spack builtin package repository to {packages_repo}]")
+            spack_repo_set_cmd = f"{self.spack_exe(use_spack_env=False)} repo set --destination {packages_repo} builtin"
             res = sexe(spack_repo_set_cmd, echo=True)
             if res != 0:
                 print("[ERROR: Failed to set builtin package repository destination]")
                 sys.exit(-1)
+
+            # Optionally, check out Spack's builtin package repo to a specific commit
+            if "spack_packages_commit" in self.project_args:
+                sha1 = self.project_args["spack_packages_commit"]
+
+                spack_repo_update_cmd = f"{self.spack_exe(use_spack_env=False)} repo update --commit {sha1} builtin"
+                res = sexe(spack_repo_update_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to update git commit for builtin package repository]")
+                    sys.exit(-1)
+            else:
+                print("[info: user did not specify `spack_packages_commit`, Spack will pull develop]")
 
 
     def disable_spack_config_scopes(self):
@@ -975,7 +988,10 @@ class SpackEnv(UberEnv):
         print("[adding spack package]")
         spack_add_cmd = "{0} add {1}".format(self.spack_exe(),
             self.pkg_name_with_spec)
-        sexe(spack_add_cmd, echo=True)
+        res = sexe(spack_add_cmd, echo=True)
+        if res != 0:
+            print(f"[ERROR: Failed to add Spack spec '{self.pkg_name_with_spec}']")
+            sys.exit(-1)
 
         # For dev-build, call develop
         if self.build_mode == "dev-build":
