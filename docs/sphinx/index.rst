@@ -224,8 +224,11 @@ Project settings are as follows:
   spack_activate           **None**                   Spack packages to activate                       **None**
   spack_build_mode         ``--spack-build-mode``     Set mode used to build TPLs with Spack           ``dev-build``
   spack_configs_path       **None**                   Directory with Spack configs to be autodetected  ``spack_configs``
+  spack_packages_url       **None**                   Download url for Spack packages                  ``https://github.com/spack/spack-packages.git``
   spack_packages_path      **None**                   Directory|List with Package Repos to be added    ``packages``
+  spack_packages_branch    **None**                   Spack packages repo branch to checkout           **None**
   spack_packages_commit    **None**                   Spack packages repo commit to checkout           **None**
+  spack_packages_tag       **None**                   Spack packages repo tag to checkout.             **None**
   spack_setup_clingo       **None**                   Do not install clingo if set to ``false``        **None**
   spack_externals          ``--spack-externals``      Space delimited string of packages for Spack to  **None**
                                                       search for externals
