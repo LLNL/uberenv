@@ -912,11 +912,6 @@ class SpackEnv(UberEnv):
                     sys.exit(-1)
             else:
                 print("[info: user did not specify `spack_packages_commit`, Spack will pull the default ref of spack-packages]")
-                spack_repo_update_cmd = f"{self.spack_exe()} repo update"
-                res = sexe(spack_repo_update_cmd, echo=True)
-                if res != 0:
-                    print("[ERROR: Failed to update git reference for builtin package repository]")
-                    sys.exit(-1)
 
 
     def disable_spack_config_scopes(self):
@@ -973,6 +968,13 @@ class SpackEnv(UberEnv):
         if res != 0:
             print("[ERROR: Failed to create Spack Environment]")
             sys.exit(-1)
+        if not "spack_packages_commit" in self.project_args:
+            print("[info: user did not specify `spack_packages_commit`, Spack will pull the spack-packages repo at its default commit or ref from the environment]")
+            spack_repo_update_cmd = f"{self.spack_exe()} repo update"
+            res = sexe(spack_repo_update_cmd, echo=True)
+            if res != 0:
+                print("[ERROR: Failed to update git reference for builtin package repository]")
+                sys.exit(-1)
 
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:
