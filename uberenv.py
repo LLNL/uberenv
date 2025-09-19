@@ -911,7 +911,7 @@ class SpackEnv(UberEnv):
                     print("[ERROR: Failed to update git tag for builtin package repository]")
                     sys.exit(-1)
             else:
-                print("[info: user did not specify any `spack_packages_*` override, Spack will pull the default ref of spack-packages]")
+                print("[info: User did not specify any `spack_packages_*` override, Spack will pull the default ref of spack-packages]")
 
 
     def disable_spack_config_scopes(self):
