@@ -869,7 +869,23 @@ class SpackEnv(UberEnv):
                 print("[ERROR: Failed to set builtin package repository destination]")
                 sys.exit(-1)
 
-            # Optionally, check out Spack's builtin package repo to a specific commit
+            # Optionally, check out Spack's builtin package repo to a specific commit/branch/tag
+            if "spack_packages_url" in self.project_args:
+                spack_repo_remove_cmd = f"{self.spack_exe(use_spack_env=False)} repo remove builtin"
+                res = sexe(spack_repo_remove_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to remove builtin package repository so it could be re-added with given URL]")
+                    sys.exit(-1)
+
+                # Now add it back with the correct url
+                url = self.project_args["spack_packages_url"]
+                spack_repo_add_cmd = f"{self.spack_exe(use_spack_env=False)} repo add --name builtin {url}"
+                res = sexe(spack_repo_add_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to add builtin package repository with given URL]")
+                    sys.exit(-1)
+
+            # Optionally, check out Spack's builtin package repo to a specific commit/branch/tag
             if "spack_packages_commit" in self.project_args:
                 sha1 = self.project_args["spack_packages_commit"]
 
@@ -878,8 +894,24 @@ class SpackEnv(UberEnv):
                 if res != 0:
                     print("[ERROR: Failed to update git commit for builtin package repository]")
                     sys.exit(-1)
+            elif "spack_packages_branch" in self.project_args:
+                branch = self.project_args["spack_packages_branch"]
+
+                spack_repo_update_cmd = f"{self.spack_exe(use_spack_env=False)} repo update --branch {branch} builtin"
+                res = sexe(spack_repo_update_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to update git branch for builtin package repository]")
+                    sys.exit(-1)
+            elif "spack_packages_tag" in self.project_args:
+                tag = self.project_args["spack_packages_tag"]
+
+                spack_repo_update_cmd = f"{self.spack_exe(use_spack_env=False)} repo update --tag {tag} builtin"
+                res = sexe(spack_repo_update_cmd, echo=True)
+                if res != 0:
+                    print("[ERROR: Failed to update git tag for builtin package repository]")
+                    sys.exit(-1)
             else:
-                print("[info: user did not specify `spack_packages_commit`, Spack will pull the spack-packages repo at develop]")
+                print("[info: User did not specify any `spack_packages_*` override, Spack will pull the spack-packages repo at develop]")
 
 
     def disable_spack_config_scopes(self):
