@@ -1028,8 +1028,8 @@ class SpackEnv(UberEnv):
         # For dev-build, call develop
         if self.build_mode == "dev-build":
             print("[calling spack develop]")
-            spack_develop_cmd = "{0} develop --no-clone --path={1} {2}".format(
-                self.spack_exe(), self.pkg_src_dir, self.pkg_name_with_spec)
+            spack_develop_cmd = "{0} develop --no-clone --path={1} {2}@={3}".format(
+                self.spack_exe(), self.pkg_src_dir, self.pkg_name, self.pkg_version)
             sexe(spack_develop_cmd, echo=True)
 
     def concretize_spack_env(self):
