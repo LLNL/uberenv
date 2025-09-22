@@ -911,7 +911,7 @@ class SpackEnv(UberEnv):
                     print("[ERROR: Failed to update git tag for builtin package repository]")
                     sys.exit(-1)
             else:
-                print("[info: User did not specify any `spack_packages_*` override, Spack will pull the spack-packages repo at develop]")
+                print("[info: User did not specify any `spack_packages_*` override, Spack will pull the default ref of spack-packages]")
 
 
     def disable_spack_config_scopes(self):
@@ -967,6 +967,21 @@ class SpackEnv(UberEnv):
         res = sexe(spack_create_cmd, echo=True)
         if res != 0:
             print("[ERROR: Failed to create Spack Environment]")
+            sys.exit(-1)
+
+        spack_pkg_keys = ("spack_packages_commit", "spack_packages_branch", "spack_packages_tag")
+        if any(key in self.project_args for key in spack_pkg_keys):
+            # Check if environment specifies alternate builtin packages repository
+            print("[checking for alternate builtin repository in environment...]")
+            res, out = sexe(f"{self.spack_exe()} config --scope env:{self.spack_env_file} get repos", ret_output=True)
+            if res == 0 and "builtin" in out:
+                print("[WARNING: Environment specifies alternate builtin packages repository, it will take precedence over any setting in uberenv config file.]")
+                print(f"[Environment builtin repo config: {out.strip()}]")
+
+        spack_repo_update_cmd = f"{self.spack_exe()} repo update"
+        res = sexe(spack_repo_update_cmd, echo=True)
+        if res != 0:
+            print("[ERROR: Failed to update git reference for builtin package repository]")
             sys.exit(-1)
 
         # Find pre-installed compilers and packages and stop uberenv.py
