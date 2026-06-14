@@ -155,6 +155,18 @@ def parse_args():
                       default=None,
                       help="dir with vckpkg ports")
 
+    # optional vcpkg feature list for the package
+    parser.add_argument("--vcpkg-features",
+                      dest="vcpkg_features",
+                      default=None,
+                      help="comma-separated vcpkg features to enable for the package")
+
+    # optional CUDA architecture list for vcpkg CUDA builds
+    parser.add_argument("--vcpkg-cuda-architectures",
+                      dest="vcpkg_cuda_architectures",
+                      default=None,
+                      help="semicolon- or comma-separated CUDA architectures for vcpkg CUDA builds")
+
     # overrides package_name
     parser.add_argument("--package-name",
                       dest="package_name",
@@ -469,6 +481,41 @@ class VcpkgEnv(UberEnv):
         if self.vcpkg_triplet is None:
            self.vcpkg_triplet = os.getenv("VCPKG_DEFAULT_TRIPLET", "x86-windows")
 
+        self.vcpkg_features = self.set_from_args_or_json("vcpkg_features", True)
+        self.vcpkg_package_name = self.pkg_name.split("[", 1)[0]
+        self.vcpkg_package_spec = self.make_vcpkg_package_spec()
+        if self.vcpkg_package_spec != self.pkg_name:
+            print("Vcpkg package spec: {}".format(self.vcpkg_package_spec))
+
+        self.vcpkg_cuda_architectures = self.set_from_args_or_json("vcpkg_cuda_architectures", True)
+        if self.vcpkg_cuda_architectures:
+            self.vcpkg_cuda_architectures = str(self.vcpkg_cuda_architectures).replace(",", ";")
+            os.environ["CUDA_ARCHITECTURES"] = self.vcpkg_cuda_architectures
+            print("Vcpkg CUDA architectures: {}".format(self.vcpkg_cuda_architectures))
+
+    def make_vcpkg_package_spec(self):
+        """ Return the package spec, with optional vcpkg features. """
+        if "[" in self.pkg_name:
+            return self.pkg_name
+
+        features = self.normalized_vcpkg_features()
+        if features:
+            return "{0}[{1}]".format(self.pkg_name, ",".join(features))
+
+        return self.pkg_name
+
+    def normalized_vcpkg_features(self):
+        """ Normalize config or command-line vcpkg feature settings. """
+        if self.vcpkg_features is None:
+            return []
+
+        if isinstance(self.vcpkg_features, str):
+            features = re.split(r"[,;]", self.vcpkg_features)
+        else:
+            features = self.vcpkg_features
+
+        return [str(feature).strip() for feature in features if str(feature).strip()]
+
     def setup_paths_and_dirs(self):
         # get the current working path, and the glob used to identify the
         # package files we want to hot-copy to vcpkg
@@ -561,10 +608,10 @@ class VcpkgEnv(UberEnv):
     def show_info(self):
         os.chdir(self.dest_vcpkg)
         print("[info: Details for package '{0}']".format(self.pkg_name))
-        sexe("vcpkg.exe search " + self.pkg_name, echo=True)
+        sexe("vcpkg.exe search " + self.vcpkg_package_name, echo=True)
 
         print("[info: Dependencies for package '{0}']".format(self.pkg_name))
-        sexe("vcpkg.exe depend-info " + self.pkg_name, echo=True)
+        sexe("vcpkg.exe depend-info " + self.vcpkg_package_spec, echo=True)
 
     def create_mirror(self):
         pass
@@ -576,13 +623,13 @@ class VcpkgEnv(UberEnv):
 
         os.chdir(self.dest_vcpkg)
         install_cmd = "vcpkg.exe "
-        install_cmd += "install {0}:{1}".format(self.pkg_name, self.vcpkg_triplet)
+        install_cmd += "install {0}:{1}".format(self.vcpkg_package_spec, self.vcpkg_triplet)
 
         res = sexe(install_cmd, echo=True)
 
         # Running the install_cmd eventually generates the host config file,
         # which we copy to the target directory.
-        src_hc = pjoin(self.dest_vcpkg, "installed", self.vcpkg_triplet, "include", self.pkg_name, "hc.cmake")
+        src_hc = pjoin(self.dest_vcpkg, "installed", self.vcpkg_triplet, "include", self.vcpkg_package_name, "hc.cmake")
         hcfg_fname = pjoin(self.dest_dir, "{0}.{1}.cmake".format(platform.uname()[1], self.vcpkg_triplet))
         print("[info: copying host config file to {0}]".format(hcfg_fname))
         shutil.copy(os.path.abspath(src_hc), hcfg_fname)
