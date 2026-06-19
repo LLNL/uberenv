@@ -626,6 +626,9 @@ class VcpkgEnv(UberEnv):
         install_cmd += "install {0}:{1} --recurse".format(self.vcpkg_package_spec, self.vcpkg_triplet)
 
         res = sexe(install_cmd, echo=True)
+        if res != 0:
+            print("[ERROR: vcpkg install failed with returncode {0}]".format(res))
+            return res
 
         # Running the install_cmd eventually generates the host config file,
         # which we copy to the target directory.
