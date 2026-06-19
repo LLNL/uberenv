@@ -26,6 +26,8 @@ The Uberenv project release numbers follow [Semantic Versioning](http://semver.o
   to `false` in `.uberenv_config.json`.
 - Adds the `--spack-debug` option to run spack spec/install commands in debug mode.
 - Adds the `--spack-allow-deprecated` option, to allow spack to build packages marked deprecated.
+- vcpkg: Adds the `--vcpkg-features` option to enable a comma- or semicolon- separated list of `features` to the installed package. Features are the vcpkg analog of spack `variants`.
+- vcpkg: Adds the `--vcpkg-cuda-architectures` option to append a specific `CMAKE_CUDA_ARCHICTURES` to the host-config
 
 ### Changed
 - All spack specs are now expressed inside single quotes to protect the parsing of complex flags.
