@@ -623,7 +623,7 @@ class VcpkgEnv(UberEnv):
 
         os.chdir(self.dest_vcpkg)
         install_cmd = "vcpkg.exe "
-        install_cmd += "install {0}:{1}".format(self.vcpkg_package_spec, self.vcpkg_triplet)
+        install_cmd += "install {0}:{1} --recurse".format(self.vcpkg_package_spec, self.vcpkg_triplet)
 
         res = sexe(install_cmd, echo=True)
 
