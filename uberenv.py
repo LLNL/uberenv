@@ -636,9 +636,18 @@ class VcpkgEnv(UberEnv):
         hcfg_fname = pjoin(self.dest_dir, "{0}.{1}.cmake".format(platform.uname()[1], self.vcpkg_triplet))
         print("[info: copying host config file to {0}]".format(hcfg_fname))
         shutil.copy(os.path.abspath(src_hc), hcfg_fname)
+        self.patch_host_config(hcfg_fname)
         print("")
         print("[install complete!]")
         return res
+
+    def patch_host_config(self, hcfg_fname):
+        """ Apply uberenv command-line settings to the copied host-config. """
+        if self.vcpkg_cuda_architectures:
+            with open(hcfg_fname, "a") as hcfg:
+                hcfg.write("\n# CUDA architecture requested through uberenv/vcpkg\n")
+                hcfg.write('set(CMAKE_CUDA_ARCHITECTURES "{0}" CACHE STRING "" FORCE)\n'
+                           .format(self.vcpkg_cuda_architectures))
 
 
 class SpackEnv(UberEnv):
