@@ -135,11 +135,19 @@ def parse_args():
                       default=None,
                       help="add an external spack instance as upstream")
 
-    # optional spack --reuse concretizer behaviour
-    parser.add_argument("--reuse",
-                      dest="reuse",
-                      default=False,
-                      help="Use spack v0.17+ --reuse functionality for spec, install and dev-build.")
+    # disable optional spack --reuse concretizer behaviour
+    parser.add_argument("--no-spack-reuse",
+                      dest="spack_reuse",
+                      action="store_false",
+                      default=True,
+                      help="Disable spack --reuse concretizer option. By default if the option exists, it will be set.")
+
+    # disable optional spack --fresh concretizer behaviour
+    parser.add_argument("--no-spack-fresh",
+                      dest="spack_fresh",
+                      action="store_false",
+                      default=True,
+                      help="Disable spack --fresh concretizer option. By default if the option exists, it will be set.")
 
     # this option allows a user to set the directory for their vcpkg ports on Windows
     parser.add_argument("--vcpkg-ports-path",
@@ -671,8 +679,8 @@ class SpackEnv(UberEnv):
 
         # List of concretizer options not in all versions of spack
         # (to be checked if it exists after cloning spack)
-        self.fresh_exists = False
-        self.reuse_exists = False
+        self.spack_fresh_exists = False
+        self.spack_reuse_exists = False
 
     # Spack executable (will include environment -e option by default)
     def spack_exe(self, use_spack_env = True):
@@ -698,18 +706,18 @@ class SpackEnv(UberEnv):
         print("[Checking for concretizer options...]")
         res, out = sexe( cmd, ret_output = True)
         if "--fresh" in out:
-            self.fresh_exists = True
+            self.spack_fresh_exists = True
             print("[--fresh exists.]")
         if "--reuse" in out:
-            self.reuse_exists = True
+            self.spack_reuse_exists = True
             print("[--reuse exists.]")
 
     def add_concretizer_args(self, options):
         # reuse is now default in spack, if on and exists use that
         # otherwise use fresh if it exists
-        if self.args["reuse"] and self.reuse_exists:
+        if self.args["spack_reuse"] and self.spack_reuse_exists:
             options += "--reuse "
-        elif self.fresh_exists:
+        if self.args["spack_fresh"] and self.spack_fresh_exists:
             options += "--fresh "
         return options
 
