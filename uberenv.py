@@ -313,12 +313,12 @@ def parse_args():
                       default=None,
                       help="Path to Spack Environment file (e.g. spack.yaml or spack.lock)")
 
-    # Enable compiler mixing argument (Spack 1.1.0+ only)
-    parser.add_argument("--spack-compiler-mixing",
-                      dest="spack_compiler_mixing",
+    # Disable compiler mixing argument (Spack 1.1.0+ only)
+    parser.add_argument("--spack-disable-compiler-mixing",
+                      dest="spack_disable_compiler_mixing",
                       default=False,
                       action="store_true",
-                      help="Enables compiler mixing (Spack 1.1.0+ only)")
+                      help="Disables compiler mixing (Spack 1.1.0+ only)")
 
     ###############
     # parse args
@@ -685,7 +685,7 @@ class SpackEnv(UberEnv):
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
-        self.spack_compiler_mixing = self.set_from_args_or_json("spack_compiler_mixing", True)
+        self.spack_disable_compiler_mixing = self.set_from_args_or_json("spack_disable_compiler_mixing", True)
 
         # default spack build mode is dev-build
         if self.build_mode is None:
@@ -1069,11 +1069,8 @@ class SpackEnv(UberEnv):
             sys.exit(-1)
 
         if version2tuple(self.spack_version()) >= version2tuple("1.1.0"):
-            if self.spack_compiler_mixing:
-                print(f"[enabling mixing compilers in Spack]\n")
-                res = sexe(f"{self.spack_exe()} config --scope=env:{self.spack_env_directory} add concretizer:compiler_mixing:True")
-            else:
-                print(f"[disabling mixing compilers in Spack]\n")
+            if self.spack_disable_compiler_mixing:
+                print(f"[disabling mixing compilers in Spack]")
                 res = sexe(f"{self.spack_exe()} config --scope=env:{self.spack_env_directory} add concretizer:compiler_mixing:False")
             if res != 0:
                 print("[ERROR: Failed to configure compiler mixing in Spack]")
