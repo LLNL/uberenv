@@ -64,7 +64,6 @@ import re
 import argparse
 
 from functools import partial
-from packaging.version import Version
 
 from os import environ as env
 from os.path import join as pjoin
@@ -386,6 +385,23 @@ def find_project_config(args):
                 lookup_path = pabs(os.path.join(lookup_path, os.pardir))
     print("ERROR: No Uberenv configuration json file found")
     sys.exit(-1)
+
+def version2tuple(version: str) -> tuple[int, int, int]:
+    """
+    Converts version string (major.minor.patch.other) to tuple (major, minor, patch).
+    Add missing 0's if not all three version numbers are supplied (e.g. "1" -> (1, 0, 0))
+
+    Example usage:
+    version2tuple(self.spack_version()) >= version2tuple("1.2.0")
+
+    :param version: Version string (major.minor.patch.other)
+    :type version: str
+    """
+    raw_parts = version.split(".")[:3]
+    parts = [p if p != "" else "0" for p in raw_parts]
+    parts += ["0"] * (3 - len(parts))
+    return tuple(map(int, parts))
+
 
 class UberEnv():
     """ Base class for package manager """
@@ -1052,7 +1068,7 @@ class SpackEnv(UberEnv):
             print("[ERROR: Failed to update git reference for builtin package repository]")
             sys.exit(-1)
 
-        if Version(self.spack_version()) >= Version("1.1.0"):
+        if version2tuple(self.spack_version()) >= version2tuple("1.1.0"):
             if self.spack_compiler_mixing:
                 print(f"[enabling mixing compilers in Spack]\n")
                 res = sexe(f"{self.spack_exe()} config --scope=env:{self.spack_env_directory} add concretizer:compiler_mixing:True")
