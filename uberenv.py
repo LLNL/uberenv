@@ -313,6 +313,13 @@ def parse_args():
                       default=None,
                       help="Path to Spack Environment file (e.g. spack.yaml or spack.lock)")
 
+    # Enable compiler mixing (Spack 1.1.0+ only)
+    parser.add_argument("--spack-allow-compiler-mixing",
+                      dest="spack_allow_compiler_mixing",
+                      default=False,
+                      action="store_true",
+                      help="Enables compiler mixing (Spack 1.1.0+ only)")
+
     ###############
     # parse args
     ###############
@@ -378,6 +385,22 @@ def find_project_config(args):
                 lookup_path = pabs(os.path.join(lookup_path, os.pardir))
     print("ERROR: No Uberenv configuration json file found")
     sys.exit(-1)
+
+def version2tuple(version: str) -> tuple[int, int, int]:
+    """
+    Converts version string (major.minor.patch.other) to tuple (major, minor, patch).
+    Add missing 0's if not all three version numbers are supplied (e.g. "1" -> (1, 0, 0))
+
+    Example usage:
+    version2tuple(self.spack_version()) >= version2tuple("1.2.0")
+
+    :param version: Version string (major.minor.patch.other)
+    :type version: str
+    """
+    raw_parts = version.split(".")[:3]
+    parts = [p if p != "" else "0" for p in raw_parts]
+    parts += ["0"] * (3 - len(parts))
+    return tuple(map(int, parts))
 
 
 class UberEnv():
@@ -662,6 +685,7 @@ class SpackEnv(UberEnv):
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
+        self.spack_allow_compiler_mixing = self.set_from_args_or_json("spack_allow_compiler_mixing", True)
 
         # default spack build mode is dev-build
         if self.build_mode is None:
@@ -734,7 +758,7 @@ class SpackEnv(UberEnv):
     # Returns version of Spack being used
     def spack_version(self):
         res, out = sexe('{0} --version'.format(self.spack_exe(use_spack_env=False)), ret_output=True)
-        return out
+        return out.split()[0]
 
     def check_concretizer_args(self):
         cmd = "{0} help install".format(self.spack_exe(use_spack_env=False))
@@ -1043,6 +1067,17 @@ class SpackEnv(UberEnv):
         if res != 0:
             print("[ERROR: Failed to update git reference for builtin package repository]")
             sys.exit(-1)
+
+        if version2tuple(self.spack_version()) >= version2tuple("1.1.0"):
+            if self.spack_allow_compiler_mixing:
+                print(f"[enabling mixing compilers in Spack]")
+                res = sexe(f"{self.spack_exe()} config --scope=env:{self.spack_env_directory} add concretizer:compiler_mixing:True")
+            else:
+                print(f"[disabling mixing compilers in Spack]")
+                res = sexe(f"{self.spack_exe()} config --scope=env:{self.spack_env_directory} add concretizer:compiler_mixing:False")
+            if res != 0:
+                print("[ERROR: Failed to configure compiler mixing in Spack]")
+                sys.exit(-1)
 
         # Find pre-installed compilers and packages and stop uberenv.py
         if self.spack_setup_environment:

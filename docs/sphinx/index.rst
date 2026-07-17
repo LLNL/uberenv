@@ -211,34 +211,35 @@ is found in the in the following order:
 
 Project settings are as follows:
 
- ========================= ========================== ================================================ =======================================
-  Setting                  Command line Option        Description                                      Default
- ========================= ========================== ================================================ =======================================
-  package_name             ``--package-name``         Spack package name                               **None**
-  package_version          **None**                   Spack package version                            **None**
-  package_final_phase      ``--package-final-phase``  Controls after which phase Spack should stop     **None**
-  package_source_dir       ``--package-source-dir``   Controls the source directory Spack should use   **None**
-  force_commandline_prefix **None**                   Force user to specify `--prefix` on command line ``false``
-  spack_url                **None**                   Download url for Spack                           ``https://github.com/spack/spack.git``
-  spack_commit             **None**                   Spack commit to checkout                         **None**
-  spack_activate           **None**                   Spack packages to activate                       **None**
-  spack_build_mode         ``--spack-build-mode``     Set mode used to build TPLs with Spack           ``dev-build``
-  spack_configs_path       **None**                   Directory with Spack configs to be autodetected  ``spack_configs``
-  spack_packages_url       **None**                   Download url for Spack packages                  ``https://github.com/spack/spack-packages.git``
-  spack_packages_path      **None**                   Directory|List with Package Repos to be added    ``packages``
-  spack_packages_branch    **None**                   Spack packages repo branch to checkout           **None**
-  spack_packages_commit    **None**                   Spack packages repo commit to checkout           **None**
-  spack_packages_tag       **None**                   Spack packages repo tag to checkout.             **None**
-  spack_setup_clingo       **None**                   Do not install clingo if set to ``false``        **None**
-  spack_externals          ``--spack-externals``      Space delimited string of packages for Spack to  **None**
-                                                      search for externals
-  spack_compiler_paths     ``--spack-compiler-paths`` Space delimited string of paths for Spack to     **None**
-                                                      search for compilers
-  vcpkg_url                **None**                   Download url for Vcpkg                           ``https://github.com/microsoft/vcpkg``
-  vcpkg_branch             **None**                   Vcpkg branch to checkout                         ``master``
-  vcpkg_commit             **None**                   Vcpkg commit to checkout                         **None**
-  vcpkg_ports_path         ``--vcpkg-ports-path``     Folder with vcpkg ports files                    **None**
- ========================= ========================== ================================================ =======================================
+ ============================== =================================== ================================================ =======================================
+  Setting                       Command line Option                 Description                                      Default
+ ============================== =================================== ================================================ =======================================
+  package_name                  ``--package-name``                  Spack package name                               **None**
+  package_version               **None**                            Spack package version                            **None**
+  package_final_phase           ``--package-final-phase``           Controls after which phase Spack should stop     **None**
+  package_source_dir            ``--package-source-dir``            Controls the source directory Spack should use   **None**
+  force_commandline_prefix      **None**                            Force user to specify `--prefix` on command line ``false``
+  spack_url                     **None**                            Download url for Spack                           ``https://github.com/spack/spack.git``
+  spack_commit                  **None**                            Spack commit to checkout                         **None**
+  spack_activate                **None**                            Spack packages to activate                       **None**
+  spack_build_mode              ``--spack-build-mode``              Set mode used to build TPLs with Spack           ``dev-build``
+  spack_configs_path            **None**                            Directory with Spack configs to be autodetected  ``spack_configs``
+  spack_packages_url            **None**                            Download url for Spack packages                  ``https://github.com/spack/spack-packages.git``
+  spack_packages_path           **None**                            Directory|List with Package Repos to be added    ``packages``
+  spack_packages_branch         **None**                            Spack packages repo branch to checkout           **None**
+  spack_packages_commit         **None**                            Spack packages repo commit to checkout           **None**
+  spack_packages_tag            **None**                            Spack packages repo tag to checkout.             **None**
+  spack_setup_clingo            **None**                            Do not install clingo if set to ``false``        **None**
+  spack_externals               ``--spack-externals``               Space delimited string of packages for Spack to  **None**
+                                                                    search for externals
+  spack_compiler_paths          ``--spack-compiler-paths``          Space delimited string of paths for Spack to     **None**
+                                                                    search for compilers
+  spack_allow_compiler_mixing   ``--spack-allow-compiler-mixing``   Enables compiler mixing (Spack 1.1.0+ only)      ``false``
+  vcpkg_url                     **None**                            Download url for Vcpkg                           ``https://github.com/microsoft/vcpkg``
+  vcpkg_branch                  **None**                            Vcpkg branch to checkout                         ``master``
+  vcpkg_commit                  **None**                            Vcpkg commit to checkout                         **None**
+  vcpkg_ports_path              ``--vcpkg-ports-path``              Folder with vcpkg ports files                    **None**
+ ============================== =================================== ================================================ =======================================
 
 If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and similarly for ``vcpkg_commit``and ``vcpkg_branch``.
 The precedence for the Spack packages repo options are ``spack_packages_commit``, ``spack_packages_branch``, and last ``spack_packages_tag``.

@@ -48,8 +48,6 @@ import shutil
 import socket
 from os import environ as env
 
-import llnl.util.tty as tty
-
 from spack.package import *
 
 
@@ -153,7 +151,6 @@ class Magictestlib(Package):
         cfg.close()
 
         host_cfg_fname = os.path.abspath(host_cfg_fname)
-        tty.info("spack generated host-config file: " + host_cfg_fname)
 
     # Copy the generated host-config to install directory for downstream use
     @run_before("install")

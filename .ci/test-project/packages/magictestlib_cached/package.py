@@ -48,9 +48,6 @@ import os
 import socket
 from os import environ as env
 
-import llnl.util.tty as tty
-
-
 class MagictestlibCached(CachedCMakePackage):
     """MagictestlibCached"""
 
