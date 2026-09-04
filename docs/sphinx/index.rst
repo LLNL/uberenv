@@ -234,7 +234,7 @@ Project settings are as follows:
                                                                     search for externals
   spack_compiler_paths          ``--spack-compiler-paths``          Space delimited string of paths for Spack to     **None**
                                                                     search for compilers
-  spack_disable_compiler_mixing ``--spack-disable-compiler-mixing`` Disables compiler mixing (Spack 1.1.0+ only)     ``false``
+  spack_allow_compiler_mixing   ``--spack-allow-compiler-mixing``   Enables compiler mixing (Spack 1.1.0+ only)      ``false``
   vcpkg_url                     **None**                            Download url for Vcpkg                           ``https://github.com/microsoft/vcpkg``
   vcpkg_branch                  **None**                            Vcpkg branch to checkout                         ``master``
   vcpkg_commit                  **None**                            Vcpkg commit to checkout                         **None**
