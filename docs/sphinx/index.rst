@@ -245,6 +245,12 @@ If a ``spack_commit`` is present, it supercedes the ``spack_branch`` option, and
 The precedence for the Spack packages repo options are ``spack_packages_commit``, ``spack_packages_branch``, and last ``spack_packages_tag``.
 If none of these are given, Spack will pull the current commit on their default branch.
 
+For ``dev-build`` mode, the optional ``package_host_config_pattern`` project
+setting controls the glob used to find generated host-config files. Uberenv
+searches ``package_source_dir`` and then the legacy
+``package_source_dir/spack-build`` directory, copying every match. The default,
+``*{package_name}.cmake``, preserves Uberenv's historical naming convention.
+
 When used as a submodule ``.uberenv_config.json`` should define both ``spack_configs_path`` and ``spack_packages_path``,
 providing Uberenv with the respective location of ``spack_configs`` and ``packages`` directories.
 Note that they cannot sit next to ``uberenv.py``, since by default, the Uberenv repo does not provide them.

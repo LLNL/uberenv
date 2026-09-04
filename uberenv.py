@@ -682,6 +682,7 @@ class SpackEnv(UberEnv):
         self.pkg_version = self.set_from_json("package_version")
         self.pkg_src_dir = self.set_from_args_or_json("package_source_dir", True)
         self.pkg_final_phase = self.set_from_args_or_json("package_final_phase", True)
+        self.pkg_host_config_pattern = self.set_from_json("package_host_config_pattern")
         self.build_mode = self.set_from_args_or_json("spack_build_mode", True)
         self.spack_externals = self.set_from_args_or_json("spack_externals", True)
         self.spack_compiler_paths = self.set_from_args_or_json("spack_compiler_paths", True)
@@ -696,6 +697,9 @@ class SpackEnv(UberEnv):
         # if we are using fake package mode, adjust the pkg name
         if self.build_mode == "uberenv-pkg":
             self.pkg_name =  "uberenv-" + self.pkg_name
+        # Preserve the historical dev-build host-config naming convention by default.
+        if self.pkg_host_config_pattern is None:
+            self.pkg_host_config_pattern = "*{0}.cmake".format(self.pkg_name)
         # convert lists to space-delimited string
         if type(self.spack_externals) is list:
             self.spack_externals = " ".join(self.spack_externals)
@@ -1198,6 +1202,48 @@ class SpackEnv(UberEnv):
         return res
 
 
+    def copy_dev_build_host_configs(self):
+        """Copy host-config files produced by a Spack develop build."""
+        legacy_build_dir = pjoin(self.pkg_src_dir, "spack-build")
+        source_dirs = (
+            self.pkg_src_dir,
+            legacy_build_dir,
+        )
+        host_configs = []
+
+        # Spack 1.2 writes develop-stage output directly to package_source_dir.
+        # Older Spack releases used package_source_dir/spack-build instead.
+        for source_dir in source_dirs:
+            host_config_glob = pjoin(source_dir, self.pkg_host_config_pattern)
+            host_configs = sorted(
+                path for path in glob.glob(host_config_glob) if os.path.isfile(path)
+            )
+            if host_configs:
+                break
+
+        if not host_configs:
+            print("[ERROR: No host-config files matched pattern '{0}' after Spack install.]".format(
+                self.pkg_host_config_pattern))
+            print("[ERROR: Searched {0}]".format(", ".join(
+                pjoin(source_dir, self.pkg_host_config_pattern) for source_dir in source_dirs)))
+            return -1
+
+        for host_config in host_configs:
+            host_config_name = os.path.basename(host_config)
+            destination = pjoin(self.dest_dir, host_config_name)
+            if pabs(host_config) == pabs(destination):
+                continue
+            if os.path.islink(destination):
+                os.unlink(destination)
+            print("[copying host config file {0} to {1}]".format(host_config, destination))
+            shutil.copy2(host_config, destination)
+
+        if source_dir == legacy_build_dir:
+            print("[removing project build directory {0}]".format(legacy_build_dir))
+            shutil.rmtree(legacy_build_dir)
+
+        return 0
+
     def install(self):
         # use the uberenv package to trigger the right builds
         # and build an host-config.cmake file
@@ -1266,22 +1312,9 @@ class SpackEnv(UberEnv):
                         print("")
                         print("[install complete!]")
         elif self.build_mode == "dev-build":
-            # we are in the "only dependencies" dev build case and the host-config
-            # file has to be copied from the do-be-deleted spack-build dir.
-            build_base = pjoin(self.dest_dir,"{0}-build".format(self.pkg_name))
-            build_dir  = pjoin(build_base,"spack-build")
-            pattern = "*{0}.cmake".format(self.pkg_name)
-            build_dir = pjoin(self.pkg_src_dir,"spack-build")
-            hc_glob = glob.glob(pjoin(build_dir,pattern))
-            if len(hc_glob) > 0:
-                hc_path  = hc_glob[0]
-                hc_fname = os.path.split(hc_path)[1]
-                if os.path.islink(hc_fname):
-                    os.unlink(hc_fname)
-                print("[copying host config file to {0}]".format(pjoin(self.dest_dir,hc_fname)))
-                sexe("cp {0} {1}".format(hc_path,hc_fname))
-                print("[removing project build directory {0}]".format(pjoin(build_dir)))
-                sexe("rm -rf {0}".format(build_dir))
+            res = self.copy_dev_build_host_configs()
+            if res != 0:
+                return res
         else:
             print("[ERROR: Unsupported build mode: {0}]".format(self.build_mode))
             return -1

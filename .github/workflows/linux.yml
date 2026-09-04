@@ -10,6 +10,15 @@ env:
   BASE_PACKAGES: binutils gcc g++ gfortran cmake python3 perl git git-lfs curl wget tar unzip build-essential
 
 jobs:
+  # Tests focused Python behavior without provisioning a Spack environment
+  test_uberenv_python:
+    name: Uberenv Python Tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run Python Tests
+      run: python3 .ci/test_uberenv.py
+
   # Tests uberenv-pkg Spack build mode
   build_uberenv_mode:
     name: Uberenv Build Mode (Linux)
